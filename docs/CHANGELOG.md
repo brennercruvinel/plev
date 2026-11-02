@@ -34,7 +34,7 @@ was lost there; it could not be recovered. The git history of this repository
 starts on 10 June 2026 (`176dd691`). Between March and June 2026 the lost work was
 written down again, and commit `704412f1` (2026-07-13) gave those records the
 dates of the work itself, from 2021 on: the note on `View`, written on
-2026-03-08, carries 2021-03-06, and the [layout ADR](adr/rendering/0002-content-driven-layout-not-fixed-constants.md),
+2026-03-08, carries 2021-03-06, and the [layout ADR](adr/Rendering/0002-content-driven-layout-not-fixed-constants/0002-content-driven-layout-not-fixed-constants.md),
 written on 2026-06-10, carries 2024-09-18. Those pages have
 `date_basis: reconstructed`, and `recorded` keeps the day they were written.
 
@@ -63,7 +63,7 @@ days the work was done, a few days before.
 ### Remapped commits
 
 Commit `b1e820ba` remapped hash references after the history purge. For example,
-`34a9893` was replaced by `55c8aa7` in the [ADR on asynchronous GPU initialization](adr/rendering/0001-async-gpu-init-and-single-wasm-entry.md). An old reference may have a recoverable match even if
+`34a9893` was replaced by `55c8aa7` in the [ADR on asynchronous GPU initialization](adr/Rendering/0001-async-gpu-init-and-single-wasm-entry/0001-async-gpu-init-and-single-wasm-entry.md). An old reference may have a recoverable match even if
 the whole earlier history no longer exists.
 
 ### Recovered material
@@ -78,8 +78,8 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
   Button's path, with builds and browser screenshots on the Linux host and
   the task page as the control panel of the definition of done.
 
-- [task-104: the 35 empty or borrowed gallery tabs become kit components](tasks/task-104-gallery-components-from-the-kit/README.md)
-- ADR 0086 (proposed): [the adaptive foundation reads preferences once into the theme](adr/interface/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme.md)
+- [task-104: the 35 empty or borrowed gallery tabs become kit components](Tasks/task-104-gallery-components-from-the-kit/task-104-gallery-components-from-the-kit.md)
+- ADR 0086 (proposed): [the adaptive foundation reads preferences once into the theme](adr/Interface/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme.md)
 
 - plev is MIT (2026-10-31, task-41): the license is decided as MIT alone,
   not the MIT OR Apache-2.0 task-41 planned. the root `LICENSE` holds the
@@ -134,17 +134,17 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
   and the web. the ELK reader and its pages wait on
   `feat/elk-ir-from-gramorph`.
 
-- [task-100: interactive graphs and corpus import](tasks/task-100-interactive-graphs/README.md)
-- [task-101: on-demand fonts and deterministic fallback](tasks/task-101-fonts-by-script/README.md)
-- [task-102: reusable builds and web commands](tasks/task-102-builds-and-web-commands/README.md)
-- [task-103: runcheck, every executable in the repository runs](tasks/task-103-runcheck-every-executable-runs/README.md)
-- ADR 0078: [the web build fetches the Noto faces when a text first needs them](adr/rendering/0078-the-web-fetches-the-noto-faces-on-demand.md)
-- ADR 0079: [a desktop draws the scripts with the embedded faces, not the system's](adr/rendering/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md)
-- ADR 0082: [a hosted view uses the engine's window and clock](adr/rendering/0082-a-hosted-view-renders-on-demand.md)
-- ADR 0081: [a graph separates data, appearance and layout](adr/structure/0081-a-graph-separates-data-appearance-and-layout.md)
-- ADR 0083: [feature unification reduces duplicate compilations](adr/workflows/0083-feature-unification.md)
-- ADR 0084: [each web target has one command and a port range](adr/workflows/0084-web-targets-and-ports.md)
-- learning: [Separate data, appearance and algorithm in Rust](learnings/data-appearance-and-algorithm.md)
+- [task-100: interactive graphs and corpus import](Tasks/task-100-interactive-graphs/task-100-interactive-graphs.md)
+- [task-101: on-demand fonts and deterministic fallback](Tasks/task-101-fonts-by-script/task-101-fonts-by-script.md)
+- [task-102: reusable builds and web commands](Tasks/task-102-builds-and-web-commands/task-102-builds-and-web-commands.md)
+- [task-103: runcheck, every executable in the repository runs](Tasks/task-103-runcheck-every-executable-runs/task-103-runcheck-every-executable-runs.md)
+- ADR 0078: [the web build fetches the Noto faces when a text first needs them](adr/Rendering/0078-the-web-fetches-the-noto-faces-on-demand/0078-the-web-fetches-the-noto-faces-on-demand.md)
+- ADR 0079: [a desktop draws the scripts with the embedded faces, not the system's](adr/Rendering/0079-a-desktop-draws-the-scripts-with-the-embedded-faces/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md)
+- ADR 0082: [a hosted view uses the engine's window and clock](adr/Rendering/0082-a-hosted-view-renders-on-demand/0082-a-hosted-view-renders-on-demand.md)
+- ADR 0081: [a graph separates data, appearance and layout](adr/Structure/0081-a-graph-separates-data-appearance-and-layout/0081-a-graph-separates-data-appearance-and-layout.md)
+- ADR 0083: [feature unification reduces duplicate compilations](adr/Workflows/0083-feature-unification/0083-feature-unification.md)
+- ADR 0084: [each web target has one command and a port range](adr/Workflows/0084-web-targets-and-ports/0084-web-targets-and-ports.md)
+- learning: [Separate data, appearance and algorithm in Rust](adr/Structure/0081-a-graph-separates-data-appearance-and-layout/data-appearance-and-algorithm.md)
 
 ## 2026-10-16
 
@@ -156,8 +156,8 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
   macOS-only, and a reduced-motion preference macOS cannot find reads as
   never set.
 
-- [task-99: explorer integration and platform fixes](tasks/task-99-integration-and-portability/README.md)
-- learning: [Why waiting for a process can block reading its output](learnings/subprocesses-and-pipes.md)
+- [task-99: explorer integration and platform fixes](Tasks/task-99-integration-and-portability/task-99-integration-and-portability.md)
+- learning: [Why waiting for a process can block reading its output](adr/Rendering/0026-worker-results-wake-the-event-loop/subprocesses-and-pipes.md)
 
 ## 2026-10-09
 
@@ -168,12 +168,12 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
   docs follow in their own commits. the names old and new are in
   `docs/TERMS.toml`.
 
-- [task-98: workspace reorganization](tasks/task-98-workspace-reorganization/README.md)
-- ADR 0080: [the workspace separates libraries, apps, demos and tools](adr/structure/0080-workspace-by-responsibility.md)
+- [task-98: workspace reorganization](Tasks/task-98-workspace-reorganization/task-98-workspace-reorganization.md)
+- ADR 0080: [the workspace separates libraries, apps, demos and tools](adr/Structure/0080-workspace-by-responsibility/0080-workspace-by-responsibility.md)
 
 ## 2026-09-29
 
-- ADR 0073: [design for ranges, not screens and devices](adr/rendering/0073-design-for-ranges-not-screens-and-devices.md)
+- ADR 0073: [design for ranges, not screens and devices](adr/Rendering/0073-design-for-ranges-not-screens-and-devices/0073-design-for-ranges-not-screens-and-devices.md)
 
 ## 2026-09-26
 
@@ -210,10 +210,10 @@ o plev é uma engine de composição GPU-first em rust que está virando um
 runtime de interação generativa: cada controle é também dado (um contrato
 semântico), que a pessoa, o leitor de tela e um agente operam pelo mesmo
 dispatcher. o que é, para onde vai e o estado de cada task ficam no
-programa ([`generative-runtime-program.md`](research/generative-runtime-program.md), seção 12); a tese está em
-[`generative-runtime-thesis.md`](research/generative-runtime-thesis.md), as regras dos agentes em
-[`generative-runtime-guidelines.md`](ref/operations/generative-runtime-guidelines.md) e o modo de operação do
-orquestrador em [`autonomy.md`](ref/operations/autonomy.md). na época, cada task tinha o seu arquivo em
+programa ([`generative-runtime-program.md`](Research/Synthesis/generative-runtime-program.md), seção 12); a tese está em
+[`generative-runtime-thesis.md`](Research/Synthesis/generative-runtime-thesis.md), as regras dos agentes em
+[`generative-runtime-guidelines.md`](Research/Workflows/generative-runtime-guidelines.md) e o modo de operação do
+orquestrador em [`autonomy.md`](Research/Workflows/autonomy.md). na época, cada task tinha o seu arquivo em
 `steps/`, e o estado dela ficava no `status:` do cabeçalho (`in-progress`,
 `pending`, `done`); as pastas `ongoing/`, `pending/` e `checked/` citadas
 no estado abaixo e nos registros antigos marcavam esse mesmo estado.
@@ -345,12 +345,12 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 
 ---
 
-- [task-78: AI-native applications](tasks/task-78-ai-native-apps/README.md)
-- ADR 0077: [the person's composition and clipboard stay the person's](adr/interface/0077-the-persons-text-and-clipboard-stay-the-persons.md)
-- ADR 0074: [a renderer upgrade is proven by a full capture](adr/rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md)
-- ADR 0072: [local llm inference in process: candle or burn](adr/structure/0072-ai-native-single-process.md)
-- experiment: [candle against burn for local LLM inference in process, TinyLlama 1.1B](experiments/local-inference-candle-vs-burn/README.md)
-- learning: [Generative runtime session: what worked and what bit us](learnings/generative-runtime.md)
+- [task-78: AI-native applications](Tasks/task-78-ai-native-apps/task-78-ai-native-apps.md)
+- ADR 0077: [the person's composition and clipboard stay the person's](adr/Interface/0077-the-persons-text-and-clipboard-stay-the-persons/0077-the-persons-text-and-clipboard-stay-the-persons.md)
+- ADR 0074: [a renderer upgrade is proven by a full capture](adr/Rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md)
+- ADR 0072: [local llm inference in process: candle or burn](adr/Ecosystem/0072-ai-native-single-process/0072-ai-native-single-process.md)
+- experiment: [candle against burn for local LLM inference in process, TinyLlama 1.1B](Research/Exploring/local-inference-candle-vs-burn.md)
+- learning: [Generative runtime session: what worked and what bit us](adr/Synthesis/0070-generative-runtime-results/generative-runtime.md)
 
 ## 2026-09-25
 
@@ -557,30 +557,30 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
   written down from the locked source: macOS today; Windows and Linux
   when their target runs; no adapter yet on iOS and the web.
 
-- [task-18: android build & device test](tasks/task-18-android-device-test/README.md)
-- [task-19: ios simulator test](tasks/task-19-ios-simulator-test/README.md)
-- [task-20: WASM visual validation](tasks/task-20-wasm-visual-validation/README.md)
-- [task-39: scene cache, memoization + dirty flag bubbling](tasks/task-39-scene-cache-memoization/README.md)
-- [task-42: plev event dispatch + gitbutler UI port](tasks/task-42-plev-event-dispatch/README.md)
-- [task-64: session inspector, bug report and session for testing](tasks/task-64-session-inspector-and-tests/README.md)
-- [task-65: pixel to code and development inspector](tasks/task-65-pixel-to-source/README.md)
-- [task-70: adaptive transformations](tasks/task-70-adaptive-transformations/README.md)
-- [task-71: plev as compiler target (importers to IR)](tasks/task-71-compiler-target/README.md)
-- [task-72: UI asset compiler](tasks/task-72-ui-asset-compiler/README.md)
-- [task-74: text and editing](tasks/task-74-text-and-editing/README.md)
-- [task-75: production-ready platform accessibility](tasks/task-75-platform-accessibility/README.md)
-- [task-77: visual determinism](tasks/task-77-visual-determinism/README.md)
-- [task-79: scene over socket](tasks/task-79-scene-over-socket/README.md)
-- [task-80: proof of qualitatively different software](tasks/task-80-proof-qualitatively-different-software/README.md)
-- [task-96: a generated surface in the ide](tasks/task-96-ide-generated-surface/README.md)
-- [task-97: code and diff in the IR vocabulary](tasks/task-97-code-and-diff-in-the-ir/README.md)
-- ADR 0070: [generative runtime results](adr/generated/0070-generative-runtime-results.md)
-- ADR 0069: [importers target plev IR, with a report in four categories](adr/importing/0069-importers-target-plev-ir.md)
-- ADR 0068: [accessibility is production-ready per platform](adr/interface/0068-accessibility-is-production-ready-per-platform.md)
-- ADR 0075: [text moves by screen order and shapes by line](adr/interface/0075-text-moves-by-screen-order-and-shapes-by-line.md)
-- ADR 0076: [the keyboard walks the projection](adr/interface/0076-the-keyboard-walks-the-projection.md)
-- ADR 0071: [embed Noto Sans subsets for the non-Latin scripts](adr/rendering/0071-embedded-fonts-by-script.md)
-- experiment: [five demos of qualitatively different software, each with its method written before it ran](experiments/five-demos/README.md)
+- [task-18: android build & device test](Tasks/task-18-android-device-test/task-18-android-device-test.md)
+- [task-19: ios simulator test](Tasks/task-19-ios-simulator-test/task-19-ios-simulator-test.md)
+- [task-20: WASM visual validation](Tasks/task-20-wasm-visual-validation/task-20-wasm-visual-validation.md)
+- [task-39: scene cache, memoization + dirty flag bubbling](Tasks/task-39-scene-cache-memoization/task-39-scene-cache-memoization.md)
+- [task-42: plev event dispatch + gitbutler UI port](Tasks/task-42-plev-event-dispatch/task-42-plev-event-dispatch.md)
+- [task-64: session inspector, bug report and session for testing](Tasks/task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-65: pixel to code and development inspector](Tasks/task-65-pixel-to-source/task-65-pixel-to-source.md)
+- [task-70: adaptive transformations](Tasks/task-70-adaptive-transformations/task-70-adaptive-transformations.md)
+- [task-71: plev as compiler target (importers to IR)](Tasks/task-71-compiler-target/task-71-compiler-target.md)
+- [task-72: UI asset compiler](Tasks/task-72-ui-asset-compiler/task-72-ui-asset-compiler.md)
+- [task-74: text and editing](Tasks/task-74-text-and-editing/task-74-text-and-editing.md)
+- [task-75: production-ready platform accessibility](Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md)
+- [task-77: visual determinism](Tasks/task-77-visual-determinism/task-77-visual-determinism.md)
+- [task-79: scene over socket](Tasks/task-79-scene-over-socket/task-79-scene-over-socket.md)
+- [task-80: proof of qualitatively different software](Tasks/task-80-proof-qualitatively-different-software/task-80-proof-qualitatively-different-software.md)
+- [task-96: a generated surface in the ide](Tasks/task-96-ide-generated-surface/task-96-ide-generated-surface.md)
+- [task-97: code and diff in the IR vocabulary](Tasks/task-97-code-and-diff-in-the-ir/task-97-code-and-diff-in-the-ir.md)
+- ADR 0070: [generative runtime results](adr/Synthesis/0070-generative-runtime-results/0070-generative-runtime-results.md)
+- ADR 0069: [importers target plev IR, with a report in four categories](adr/Importing/0069-importers-target-plev-ir/0069-importers-target-plev-ir.md)
+- ADR 0068: [accessibility is production-ready per platform](adr/Interface/0068-accessibility-is-production-ready-per-platform/0068-accessibility-is-production-ready-per-platform.md)
+- ADR 0075: [text moves by screen order and shapes by line](adr/Interface/0075-text-moves-by-screen-order-and-shapes-by-line/0075-text-moves-by-screen-order-and-shapes-by-line.md)
+- ADR 0076: [the keyboard walks the projection](adr/Interface/0076-the-keyboard-walks-the-projection/0076-the-keyboard-walks-the-projection.md)
+- ADR 0071: [embed Noto Sans subsets for the non-Latin scripts](adr/Rendering/0071-embedded-fonts-by-script/0071-embedded-fonts-by-script.md)
+- experiment: [five demos of qualitatively different software, each with its method written before it ran](Research/Exploring/five-demos.md)
 
 ## 2026-09-24
 
@@ -967,38 +967,38 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
   stage revisions without observing; the report counts the protocol's
   refusals (`not_observed`, `unknown_revision`).
 
-- [task-63: session flight recorder](tasks/task-63-flight-recorder/README.md)
-- [task-69: ephemeral and generated surfaces](tasks/task-69-ephemeral-generative-surfaces/README.md)
-- [task-76: platform integration](tasks/task-76-platform-integration/README.md)
-- [task-88: the lab measures what the agent rested on](tasks/task-88-the-lab-measures-what-the-agent-rested-on/README.md)
-- [task-91: the dispatcher knows when the agent looked](tasks/task-91-the-dispatcher-knows-when-the-agent-looked/README.md)
-- [task-92: the agent asks the person](tasks/task-92-the-agent-asks-the-person/README.md)
-- [task-93: the person in the lab answers](tasks/task-93-the-lab-person-answers/README.md)
-- [task-94: the refusal that names a person points to the question](tasks/task-94-the-refusal-points-at-the-question/README.md)
-- [task-95: the todo projects its items as a list](tasks/task-95-the-todo-projects-its-items-as-a-list/README.md)
-- ADR 0049: [the plev IR is typed, references only declared capabilities, and runs only once verified](adr/generated/0049-plev-ir-typed-and-verified.md)
-- ADR 0051: [a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](adr/generated/0051-materialized-surfaces-from-verified-ir.md)
-- ADR 0052: [proposers propose, the runtime verifies](adr/generated/0052-proposers-propose-the-runtime-verifies.md)
-- ADR 0067: [adaptive transformations are small verified operations that preserve identity](adr/generated/0067-adaptive-transforms-preserve-identity.md)
-- ADR 0066: [ui asset compiler: an asset leaves the runtime on a measured number](adr/importing/0066-ui-asset-compiler.md)
-- ADR 0055: [file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person](adr/interface/0055-file-dialogs-and-drops-are-capabilities.md)
-- ADR 0057: [a native menu is another view of the app's capabilities](adr/interface/0057-native-menus-are-another-view-of-capabilities.md)
-- ADR 0058: [a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](adr/interface/0058-native-dialogs-answer-the-same-contract.md)
-- ADR 0059: [the tray and the notifications are capabilities out of the window](adr/interface/0059-tray-and-notifications-are-capabilities-out-of-the-window.md)
-- ADR 0062: [capture is a job the person turns on](adr/interface/0062-capture-is-a-job-the-person-turns-on.md)
-- ADR 0063: [a link is not a person](adr/interface/0063-a-link-is-not-a-person.md)
-- ADR 0050: [sessions become regression tests](adr/recording/0050-sessions-become-regression-tests.md)
-- ADR 0065: [the scene travels as data](adr/recording/0065-scene-travels-as-data.md)
-- ADR 0054: [a lost GPU device is recovered in place, and the next frame draws the same](adr/rendering/0054-gpu-device-loss-recovers-in-place.md)
-- ADR 0060: [a covered window does not draw, and wakes with a new frame](adr/rendering/0060-a-covered-window-does-not-draw-and-wakes-new.md)
-- ADR 0061: [printing is the frame on paper](adr/rendering/0061-printing-is-the-frame-on-paper.md)
-- ADR 0053: [the silences app is the fixed screen the generated one is compared against](adr/structure/0053-the-silences-app-is-the-fixed-screen.md)
-- ADR 0056: [a window is a host of what dies with it; the app owns the state](adr/structure/0056-windows-are-hosts-the-app-owns-the-state.md)
-- ADR 0048: [view source for pixels: a control leads to its projection, a text to its literal](adr/workflows/0048-view-source-for-pixels.md)
-- ADR 0064: [what identical means](adr/workflows/0064-what-identical-means.md)
-- experiment: [generated silences screen against the fixed screen, checkpoint b of task-69](experiments/generated-surface-checkpoint-b/README.md)
-- experiment: [text coverage per writing system, and the cost of large documents in the editor](experiments/text-coverage-and-large-documents/README.md)
-- experiment: [desktop gallery pages: same pixels across scales, themes and runs](experiments/visual-determinism-captures/README.md)
+- [task-63: session flight recorder](Tasks/task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-69: ephemeral and generated surfaces](Tasks/task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-76: platform integration](Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-88: the lab measures what the agent rested on](Tasks/task-88-the-lab-measures-what-the-agent-rested-on/task-88-the-lab-measures-what-the-agent-rested-on.md)
+- [task-91: the dispatcher knows when the agent looked](Tasks/task-91-the-dispatcher-knows-when-the-agent-looked/task-91-the-dispatcher-knows-when-the-agent-looked.md)
+- [task-92: the agent asks the person](Tasks/task-92-the-agent-asks-the-person/task-92-the-agent-asks-the-person.md)
+- [task-93: the person in the lab answers](Tasks/task-93-the-lab-person-answers/task-93-the-lab-person-answers.md)
+- [task-94: the refusal that names a person points to the question](Tasks/task-94-the-refusal-points-at-the-question/task-94-the-refusal-points-at-the-question.md)
+- [task-95: the todo projects its items as a list](Tasks/task-95-the-todo-projects-its-items-as-a-list/task-95-the-todo-projects-its-items-as-a-list.md)
+- ADR 0049: [the plev IR is typed, references only declared capabilities, and runs only once verified](adr/Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md)
+- ADR 0051: [a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)
+- ADR 0052: [proposers propose, the runtime verifies](adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md)
+- ADR 0067: [adaptive transformations are small verified operations that preserve identity](adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md)
+- ADR 0066: [ui asset compiler: an asset leaves the runtime on a measured number](adr/Importing/0066-ui-asset-compiler/0066-ui-asset-compiler.md)
+- ADR 0055: [file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person](adr/Interface/0055-file-dialogs-and-drops-are-capabilities/0055-file-dialogs-and-drops-are-capabilities.md)
+- ADR 0057: [a native menu is another view of the app's capabilities](adr/Interface/0057-native-menus-are-another-view-of-capabilities/0057-native-menus-are-another-view-of-capabilities.md)
+- ADR 0058: [a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](adr/Interface/0058-native-dialogs-answer-the-same-contract/0058-native-dialogs-answer-the-same-contract.md)
+- ADR 0059: [the tray and the notifications are capabilities out of the window](adr/Interface/0059-tray-and-notifications-are-capabilities-out-of-the-window/0059-tray-and-notifications-are-capabilities-out-of-the-window.md)
+- ADR 0062: [capture is a job the person turns on](adr/Interface/0062-capture-is-a-job-the-person-turns-on/0062-capture-is-a-job-the-person-turns-on.md)
+- ADR 0063: [a link is not a person](adr/Interface/0063-a-link-is-not-a-person/0063-a-link-is-not-a-person.md)
+- ADR 0050: [sessions become regression tests](adr/Recording/0050-sessions-become-regression-tests/0050-sessions-become-regression-tests.md)
+- ADR 0065: [the scene travels as data](adr/Recording/0065-scene-travels-as-data/0065-scene-travels-as-data.md)
+- ADR 0054: [a lost GPU device is recovered in place, and the next frame draws the same](adr/Rendering/0054-gpu-device-loss-recovers-in-place/0054-gpu-device-loss-recovers-in-place.md)
+- ADR 0060: [a covered window does not draw, and wakes with a new frame](adr/Rendering/0060-a-covered-window-does-not-draw-and-wakes-new/0060-a-covered-window-does-not-draw-and-wakes-new.md)
+- ADR 0061: [printing is the frame on paper](adr/Rendering/0061-printing-is-the-frame-on-paper/0061-printing-is-the-frame-on-paper.md)
+- ADR 0053: [the silences app is the fixed screen the generated one is compared against](adr/Structure/0053-the-silences-app-is-the-fixed-screen/0053-the-silences-app-is-the-fixed-screen.md)
+- ADR 0056: [a window is a host of what dies with it; the app owns the state](adr/Structure/0056-windows-are-hosts-the-app-owns-the-state/0056-windows-are-hosts-the-app-owns-the-state.md)
+- ADR 0048: [view source for pixels: a control leads to its projection, a text to its literal](adr/Workflows/0048-view-source-for-pixels/0048-view-source-for-pixels.md)
+- ADR 0064: [what identical means](adr/Workflows/0064-what-identical-means/0064-what-identical-means.md)
+- experiment: [generated silences screen against the fixed screen, checkpoint b of task-69](Research/Exploring/generated-surface-checkpoint-b.md)
+- experiment: [text coverage per writing system, and the cost of large documents in the editor](Research/Exploring/text-coverage-and-large-documents.md)
+- experiment: [desktop gallery pages: same pixels across scales, themes and runs](Research/Exploring/visual-determinism-captures.md)
 
 ## 2026-09-23
 
@@ -1228,7 +1228,7 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
   interactions through the window's frame path and prints the tables. the
   first finding: on an M4 the frame is bound by the GPU (0.45 to 2.2 ms of
   wait against 30 to 400 us of CPU), which reshapes the incremental work
-  ahead ([docs/log/steps/task-73-measurements.md](tasks/task-73-incremental-dependency-system/phase-1-measurements.md)).
+  ahead ([docs/log/steps/task-73-measurements.md](Tasks/task-73-incremental-dependency-system/phase-1-measurements.md)).
 
 - every interactive comps widget speaks the semantic contract (2026-09-23,
   task-59 phase b): chip, icon button, submit button, switch, slider,
@@ -1288,51 +1288,51 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
   engine or the apps uses it yet; task-58 adds preconditions and the
   dispatcher on top.
 
-- [task-57: semantic contract (crate `sem`)](tasks/task-57-semantic-contract/README.md)
-- [task-57b: lean JSON wire form and a single redaction](tasks/task-57b-lean-wire-form-and-one-redaction/README.md)
-- [task-58: action with precondition, dispatch and receipts](tasks/task-58-actions-preconditions-receipts/README.md)
-- [task-58b: declining a confirmation](tasks/task-58b-decline-a-confirmation/README.md)
-- [task-59: semantic binding with the render and one operational path](tasks/task-59-semantic-binding-and-one-path/README.md)
-- [task-60: accessibility as a projection of the contract](tasks/task-60-accessibility-projection/README.md)
-- [task-61: agent surface (local socket, observe, act)](tasks/task-61-agent-surface/README.md)
-- [task-62: proof in the ide: stale-state rejection and human-agent handoff](tasks/task-62-ide-human-agent-proof/README.md)
-- [task-66: headless as a first-class citizen](tasks/task-66-headless-first-class/README.md)
-- [task-66b: SVG export and `--semantics` in headless mode](tasks/task-66b-svg-export/README.md)
-- [task-67: structural regression before pixels](tasks/task-67-structural-regression/README.md)
-- [task-68: plev IR and verifier](tasks/task-68-plev-ir-and-verifier/README.md)
-- [task-73: incremental dependency system](tasks/task-73-incremental-dependency-system/README.md)
-- [task-81: scrolling panel for `Select`](tasks/task-81-select-scrolling-panel/README.md)
-- [task-82: the caret cannot request 60 frames per second](tasks/task-82-caret-blink-render-on-demand/README.md)
-- [task-83: the delta carries the node that was just added, and the refusal names who acted](tasks/task-83-delta-carries-node-refusal-names-actor/README.md)
-- [task-84: an old refresh does not undo what the ide has already accepted](tasks/task-84-ide-refresh-never-goes-back/README.md)
-- [task-85: the commit that the receipt announces is already in the projection, with the files](tasks/task-85-the-commit-a-receipt-announces-is-projected/README.md)
-- [task-86: the ide people use opens the agent port](tasks/task-86-the-ide-opens-the-agent-port/README.md)
-- [task-87: a terminal stage carries the revision the app was left in](tasks/task-87-a-terminal-stage-carries-the-revision/README.md)
-- [task-89: an act relies only on what was shown to the agent](tasks/task-89-an-act-rests-only-on-what-was-shown/README.md)
-- [task-90: a refusal names who acted since the agent looked](tasks/task-90-a-refusal-names-who-acted-since-the-look/README.md)
-- ADR 0038: [accessibility projects the semantic snapshot](adr/interface/0038-accessibility-projects-the-semantic-snapshot.md)
-- ADR 0037: [session recording: replay, not re-execution](adr/recording/0037-session-recording-replay-not-reexecution.md)
-- ADR 0046: [the inspector reads a session, it never runs it](adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md)
-- ADR 0034: [headless render shares the frame path](adr/rendering/0034-headless-render-shares-the-frame-path.md)
-- ADR 0041: [the svg export reads the scene, not the pixels](adr/rendering/0041-svg-export-reads-the-scene.md)
-- ADR 0042: [a tick asks for a deadline, not for every frame](adr/rendering/0042-a-tick-asks-for-a-deadline.md)
-- ADR 0032: [semantic contract as a pure projection of app state](adr/semantics/0032-semantic-contract-as-pure-projection.md)
-- ADR 0033: [actions carry the state their actor observed](adr/semantics/0033-actions-carry-observed-state.md)
-- ADR 0035: [semantic binding beside the scene, and the click as a request](adr/semantics/0035-semantic-binding-beside-the-scene.md)
-- ADR 0036: [a commit checks the index it observed](adr/semantics/0036-commit-checks-the-index-it-observed.md)
-- ADR 0039: [agents act through the semantic contract](adr/semantics/0039-agents-act-through-the-semantic-contract.md)
-- ADR 0040: [the semantic form is lean, and one rule redacts a secret](adr/semantics/0040-lean-semantic-form-and-one-redaction.md)
-- ADR 0043: [a delta carries the node it adds, and a stale refusal names who acted](adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md)
-- ADR 0044: [a terminal stage carries the revision the app is at](adr/semantics/0044-a-terminal-stage-carries-the-revision.md)
-- ADR 0047: [an act rests on what its actor was shown](adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md)
-- ADR 0045: [regression by meaning before pixels](adr/workflows/0045-regression-by-meaning-before-pixels.md)
-- ADR 0085: [integration into main is a pull request merged by merge commit](adr/workflows/0085-integration-by-merge-commit.md)
-- experiment: [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](experiments/agent-proof-checkpoint-a/README.md)
-- experiment: [caret blink as a deadline: frames drawn with a focused, idle field](experiments/caret-render-on-demand/README.md)
-- experiment: [what each stage of a frame costs in nine scenarios](experiments/frame-cost-by-stage/README.md)
-- program: [program: from GPU UI engine to generative interaction runtime](research/generative-runtime-program.md)
-- record: [autonomous cycle journal](research/autonomous-cycle-journal.md)
-- thesis: [plev: thesis of the generative interaction runtime](research/generative-runtime-thesis.md)
+- [task-57: semantic contract (crate `sem`)](Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
+- [task-57b: lean JSON wire form and a single redaction](Tasks/task-57b-lean-wire-form-and-one-redaction/task-57b-lean-wire-form-and-one-redaction.md)
+- [task-58: action with precondition, dispatch and receipts](Tasks/task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-58b: declining a confirmation](Tasks/task-58b-decline-a-confirmation/task-58b-decline-a-confirmation.md)
+- [task-59: semantic binding with the render and one operational path](Tasks/task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-60: accessibility as a projection of the contract](Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-61: agent surface (local socket, observe, act)](Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-66: headless as a first-class citizen](Tasks/task-66-headless-first-class/task-66-headless-first-class.md)
+- [task-66b: SVG export and `--semantics` in headless mode](Tasks/task-66b-svg-export/task-66b-svg-export.md)
+- [task-67: structural regression before pixels](Tasks/task-67-structural-regression/task-67-structural-regression.md)
+- [task-68: plev IR and verifier](Tasks/task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-73: incremental dependency system](Tasks/task-73-incremental-dependency-system/task-73-incremental-dependency-system.md)
+- [task-81: scrolling panel for `Select`](Tasks/task-81-select-scrolling-panel/task-81-select-scrolling-panel.md)
+- [task-82: the caret cannot request 60 frames per second](Tasks/task-82-caret-blink-render-on-demand/task-82-caret-blink-render-on-demand.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](Tasks/task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)
+- [task-84: an old refresh does not undo what the ide has already accepted](Tasks/task-84-ide-refresh-never-goes-back/task-84-ide-refresh-never-goes-back.md)
+- [task-85: the commit that the receipt announces is already in the projection, with the files](Tasks/task-85-the-commit-a-receipt-announces-is-projected/task-85-the-commit-a-receipt-announces-is-projected.md)
+- [task-86: the ide people use opens the agent port](Tasks/task-86-the-ide-opens-the-agent-port/task-86-the-ide-opens-the-agent-port.md)
+- [task-87: a terminal stage carries the revision the app was left in](Tasks/task-87-a-terminal-stage-carries-the-revision/task-87-a-terminal-stage-carries-the-revision.md)
+- [task-89: an act relies only on what was shown to the agent](Tasks/task-89-an-act-rests-only-on-what-was-shown/task-89-an-act-rests-only-on-what-was-shown.md)
+- [task-90: a refusal names who acted since the agent looked](Tasks/task-90-a-refusal-names-who-acted-since-the-look/task-90-a-refusal-names-who-acted-since-the-look.md)
+- ADR 0038: [accessibility projects the semantic snapshot](adr/Interface/0038-accessibility-projects-the-semantic-snapshot/0038-accessibility-projects-the-semantic-snapshot.md)
+- ADR 0037: [session recording: replay, not re-execution](adr/Recording/0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md)
+- ADR 0046: [the inspector reads a session, it never runs it](adr/Recording/0046-the-inspector-reads-a-session-never-runs-it/0046-the-inspector-reads-a-session-never-runs-it.md)
+- ADR 0034: [headless render shares the frame path](adr/Rendering/0034-headless-render-shares-the-frame-path/0034-headless-render-shares-the-frame-path.md)
+- ADR 0041: [the svg export reads the scene, not the pixels](adr/Rendering/0041-svg-export-reads-the-scene/0041-svg-export-reads-the-scene.md)
+- ADR 0042: [a tick asks for a deadline, not for every frame](adr/Rendering/0042-a-tick-asks-for-a-deadline/0042-a-tick-asks-for-a-deadline.md)
+- ADR 0032: [semantic contract as a pure projection of app state](adr/Semantics/0032-semantic-contract-as-pure-projection/0032-semantic-contract-as-pure-projection.md)
+- ADR 0033: [actions carry the state their actor observed](adr/Semantics/0033-actions-carry-observed-state/0033-actions-carry-observed-state.md)
+- ADR 0035: [semantic binding beside the scene, and the click as a request](adr/Semantics/0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md)
+- ADR 0036: [a commit checks the index it observed](adr/Semantics/0036-commit-checks-the-index-it-observed/0036-commit-checks-the-index-it-observed.md)
+- ADR 0039: [agents act through the semantic contract](adr/Semantics/0039-agents-act-through-the-semantic-contract/0039-agents-act-through-the-semantic-contract.md)
+- ADR 0040: [the semantic form is lean, and one rule redacts a secret](adr/Semantics/0040-lean-semantic-form-and-one-redaction/0040-lean-semantic-form-and-one-redaction.md)
+- ADR 0043: [a delta carries the node it adds, and a stale refusal names who acted](adr/Semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md)
+- ADR 0044: [a terminal stage carries the revision the app is at](adr/Semantics/0044-a-terminal-stage-carries-the-revision/0044-a-terminal-stage-carries-the-revision.md)
+- ADR 0047: [an act rests on what its actor was shown](adr/Semantics/0047-an-act-rests-on-what-its-actor-was-shown/0047-an-act-rests-on-what-its-actor-was-shown.md)
+- ADR 0045: [regression by meaning before pixels](adr/Workflows/0045-regression-by-meaning-before-pixels/0045-regression-by-meaning-before-pixels.md)
+- ADR 0085: [integration into main is a pull request merged by merge commit](adr/Workflows/0085-integration-by-merge-commit/0085-integration-by-merge-commit.md)
+- experiment: [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](Research/Exploring/agent-proof-checkpoint-a.md)
+- experiment: [caret blink as a deadline: frames drawn with a focused, idle field](Research/Exploring/caret-render-on-demand.md)
+- experiment: [what each stage of a frame costs in nine scenarios](Research/Exploring/frame-cost-by-stage.md)
+- program: [program: from GPU UI engine to generative interaction runtime](Research/Synthesis/generative-runtime-program.md)
+- record: [autonomous cycle journal](Research/Workflows/autonomous-cycle-journal.md)
+- thesis: [plev: thesis of the generative interaction runtime](Research/Synthesis/generative-runtime-thesis.md)
 
 ## 2026-09-22
 
@@ -1353,9 +1353,9 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
   (`cargo build -p $CARGO_PKG_NAME --bin`) and re-execs the running
   binary. `cargo run -p uigallery` alone is the dev loop.
 
-- [task-56: hot reload](tasks/task-56-hot-reload/README.md)
-- ADR 0031: [hot reload on by default: shaders and literals in place, code by rebuild](adr/workflows/0031-hot-reload-on-by-default-in-gpu-context.md)
-- learning: [hot reload session: what worked and what bit us](learnings/hot-reload.md)
+- [task-56: hot reload](Tasks/task-56-hot-reload/task-56-hot-reload.md)
+- ADR 0031: [hot reload on by default: shaders and literals in place, code by rebuild](adr/Workflows/0031-hot-reload-on-by-default-in-gpu-context/0031-hot-reload-on-by-default-in-gpu-context.md)
+- learning: [hot reload session: what worked and what bit us](adr/Workflows/0031-hot-reload-on-by-default-in-gpu-context/hot-reload.md)
 
 ## 2026-09-21
 
@@ -1388,18 +1388,18 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
   lines; nav link hover is text-only; the sidebar band fades where it
   still has links.
 
-- [task-53: editor and git in the showcase](tasks/task-53-editor-and-git-in-the-showcase/README.md)
-- [task-54: core theme, buttons poc](tasks/task-54-core-theme-buttons-poc/README.md)
-- [task-55: showcase, one page per component](tasks/task-55-showcase-one-page-per-component/README.md)
-- ADR 0028: [core theme: the tailwind class lists as button recipes](adr/rendering/0028-core-theme-tailwind-classes-as-recipes.md)
-- ADR 0029: [embed an app view by giving it a frame origin](adr/rendering/0029-embed-an-app-view-by-frame-origin.md)
-- ADR 0030: [showcase: one page per component, the sidebar as a folding tree](adr/structure/0030-showcase-one-page-per-component.md)
-- learning: [core buttons session: what worked and what bit us](learnings/core-buttons.md)
-- learning: [showcase pages session: what worked and what bit us](learnings/showcase-pages.md)
+- [task-53: editor and git in the showcase](Tasks/task-53-editor-and-git-in-the-showcase/task-53-editor-and-git-in-the-showcase.md)
+- [task-54: core theme, buttons poc](Tasks/task-54-core-theme-buttons-poc/task-54-core-theme-buttons-poc.md)
+- [task-55: showcase, one page per component](Tasks/task-55-showcase-one-page-per-component/task-55-showcase-one-page-per-component.md)
+- ADR 0028: [core theme: the tailwind class lists as button recipes](adr/Rendering/0028-core-theme-tailwind-classes-as-recipes/0028-core-theme-tailwind-classes-as-recipes.md)
+- ADR 0029: [embed an app view by giving it a frame origin](adr/Rendering/0029-embed-an-app-view-by-frame-origin/0029-embed-an-app-view-by-frame-origin.md)
+- ADR 0030: [showcase: one page per component, the sidebar as a folding tree](adr/Structure/0030-showcase-one-page-per-component/0030-showcase-one-page-per-component.md)
+- learning: [core buttons session: what worked and what bit us](adr/Rendering/0028-core-theme-tailwind-classes-as-recipes/core-buttons.md)
+- learning: [showcase pages session: what worked and what bit us](adr/Structure/0030-showcase-one-page-per-component/showcase-pages.md)
 
 ## 2026-09-19
 
-- learning: [comps session: what worked and what bit us](learnings/comps.md)
+- learning: [comps session: what worked and what bit us](adr/Structure/0027-comps-one-design-system-crate/comps.md)
 
 ## 2026-09-18
 
@@ -1430,7 +1430,7 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
   `TextMeasurer::elide_path` came from the ide (and now drops several
   middle segments, the old helper dropped one). matrix test: every widget
   under 13 themes at phone and desktop widths. inventory and migration
-  record: [docs/ref/component-catalog.md](ref/architecture/component-catalog.md). workspace tests 855 -> 1414.
+  record: [docs/ref/component-catalog.md](Research/Structure/component-catalog.md). workspace tests 855 -> 1414.
 
 - urnaui, the .urna explorer (2026-09-18): nestui renamed to urnaui end to
   end (crate, modules, types, apps/urnadbapp/web, tool/tasks/webtarget.sh urnadbapp, gate, ci)
@@ -1460,10 +1460,10 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
   and the README point at it. content unchanged except nest/nestui ->
   urna/urnaui, which is the rename in flight on this branch.
 
-- ADR 0025: [urnaui: decode media frames in place with ffmpeg's subfile protocol](adr/importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md)
-- ADR 0026: [background results wake the event loop; child pipes drain from the start](adr/rendering/0026-worker-results-wake-the-event-loop.md)
-- ADR 0027: [comps: one design system crate, every value a token](adr/structure/0027-comps-one-design-system-crate.md)
-- reference: [ui component catalog](ref/architecture/component-catalog.md)
+- ADR 0025: [urnaui: decode media frames in place with ffmpeg's subfile protocol](adr/Importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md)
+- ADR 0026: [background results wake the event loop; child pipes drain from the start](adr/Rendering/0026-worker-results-wake-the-event-loop/0026-worker-results-wake-the-event-loop.md)
+- ADR 0027: [comps: one design system crate, every value a token](adr/Structure/0027-comps-one-design-system-crate/0027-comps-one-design-system-crate.md)
+- reference: [ui component catalog](Research/Structure/component-catalog.md)
 
 ## 2026-08-31
 
@@ -1476,17 +1476,17 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
   set_raster_scale is #[must_use]; LRU capacity drops return their
   rectangles; empty glyphs carry alloc_id None; headless pixel validation
   via engine::text::probe (incl. multi-frame render_frames). see
-  [docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md](adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md)
+  [docs/adr/Rendering/0024-glyph-raster-identity-and-atlas-isolation/0024-glyph-raster-identity-and-atlas-isolation.md](adr/Rendering/0024-glyph-raster-identity-and-atlas-isolation/0024-glyph-raster-identity-and-atlas-isolation.md)
 
 - jetbrains mono removed (2026-08-31): inclusive sans is the single
   embedded family; ~550kb less embedded font data, monospace pinned to it
   as well since no mono face ships.
 
-- ADR 0024: [glyph raster identity and atlas isolation](adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md)
+- ADR 0024: [glyph raster identity and atlas isolation](adr/Rendering/0024-glyph-raster-identity-and-atlas-isolation/0024-glyph-raster-identity-and-atlas-isolation.md)
 
 ## 2026-08-30
 
-- ADR 0023: [official app pattern: state in structs, retained widgets, explicit invalidation](adr/structure/0023-official-app-pattern.md)
+- ADR 0023: [official app pattern: state in structs, retained widgets, explicit invalidation](adr/Structure/0023-official-app-pattern/0023-official-app-pattern.md)
 
 ## 2026-08
 
@@ -1504,17 +1504,17 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 
 ## 2026-07-13
 
-- ADR 0022: [one knowledge tree, and a minimal root](adr/structure/0022-one-knowledge-tree-and-a-minimal-root.md)
+- ADR 0022: [one knowledge tree, and a minimal root](adr/Structure/0022-one-knowledge-tree-and-a-minimal-root/0022-one-knowledge-tree-and-a-minimal-root.md)
 
 ## 2026-06-12
 
-- research: [mon experiment](research/mon-experiment-notes.md)
+- research: [mon experiment](Research/Importing/mon-experiment-notes.md)
 
 ## 2026-06-10
 
-- learning: [why the apps bypassed the engine, and what that costs](learnings/apps-bypass-the-engine.md)
-- learning: [the two gamma bugs: one assumption, two opposite failures](learnings/the-two-gamma-bugs.md)
-- reference: [hoff visual tokens (measured)](ref/architecture/hoff-visual-tokens.md)
+- learning: [why the apps bypassed the engine, and what that costs](adr/Rendering/0002-content-driven-layout-not-fixed-constants/apps-bypass-the-engine.md)
+- learning: [the two gamma bugs: one assumption, two opposite failures](adr/Rendering/0004-linearize-colors-before-the-gpu/the-two-gamma-bugs.md)
+- reference: [hoff visual tokens (measured)](Research/Rendering/hoff-visual-tokens.md)
 
 ## 2026-06 to 2026-08, entries without a day
 
@@ -1539,7 +1539,7 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 - one knowledge tree: kdb/ renamed to docs/ and the arc trio moved into
   it (docs/, from doc/arc/); doc/ was retired (its changelog copy
   was the stale duplicate of this file). the mon working note left the
-  root for [docs/ref/mon-experiment-notes.md](research/mon-experiment-notes.md). web/ owns
+  root for [docs/ref/mon-experiment-notes.md](Research/Importing/mon-experiment-notes.md). web/ owns
   the web target end to end (Trunk.toml, index.html, dist output) and
   script/ owns the commands (gate, web). the arc sync guard, the
   instruction source (.contracts/.agents/AGENTS.md, the only
@@ -1618,75 +1618,75 @@ no estado abaixo e nos registros antigos marcavam esse mesmo estado.
 
 ## 2026-05-11
 
-- [task-48: ide, native git client in plev](tasks/task-48-ide-git-client/README.md)
+- [task-48: ide, native git client in plev](Tasks/task-48-ide-git-client/task-48-ide-git-client.md)
 
 ## 2026-04-08
 
-- [task-47: git, backend for plev apps](tasks/task-47-git-backend/README.md)
+- [task-47: git, backend for plev apps](Tasks/task-47-git-backend/task-47-git-backend.md)
 
 ## 2026-04-01
 
-- ADR 0020: [git backend: gix for reads, git CLI for mutations, a worker thread for the UI](adr/structure/0020-git-backend-gix-reads-cli-mutations.md)
+- ADR 0020: [git backend: gix for reads, git CLI for mutations, a worker thread for the UI](adr/Ecosystem/0020-git-backend-gix-reads-cli-mutations/0020-git-backend-gix-reads-cli-mutations.md)
 
 ## 2026-03-11
 
-- experiment: [benchmark results, plev v0.2](experiments/benchmarks-v02/README.md)
+- experiment: [benchmark results, plev v0.2](Research/Exploring/benchmarks-v02.md)
 
 ## 2026-03-10
 
-- [task-46: rope, text editing core](tasks/task-46-rope-editing-core/README.md)
+- [task-46: rope, text editing core](Tasks/task-46-rope-editing-core/task-46-rope-editing-core.md)
 
 ## 2026-03-04
 
-- ADR 0021: [the text editing core follows helix: document is rope plus selections plus history](adr/interface/0021-text-editing-core-follows-helix.md)
+- ADR 0021: [the text editing core follows helix: document is rope plus selections plus history](adr/Interface/0021-text-editing-core-follows-helix/0021-text-editing-core-follows-helix.md)
 
 ## 2026-02-16
 
-- [task-51: workspace restructure and naming rebrand](tasks/task-51-workspace-restructure/README.md)
+- [task-51: workspace restructure and naming rebrand](Tasks/task-51-workspace-restructure/task-51-workspace-restructure.md)
 
 ## 2025-11-14
 
-- [task-50: multiplatform showcase as a lib (desktop/web/android/ios)](tasks/task-50-showcase-multiplatform/README.md)
+- [task-50: multiplatform showcase as a lib (desktop/web/android/ios)](Tasks/task-50-showcase-multiplatform/task-50-showcase-multiplatform.md)
 
 ## 2025-10-01
 
-- [task-49: prime number creatures, port of entropic life](tasks/task-49-prime-creatures/README.md)
+- [task-49: prime number creatures, port of entropic life](Tasks/task-49-prime-creatures/task-49-prime-creatures.md)
 
 ## 2025-09-24
 
-- ADR 0014: [motion trails come from position history, not framebuffer accumulation](adr/rendering/0014-motion-trails-by-position-history.md)
+- ADR 0014: [motion trails come from position history, not framebuffer accumulation](adr/Rendering/0014-motion-trails-by-position-history/0014-motion-trails-by-position-history.md)
 
 ## 2025-08-18
 
-- ADR 0013: [engine at root, libraries and apps in crates, demos in examples](adr/structure/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md)
+- ADR 0013: [engine at root, libraries and apps in crates, demos in examples](adr/Structure/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md)
 
 ## 2025-07-16
 
-- [task-45: parser, transpiler poc (react/gpui to builder)](tasks/task-45-parser-transpiler/README.md)
+- [task-45: parser, transpiler poc (react/gpui to builder)](Tasks/task-45-parser-transpiler/task-45-parser-transpiler.md)
 
 ## 2025-07-08
 
-- ADR 0012: [the transpiler reports every unmapped construct, never drops silently](adr/importing/0012-transpiler-reports-every-unmapped-construct.md)
+- ADR 0012: [the transpiler reports every unmapped construct, never drops silently](adr/Importing/0012-transpiler-reports-every-unmapped-construct/0012-transpiler-reports-every-unmapped-construct.md)
 
 ## 2025-06-17
 
-- [task-44: lot, lottie importer and bridge to .monster](tasks/task-44-lot-lottie-importer/README.md)
+- [task-44: lot, lottie importer and bridge to .monster](Tasks/task-44-lot-lottie-importer/task-44-lot-lottie-importer.md)
 
 ## 2025-06-10
 
-- ADR 0011: [import foreign formats by conversion, never by embedding a foreign runtime](adr/importing/0011-import-foreign-formats-by-conversion-not-embedding.md)
+- ADR 0011: [import foreign formats by conversion, never by embedding a foreign runtime](adr/Importing/0011-import-foreign-formats-by-conversion-not-embedding/0011-import-foreign-formats-by-conversion-not-embedding.md)
 
 ## 2025-05-21
 
-- [task-43: monster, binary animation codec v0](tasks/task-43-monster-codec/README.md)
+- [task-43: monster, binary animation codec v0](Tasks/task-43-monster-codec/task-43-monster-codec.md)
 
 ## 2025-05-14
 
-- ADR 0010: [the monster animation format: keyframes plus discovered deltas](adr/importing/0010-binary-animation-format-with-discovered-deltas.md)
+- ADR 0010: [the monster animation format: keyframes plus discovered deltas](adr/Importing/0010-binary-animation-format-with-discovered-deltas/0010-binary-animation-format-with-discovered-deltas.md)
 
 ## 2025-03-26
 
-- reference: [monster format v0 specification](ref/architecture/monster-format-v0.md)
+- reference: [monster format v0 specification](Research/Importing/monster-format-v0.md)
 
 ## 2025-02-19
 
@@ -1782,319 +1782,350 @@ prerequisites already satisfied.
 
 ## 2025-02-10
 
-- ADR 0001: [async GPU initialization and one wasm entry point per module](adr/rendering/0001-async-gpu-init-and-single-wasm-entry.md)
+- ADR 0001: [async GPU initialization and one wasm entry point per module](adr/Rendering/0001-async-gpu-init-and-single-wasm-entry/0001-async-gpu-init-and-single-wasm-entry.md)
 
 ## 2025-01-27
 
-- ADR 0009: [touch input synthesizes pointer events into the existing mouse path](adr/interface/0009-touch-as-synthesized-pointer-events.md)
+- ADR 0009: [touch input synthesizes pointer events into the existing mouse path](adr/Interface/0009-touch-as-synthesized-pointer-events/0009-touch-as-synthesized-pointer-events.md)
 
 ## 2025-01-08
 
-- ADR 0003: [embed every font weight the UI uses, and pin the default families](adr/rendering/0003-embed-every-font-weight-in-use.md)
+- ADR 0003: [embed every font weight the UI uses, and pin the default families](adr/Rendering/0003-embed-every-font-weight-in-use/0003-embed-every-font-weight-in-use.md)
 
 ## 2024-12-19
 
-- ADR 0005: [design tokens come from measurement of the live reference, not from eyes or static CSS](adr/rendering/0005-measured-design-tokens-over-eyeballed-values.md)
+- ADR 0005: [design tokens come from measurement of the live reference, not from eyes or static CSS](adr/Rendering/0005-measured-design-tokens-over-eyeballed-values/0005-measured-design-tokens-over-eyeballed-values.md)
 
 ## 2024-12-04
 
-- ADR 0007: [render into an sRGB view when the surface format cannot be sRGB](adr/rendering/0007-render-into-an-srgb-view-format.md)
+- ADR 0007: [render into an sRGB view when the surface format cannot be sRGB](adr/Rendering/0007-render-into-an-srgb-view-format/0007-render-into-an-srgb-view-format.md)
 
 ## 2024-11-20
 
-- ADR 0004: [linearize colors before they reach the GPU](adr/rendering/0004-linearize-colors-before-the-gpu.md)
+- ADR 0004: [linearize colors before they reach the GPU](adr/Rendering/0004-linearize-colors-before-the-gpu/0004-linearize-colors-before-the-gpu.md)
 
 ## 2024-10-29
 
-- ADR 0006: [one TextStyle per text run, shared by measurement and drawing](adr/rendering/0006-one-text-style-for-measurement-and-drawing.md)
+- ADR 0006: [one TextStyle per text run, shared by measurement and drawing](adr/Rendering/0006-one-text-style-for-measurement-and-drawing/0006-one-text-style-for-measurement-and-drawing.md)
 
 ## 2024-10-07
 
-- ADR 0008: [render on demand makes invalidation a correctness contract](adr/rendering/0008-render-on-demand-requires-explicit-invalidation.md)
+- ADR 0008: [render on demand makes invalidation a correctness contract](adr/Rendering/0008-render-on-demand-requires-explicit-invalidation/0008-render-on-demand-requires-explicit-invalidation.md)
 
 ## 2024-09-18
 
-- ADR 0002: [container geometry derives from available space, never from constants](adr/rendering/0002-content-driven-layout-not-fixed-constants.md)
+- ADR 0002: [container geometry derives from available space, never from constants](adr/Rendering/0002-content-driven-layout-not-fixed-constants/0002-content-driven-layout-not-fixed-constants.md)
 
 ## 2024-07-09
 
-- reference: [resolving 107 clippy warnings to zero](ref/architecture/clippy-zero-warnings.md)
+- reference: [resolving 107 clippy warnings to zero](Research/Workflows/clippy-zero-warnings.md)
 
 ## 2024-06-17
 
-- ADR 0016: [adr-004: adotamos projecao ortografica em logical pixels para apps hidpi](adr/rendering/0016-hidpi-projection.md)
+- ADR 0016: [adr-004: adotamos projecao ortografica em logical pixels para apps hidpi](adr/Rendering/0016-hidpi-projection/0016-hidpi-projection.md)
 
 ## 2024-05-29
 
-- [task-52: modularization by single responsibility principle](tasks/task-52-srp-modularization/README.md)
+- [task-52: modularization by single responsibility principle](Tasks/task-52-srp-modularization/task-52-srp-modularization.md)
 
 ## 2024-05-23
 
-- reference: [SRP modularization with a 300-line limit](ref/architecture/srp-modularization.md)
+- reference: [SRP modularization with a 300-line limit](Research/Structure/srp-modularization.md)
 
 ## 2024-05-21
 
-- ADR 0015: [adr-003: modularizacao por single responsibility principle](adr/structure/0015-srp-modularization.md)
+- ADR 0015: [adr-003: modularizacao por single responsibility principle](adr/Structure/0015-srp-modularization/0015-srp-modularization.md)
 
 ## 2024-04-14
 
-- ADR 0017: [adotamos pleverror como tipo de erro unificado e eliminamos debt de lint](adr/workflows/0017-error-handling-lint-cleanup.md)
+- ADR 0017: [adotamos pleverror como tipo de erro unificado e eliminamos debt de lint](adr/Workflows/0017-error-handling-lint-cleanup/0017-error-handling-lint-cleanup.md)
 
 ## 2024-02-18
 
-- ADR 0018: [adotamos runtime parser + override map para hot reload de plev_narrate! DSL](adr/workflows/0018-narrate-hot-reload.md)
+- ADR 0018: [adotamos runtime parser + override map para hot reload de plev_narrate! DSL](adr/Workflows/0018-narrate-hot-reload/0018-narrate-hot-reload.md)
 
 ## 2024-02-06
 
-- ADR 0019: [adotamos shader hot reload via notify file watcher sobre dylib reloading](adr/workflows/0019-shader-hot-reload.md)
+- ADR 0019: [adotamos shader hot reload via notify file watcher sobre dylib reloading](adr/Workflows/0019-shader-hot-reload/0019-shader-hot-reload.md)
 
 ## 2024-01-22
 
-- reference: [hot reload design - plev](ref/architecture/hot-reload-design.md)
+- reference: [hot reload design - plev](Research/Workflows/hot-reload-design.md)
 
 ## 2023-12-14
 
-- [task-41: license + preparation for public release](tasks/task-41-license-and-public-release/README.md)
+- [task-41: license + preparation for public release](Tasks/task-41-license-and-public-release/task-41-license-and-public-release.md)
 
 ## 2023-11-09
 
-- [task-38: event batching](tasks/task-38-event-batching/README.md)
+- [task-38: event batching](Tasks/task-38-event-batching/task-38-event-batching.md)
 
 ## 2023-10-02
 
-- [task-37: animation enhancements](tasks/task-37-animation-enhancements/README.md)
+- [task-37: animation enhancements](Tasks/task-37-animation-enhancements/task-37-animation-enhancements.md)
 
 ## 2023-08-28
 
-- [task-36: signal system hardening](tasks/task-36-signal-hardening/README.md)
+- [task-36: signal system hardening](Tasks/task-36-signal-hardening/task-36-signal-hardening.md)
 
 ## 2023-07-23
 
-- [task-35: fix spring<t>, analytical solver](tasks/task-35-spring-analytical-solver/README.md)
+- [task-35: fix spring<t>, analytical solver](Tasks/task-35-spring-analytical-solver/task-35-spring-analytical-solver.md)
 
 ## 2023-07-11
 
-- [task-33: WASM plugin architecture](tasks/task-33-wasm-plugins/README.md)
+- [task-33: WASM plugin architecture](Tasks/task-33-wasm-plugins/task-33-wasm-plugins.md)
 
 ## 2023-07-05
 
-- research: [WASM plugin architecture - research doc](research/wasm-plugin-architecture.md)
+- research: [WASM plugin architecture - research doc](Research/Structure/wasm-plugin-architecture.md)
 
 ## 2023-06-25
 
-- [task-32: text system upgrade assessment](tasks/task-32-text-upgrade-assessment/README.md)
+- [task-32: text system upgrade assessment](Tasks/task-32-text-upgrade-assessment/task-32-text-upgrade-assessment.md)
 
 ## 2023-06-20
 
-- research: [parley vs cosmic-text - factual comparison for plev](research/parley-vs-cosmic-text.md)
+- research: [parley vs cosmic-text - factual comparison for plev](Research/Rendering/parley-vs-cosmic-text.md)
 
 ## 2023-06-12
 
-- [task-31: vector path rendering (lyon integration)](tasks/task-31-vector-paths/README.md)
+- [task-31: vector path rendering (lyon integration)](Tasks/task-31-vector-paths/task-31-vector-paths.md)
 
 ## 2023-05-02
 
-- [task-30: accessibility (accesskit)](tasks/task-30-accessibility/README.md)
+- [task-30: accessibility (accesskit)](Tasks/task-30-accessibility/task-30-accessibility.md)
 
 ## 2023-04-12
 
-- [task-34: exploration and extraction of ideas from the reference repos](tasks/task-34-exploration-extraction/README.md)
-- research: [task-34 extraction: phase e (WASM runtime) + phase f (competitors)](research/extraction-fase-ef.md)
-- research: [pattern extraction: parley, lyon, glam-rs](research/pattern-extraction-parley-lyon-glam.md)
-- research: [pattern extraction: tui apps (yazi, television, bottom)](research/pattern-extraction-tui-apps.md)
+- [task-34: exploration and extraction of ideas from the reference repos](Tasks/task-34-exploration-extraction/task-34-exploration-extraction.md)
+- research: [task-34 extraction: phase e (WASM runtime) + phase f (competitors)](Research/Ecosystem/extraction-fase-ef.md)
+- research: [pattern extraction: parley, lyon, glam-rs](Research/Rendering/pattern-extraction-parley-lyon-glam.md)
+- research: [pattern extraction: tui apps (yazi, television, bottom)](Research/Interface/pattern-extraction-tui-apps.md)
 
 ## 2023-04-06
 
-- research: [extracted patterns, 56 reference repos](research/extracted-patterns.md)
+- research: [extracted patterns, 56 reference repos](Research/Ecosystem/extracted-patterns.md)
 
 ## 2023-03-22
 
-- [task-29: app demo real (proof of life)](tasks/task-29-app-demo-real/README.md)
+- [task-29: app demo real (proof of life)](Tasks/task-29-app-demo-real/task-29-app-demo-real.md)
 
 ## 2023-01-25
 
-- [task-28: editable text](tasks/task-28-editable-text/README.md)
+- [task-28: editable text](Tasks/task-28-editable-text/task-28-editable-text.md)
 
 ## 2022-12-21
 
-- [task-27: animation system](tasks/task-27-animation-system/README.md)
+- [task-27: animation system](Tasks/task-27-animation-system/task-27-animation-system.md)
 
 ## 2022-12-10
 
-- research: [technical report: plev vs makepad](research/plev-vs-makepad-report.md)
+- research: [technical report: plev vs makepad](Research/Ecosystem/plev-vs-makepad-report.md)
 
 ## 2022-11-19
 
-- research: [makepad visual feature inventory vs plev gap analysis](research/makepad-gap-analysis.md)
+- research: [makepad visual feature inventory vs plev gap analysis](Research/Ecosystem/makepad-gap-analysis.md)
 
 ## 2022-10-27
 
-- reference: [touch & gesture recognition design](ref/architecture/touch-gesture-design.md)
+- reference: [touch & gesture recognition design](Research/Interface/touch-gesture-design.md)
 
 ## 2022-10-21
 
-- research: [competitors by tier](research/competitors-by-tier.md)
+- research: [competitors by tier](Research/Ecosystem/competitors-by-tier.md)
 
 ## 2022-06-15
 
-- [task-ref: research briefing (50+ repos)](tasks/task-ref-research-briefing/README.md)
-- research: [reference analysis: accessibility (accesskit)](research/accessibility.md)
-- research: [reference analysis: animation and motion](research/animation-motion.md)
-- research: [reference analysis: charts and visualization](research/charts-visualization.md)
-- research: [competitive positioning, plev](research/competitive-positioning.md)
-- research: [competitor analysis, gui/rendering frameworks](research/competitors.md)
-- research: [reference analysis: emulators and WASM runtimes](research/emulators-wasm-runtimes.md)
-- research: [integration candidates, ranking](research/integration-candidates.md)
-- research: [linebender ecosystem, analysis for plev](research/linebender-ecosystem.md)
-- research: [reference analysis: math, physics and geometry](research/math-physics-geometry.md)
-- research: [technology radar, plev](research/technology-radar.md)
-- research: [reference analysis: tui patterns](research/tui-patterns.md)
-- research: [reference analysis: WASM tooling ecosystem](research/wasm-tooling.md)
+- [task-ref: research briefing (50+ repos)](Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- research: [reference analysis: accessibility (accesskit)](Research/Interface/accessibility.md)
+- research: [reference analysis: animation and motion](Research/Rendering/animation-motion.md)
+- research: [reference analysis: charts and visualization](Research/Rendering/charts-visualization.md)
+- research: [competitive positioning, plev](Research/Ecosystem/competitive-positioning.md)
+- research: [competitor analysis, gui/rendering frameworks](Research/Ecosystem/competitors.md)
+- research: [reference analysis: emulators and WASM runtimes](Research/Ecosystem/emulators-wasm-runtimes.md)
+- research: [integration candidates, ranking](Research/Ecosystem/integration-candidates.md)
+- research: [linebender ecosystem, analysis for plev](Research/Ecosystem/linebender-ecosystem.md)
+- research: [reference analysis: math, physics and geometry](Research/Rendering/math-physics-geometry.md)
+- research: [technology radar, plev](Research/Ecosystem/technology-radar.md)
+- research: [reference analysis: tui patterns](Research/Interface/tui-patterns.md)
+- research: [reference analysis: WASM tooling ecosystem](Research/Ecosystem/wasm-tooling.md)
 
 ## 2022-05-03
 
-- [task-25: benchmarks](tasks/task-25-benchmarks/README.md)
+- [task-25: benchmarks](Tasks/task-25-benchmarks/task-25-benchmarks.md)
 
 ## 2022-02-24
 
-- reference: [animation pattern, frame-based exponential lerp](ref/architecture/animation-pattern-lerp.md)
+- reference: [animation pattern, frame-based exponential lerp](Research/Rendering/animation-pattern-lerp.md)
 
 ## 2022-01-19
 
-- reference: [android emulator deploy](ref/platforms/android-emulator-deploy.md)
+- reference: [android emulator deploy](Research/Workflows/android-emulator-deploy.md)
 
 ## 2021-12-27
 
-- [task-24: cleanup & readme](tasks/task-24-cleanup-readme/README.md)
+- [task-24: cleanup & readme](Tasks/task-24-cleanup-readme/task-24-cleanup-readme.md)
 
 ## 2021-12-18
 
-- [task-23: CI/CD](tasks/task-23-ci-cd/README.md)
+- [task-23: CI/CD](Tasks/task-23-ci-cd/task-23-ci-cd.md)
 
 ## 2021-12-11
 
-- [task-22: error messages & DX](tasks/task-22-error-messages-dx/README.md)
+- [task-22: error messages & DX](Tasks/task-22-error-messages-dx/task-22-error-messages-dx.md)
 
 ## 2021-12-04
 
-- [task-21: documentation of the narrate DSL](tasks/task-21-narrate-dsl-documentation/README.md)
+- [task-21: documentation of the narrate DSL](Tasks/task-21-narrate-dsl-documentation/task-21-narrate-dsl-documentation.md)
 
 ## 2021-11-08
 
-- [task-17: input <-> layer hit-testing](tasks/task-17-input-layer-hit-testing/README.md)
+- [task-17: input <-> layer hit-testing](Tasks/task-17-input-layer-hit-testing/task-17-input-layer-hit-testing.md)
 
 ## 2021-10-24
 
-- [task-16: effects <-> layer integration](tasks/task-16-effects-layer-integration/README.md)
+- [task-16: effects <-> layer integration](Tasks/task-16-effects-layer-integration/task-16-effects-layer-integration.md)
 
 ## 2021-10-10
 
-- [task-15: pipeline DSL -> builder -> compositor](tasks/task-15-pipeline-dsl-builder-compositor/README.md)
+- [task-15: pipeline DSL -> builder -> compositor](Tasks/task-15-pipeline-dsl-builder-compositor/task-15-pipeline-dsl-builder-compositor.md)
 
 ## 2021-09-27
 
-- [task-14: plev_narrate!, verbal DSL](tasks/task-14-plev-narrate-dsl-verbal/README.md)
+- [task-14: plev_narrate!, verbal DSL](Tasks/task-14-plev-narrate-dsl-verbal/task-14-plev-narrate-dsl-verbal.md)
 
 ## 2021-09-17
 
-- reference: [WASM/webgpu validation - knowledge](ref/platforms/wasm-webgpu-validation.md)
+- reference: [WASM/webgpu validation - knowledge](Research/Rendering/wasm-webgpu-validation.md)
 
 ## 2021-09-12
 
-- [task-13: mobile specifics, safe areas, IME, lifecycle](tasks/task-13-mobile-specifics-safe-areas-ime-lifecycle/README.md)
+- [task-13: mobile specifics, safe areas, IME, lifecycle](Tasks/task-13-mobile-specifics-safe-areas-ime-lifecycle/task-13-mobile-specifics-safe-areas-ime-lifecycle.md)
 
 ## 2021-08-30
 
-- reference: [mobile specifics - safe areas, IME, lifecycle](ref/platforms/mobile-specifics.md)
+- reference: [mobile specifics - safe areas, IME, lifecycle](Research/Interface/mobile-specifics.md)
 
 ## 2021-08-29
 
-- [task-12: ios build + lifecycle](tasks/task-12-ios-build-lifecycle/README.md)
+- [task-12: ios build + lifecycle](Tasks/task-12-ios-build-lifecycle/task-12-ios-build-lifecycle.md)
 
 ## 2021-08-16
 
-- [task-11: android build + lifecycle](tasks/task-11-android-build-lifecycle/README.md)
+- [task-11: android build + lifecycle](Tasks/task-11-android-build-lifecycle/task-11-android-build-lifecycle.md)
 
 ## 2021-08-15
 
-- reference: [ios build - decisions and knowledge](ref/platforms/ios-build.md)
+- reference: [ios build - decisions and knowledge](Research/Workflows/ios-build.md)
 
 ## 2021-08-02
 
-- [task-10: input system, touch + gestures](tasks/task-10-input-system-touch-gestures/README.md)
+- [task-10: input system, touch + gestures](Tasks/task-10-input-system-touch-gestures/task-10-input-system-touch-gestures.md)
 
 ## 2021-07-26
 
-- reference: [DSL narrate, design decisions](ref/architecture/dsl-narrate-design.md)
+- reference: [DSL narrate, design decisions](Research/Structure/dsl-narrate-design.md)
 
 ## 2021-07-19
 
-- [task-09: input system, keyboard + mouse](tasks/task-09-input-system-keyboard-mouse/README.md)
+- [task-09: input system, keyboard + mouse](Tasks/task-09-input-system-keyboard-mouse/task-09-input-system-keyboard-mouse.md)
 
 ## 2021-07-06
 
-- [task-08: compositing effects (blur, shadow, opacity)](tasks/task-08-compositing-effects/README.md)
+- [task-08: compositing effects (blur, shadow, opacity)](Tasks/task-08-compositing-effects/task-08-compositing-effects.md)
 
 ## 2021-07-04
 
-- reference: [effects architecture (task-08)](ref/architecture/effects-architecture.md)
+- reference: [effects architecture (task-08)](Research/Rendering/effects-architecture.md)
 
 ## 2021-06-21
 
-- [task-07: independent layer system](tasks/task-07-independent-layer-system/README.md)
+- [task-07: independent layer system](Tasks/task-07-independent-layer-system/task-07-independent-layer-system.md)
 
 ## 2021-06-16
 
-- reference: [layer system - technical decisions](ref/architecture/layer-system.md)
+- reference: [layer system - technical decisions](Research/Rendering/layer-system.md)
 
 ## 2021-06-08
 
-- [task-06: WASM/webgpu validation in the browser](tasks/task-06-wasm-webgpu-validation-in-the-browser/README.md)
+- [task-06: WASM/webgpu validation in the browser](Tasks/task-06-wasm-webgpu-validation-in-the-browser/task-06-wasm-webgpu-validation-in-the-browser.md)
 
 ## 2021-05-27
 
-- reference: [input system design (task-09)](ref/architecture/input-system-design.md)
+- reference: [input system design (task-09)](Research/Interface/input-system-design.md)
 
 ## 2021-05-23
 
-- [task-05: declarative API + builder pattern](tasks/task-05-declarative-api-builder-pattern/README.md)
+- [task-05: declarative API + builder pattern](Tasks/task-05-declarative-api-builder-pattern/task-05-declarative-api-builder-pattern.md)
 
 ## 2021-05-06
 
-- [task-04: signal system (reactivity)](tasks/task-04-signal-system/README.md)
+- [task-04: signal system (reactivity)](Tasks/task-04-signal-system/task-04-signal-system.md)
 
 ## 2021-05-02
 
-- reference: [signal system design](ref/architecture/signal-system-design.md)
+- reference: [signal system design](Research/Structure/signal-system-design.md)
 
 ## 2021-04-20
 
-- [task-03: layout engine (flexbox-like)](tasks/task-03-layout-engine/README.md)
+- [task-03: layout engine (flexbox-like)](Tasks/task-03-layout-engine/task-03-layout-engine.md)
 
 ## 2021-04-15
 
-- reference: [layout engine - decisions and knowledge](ref/architecture/layout-engine.md)
+- reference: [layout engine - decisions and knowledge](Research/Rendering/layout-engine.md)
 
 ## 2021-03-28
 
-- [task-02: component state management](tasks/task-02-component-state-management/README.md)
+- [task-02: component state management](Tasks/task-02-component-state-management/task-02-component-state-management.md)
 
 ## 2021-03-24
 
-- reference: [component state design (task-02)](ref/architecture/component-design.md)
+- reference: [component state design (task-02)](Research/Structure/component-design.md)
 
 ## 2021-03-10
 
-- [task-01: view trait + viewcontext](tasks/task-01-view-trait-viewcontext/README.md)
+- [task-01: view trait + viewcontext](Tasks/task-01-view-trait-viewcontext/task-01-view-trait-viewcontext.md)
 
 ## 2021-03-06
 
-- reference: [view trait - design decisions](ref/architecture/view-trait-design.md)
+- reference: [view trait - design decisions](Research/Structure/view-trait-design.md)
 
 ## undated
 
-- learning: [General learnings](learnings/general.md)
-- program: [plev — Technical Implementation Plan](research/technical-plan.md)
+- learning: [what the autonomous cycle taught about the way of working](Research/Workflows/autonomous-cycle-learnings.md)
+- learning: [what the autonomous cycle taught: importers target plev IR, with a report in four categories](adr/Importing/0069-importers-target-plev-ir/learned-importers-target-plev-ir.md)
+- learning: [what the autonomous cycle taught: a native menu is another view of the app's capabilities](adr/Interface/0057-native-menus-are-another-view-of-capabilities/learned-native-menus-are-another-view-of-capabilities.md)
+- learning: [what the autonomous cycle taught: a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](adr/Interface/0058-native-dialogs-answer-the-same-contract/learned-native-dialogs-answer-the-same-contract.md)
+- learning: [what the autonomous cycle taught: capture is a job the person turns on](adr/Interface/0062-capture-is-a-job-the-person-turns-on/learned-capture-is-a-job-the-person-turns-on.md)
+- learning: [what the autonomous cycle taught: accessibility is production-ready per platform](adr/Interface/0068-accessibility-is-production-ready-per-platform/learned-accessibility-is-production-ready-per-platform.md)
+- learning: [what the autonomous cycle taught: session recording: replay, not re-execution](adr/Recording/0037-session-recording-replay-not-reexecution/learned-session-recording-replay-not-reexecution.md)
+- learning: [what the autonomous cycle taught: the inspector reads a session, it never runs it](adr/Recording/0046-the-inspector-reads-a-session-never-runs-it/learned-the-inspector-reads-a-session-never-runs-it.md)
+- learning: [what the autonomous cycle taught: sessions become regression tests](adr/Recording/0050-sessions-become-regression-tests/learned-sessions-become-regression-tests.md)
+- learning: [what the autonomous cycle taught: the scene travels as data](adr/Recording/0065-scene-travels-as-data/learned-scene-travels-as-data.md)
+- learning: [what the autonomous cycle taught: background results wake the event loop; child pipes drain from the start](adr/Rendering/0026-worker-results-wake-the-event-loop/learned-worker-results-wake-the-event-loop.md)
+- learning: [what the autonomous cycle taught: a tick asks for a deadline, not for every frame](adr/Rendering/0042-a-tick-asks-for-a-deadline/learned-a-tick-asks-for-a-deadline.md)
+- learning: [what the autonomous cycle taught: a lost GPU device is recovered in place, and the next frame draws the same](adr/Rendering/0054-gpu-device-loss-recovers-in-place/learned-gpu-device-loss-recovers-in-place.md)
+- learning: [what the autonomous cycle taught: a covered window does not draw, and wakes with a new frame](adr/Rendering/0060-a-covered-window-does-not-draw-and-wakes-new/learned-a-covered-window-does-not-draw-and-wakes-new.md)
+- learning: [what the autonomous cycle taught: printing is the frame on paper](adr/Rendering/0061-printing-is-the-frame-on-paper/learned-printing-is-the-frame-on-paper.md)
+- learning: [what the autonomous cycle taught: embed Noto Sans subsets for the non-Latin scripts](adr/Rendering/0071-embedded-fonts-by-script/learned-embedded-fonts-by-script.md)
+- learning: [what the autonomous cycle taught: a commit checks the index it observed](adr/Semantics/0036-commit-checks-the-index-it-observed/learned-commit-checks-the-index-it-observed.md)
+- learning: [what the autonomous cycle taught: agents act through the semantic contract](adr/Semantics/0039-agents-act-through-the-semantic-contract/learned-agents-act-through-the-semantic-contract.md)
+- learning: [what the autonomous cycle taught: the semantic form is lean, and one rule redacts a secret](adr/Semantics/0040-lean-semantic-form-and-one-redaction/learned-lean-semantic-form-and-one-redaction.md)
+- learning: [what the autonomous cycle taught: a delta carries the node it adds, and a stale refusal names who acted](adr/Semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted/learned-a-delta-carries-the-node-a-refusal-names-who-acted.md)
+- learning: [what the autonomous cycle taught: a terminal stage carries the revision the app is at](adr/Semantics/0044-a-terminal-stage-carries-the-revision/learned-a-terminal-stage-carries-the-revision.md)
+- learning: [what the autonomous cycle taught: an act rests on what its actor was shown](adr/Semantics/0047-an-act-rests-on-what-its-actor-was-shown/learned-an-act-rests-on-what-its-actor-was-shown.md)
+- learning: [what the autonomous cycle taught: adr-003: modularizacao por single responsibility principle](adr/Structure/0015-srp-modularization/learned-srp-modularization.md)
+- learning: [what the autonomous cycle taught: the silences app is the fixed screen the generated one is compared against](adr/Structure/0053-the-silences-app-is-the-fixed-screen/learned-the-silences-app-is-the-fixed-screen.md)
+- learning: [what the autonomous cycle taught: a window is a host of what dies with it; the app owns the state](adr/Structure/0056-windows-are-hosts-the-app-owns-the-state/learned-windows-are-hosts-the-app-owns-the-state.md)
+- learning: [what the autonomous cycle taught: the plev IR is typed, references only declared capabilities, and runs only once verified](adr/Synthesis/0049-plev-ir-typed-and-verified/learned-plev-ir-typed-and-verified.md)
+- learning: [what the autonomous cycle taught: a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](adr/Synthesis/0051-materialized-surfaces-from-verified-ir/learned-materialized-surfaces-from-verified-ir.md)
+- learning: [what the autonomous cycle taught: proposers propose, the runtime verifies](adr/Synthesis/0052-proposers-propose-the-runtime-verifies/learned-proposers-propose-the-runtime-verifies.md)
+- learning: [what the autonomous cycle taught: adaptive transformations are small verified operations that preserve identity](adr/Synthesis/0067-adaptive-transforms-preserve-identity/learned-adaptive-transforms-preserve-identity.md)
+- learning: [what the autonomous cycle taught: generative runtime results](adr/Synthesis/0070-generative-runtime-results/learned-generative-runtime-results.md)
+- learning: [what the autonomous cycle taught: regression by meaning before pixels](adr/Workflows/0045-regression-by-meaning-before-pixels/learned-regression-by-meaning-before-pixels.md)
+- learning: [what the autonomous cycle taught: integration into main is a pull request merged by merge commit](adr/Workflows/0085-integration-by-merge-commit/learned-integration-by-merge-commit.md)
+- program: [plev — Technical Implementation Plan](Research/Structure/technical-plan.md)
 
 ## summary written when the changelog began
 

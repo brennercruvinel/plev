@@ -13,7 +13,7 @@
 //! same corners.
 //!
 //! The engine's rounded rect has one radius for its four corners
-//! (docs/research/makepad-gap-analysis.md); the square tail is the pill
+//! (docs/Research/Ecosystem/makepad-gap-analysis.md); the square tail is the pill
 //! with a square patch over that corner, the border's and the fill's, so
 //! the fill is opaque.
 //!

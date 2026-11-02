@@ -11,7 +11,7 @@ topics: [navigation]
 relations: [docs-conventions, changelog]
 source: docs/README.md
 source_revision: ec0a224c
-revised: 2026-10-31
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -28,22 +28,27 @@ backs each claim.
 | To | Start at |
 |---|---|
 | follow the story in time | the [changelog](CHANGELOG.md), newest first, one section per date; [reading the dates](CHANGELOG.md#reading-the-dates) says how far each date holds |
-| see what was done, task by task | [tasks](tasks/README.md), one folder per task |
-| understand why the code is the way it is | the [ADRs](adr/README.md); [adr/TEMPLATE.md](adr/TEMPLATE.md) for a new one |
-| what was measured, how, and its limits | [experiments](experiments/README.md) |
-| what was studied before building | [research](research/README.md), with the [generative runtime thesis](research/generative-runtime-thesis.md) and its [program](research/generative-runtime-program.md) |
-| what went wrong and what stayed | [learnings](learnings/README.md) |
-| work on the code today | [reference](ref/README.md), starting with the [engine manual](ref/operations/code-against-the-plev-engine.md) |
+| see what was done, task by task | [tasks](Tasks/Tasks.md), one folder per task, its note named like the folder |
+| understand why the code is the way it is | the [ADRs](adr/adr.md), one folder per decision, with what it taught beside it; [adr/TEMPLATE.md](adr/TEMPLATE.md) for a new one |
+| what was measured, how, and its limits | the experiments, in [Research/Exploring](Research/Research.md#exploring) |
+| what we know about a subject | [research](Research/Research.md), by the same themes as the ADRs, with the [generative runtime thesis](Research/Synthesis/generative-runtime-thesis.md) and its [program](Research/Synthesis/generative-runtime-program.md) |
+| what went wrong and what stayed | the learnings, beside the decision they speak to, in the ADR's folder; what taught the way of working in [Research/Workflows](Research/Workflows/autonomous-cycle-learnings.md) |
+| work on the code today | [Research/Workflows](Research/Research.md#workflows), starting with the [engine manual](Research/Workflows/code-against-the-plev-engine.md) |
 | the architecture on one page | [ATLAS.toml](ATLAS.toml); the old names and today's in [TERMS.toml](TERMS.toml) |
 
 ## How the pieces connect
 
-A research note raises a hypothesis; a task implements it; an ADR fixes the decision
-that stayed; an experiment measures it; a learning says what changed in the
-understanding. Each page points to the others in the `relations` field of its header,
-and [CATALOG.json](CATALOG.json) gathers all of them, with their headings, for
+The archive has two trees with the same themes (Ecosystem, Importing, Interface,
+Recording, Rendering, Semantics, Structure, Synthesis, Workflows): `adr/<Theme>/` holds
+what was decided and `Research/<Theme>/` what is known about the same subject;
+`Research/Exploring/` holds the experiments, what was measured. A research
+note raises a hypothesis; a task implements it; an ADR fixes the decision that stayed; an
+experiment measures it; a learning says what changed in the understanding, and lives in
+the folder of the ADR it led to. Each page points to the others in the `relations` field of its header, and
+ends with a Related list written from those relations in both directions, as plain
+links: Quartz, Obsidian, Zola or a reader on GitHub follow and draw the same graph; [CATALOG.json](CATALOG.json) gathers all of them, with their headings, for
 whoever wants to query the archive as data. The shape of every page is in the
-[conventions](ref/operations/docs-conventions.md).
+[conventions](Research/Workflows/docs-conventions.md).
 
 ## Reading an old record
 

@@ -1,5 +1,5 @@
 //! the scene as data that travels (task-79,
-//! docs/adr/recording/0065-scene-travels-as-data.md): a window's frame written layer by
+//! docs/adr/Recording/0065-scene-travels-as-data/0065-scene-travels-as-data.md): a window's frame written layer by
 //! layer, so what did not change does not travel, and read back into a
 //! compositor of another process that draws the same pixels.
 //!

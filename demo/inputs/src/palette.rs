@@ -60,7 +60,7 @@ pub(crate) fn card(compositor: &mut Compositor, x: f32, y: f32, w: f32, h: f32, 
 }
 
 // One TextStyle per run, shared by measurement and drawing
-// (docs/adr/rendering/0006-one-text-style-for-measurement-and-drawing.md). Weights are
+// (docs/adr/Rendering/0006-one-text-style-for-measurement-and-drawing/0006-one-text-style-for-measurement-and-drawing.md). Weights are
 // semantic: 700 page title, 600 card title, 500 label, 400 body; code and
 // counters render in the same embedded Inclusive Sans (the only UI family).
 
