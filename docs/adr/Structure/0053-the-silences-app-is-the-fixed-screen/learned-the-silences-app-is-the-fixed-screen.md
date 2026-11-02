@@ -26,7 +26,7 @@ Records what the experiments and implementations of the autonomous cycle of Sept
   frame de cada corte, que é como a pessoa vê o que vai cortar. regra:
   toda orientação de prompt nova é conferida na rodada seguinte contra o
   que a tela fixa considera central, não só contra o defeito que a
-  motivou. fonte: [`r2-04-generated-claude.png`](../../../img/task-69-checkpoint-b/r2-04-generated-claude.png).
+  motivou. fonte: [`r2-04-generated-claude.png`](../../../Tasks/task-69-ephemeral-generative-surfaces/img/r2-04-generated-claude.png).
 - **a mesma tela, duas escalas:** a primeira rodada saiu a 1200x800
   físicos e a segunda a 2400x1600 (a janela abriu numa tela retina). o
   espelho entrega o físico; para comparar rodadas, reduzir ao lógico.

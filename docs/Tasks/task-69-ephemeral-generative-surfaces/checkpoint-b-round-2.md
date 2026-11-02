@@ -28,14 +28,14 @@ como o agente `orquestrador`, e cada tela pelo espelho. a janela abriu
 numa tela retina (2400x1600 físicos, 1200x800 lógicos); as imagens foram
 reduzidas a 1200 de largura e estão em `checkpoint-b/r2-*.png`.
 
-- **tela fixa** ([`r2-02-fixed-detected.png`](../../img/task-69-checkpoint-b/r2-02-fixed-detected.png)): igual à primeira rodada. a
+- **tela fixa** ([`r2-02-fixed-detected.png`](img/r2-02-fixed-detected.png)): igual à primeira rodada. a
   lista começa no pé da janela; só o primeiro corte aparece, com frame,
   faixa, "2.0 s of silence", o estado e aplicar/rejeitar.
-- **gerada pelas regras** ([`r2-03-generated-rules.png`](../../img/task-69-checkpoint-b/r2-03-generated-rules.png)): usável agora. a
+- **gerada pelas regras** ([`r2-03-generated-rules.png`](img/r2-03-generated-rules.png)): usável agora. a
   linha de cada corte cabe no card (frame, "3.02 5.02 2 0:03.0 to
   0:05.0 pending" e os botões numa segunda e terceira linha). os
   números da linha aparecem sem rótulo, e "reject cut" desce sozinho.
-- **gerada pelo Claude** ([`r2-04-generated-claude.png`](../../img/task-69-checkpoint-b/r2-04-generated-claude.png), 126,2 s, 1
+- **gerada pelo Claude** ([`r2-04-generated-claude.png`](img/r2-04-generated-claude.png), 126,2 s, 1
   tentativa, 0,159 USD; na primeira rodada 119,2 s, 2 tentativas, 0,196
   USD): a tarefa vem primeiro. os dois cortes, com faixa, estado e os
   três botões, estão no topo; depois "detect silences" e "apply all";
@@ -46,7 +46,7 @@ reduzidas a 1200 de largura e estão em `checkpoint-b/r2-*.png`.
   texto solto, não como selo. a detecção e os sliders continuam
   repetidos (a intenção começa por "cut the silences", o que dá um
   motivo).
-- **a tarefa** ([`r2-05-after-task.png`](../../img/task-69-checkpoint-b/r2-05-after-task.png)): o primeiro corte aplicado pela
+- **a tarefa** ([`r2-05-after-task.png`](img/r2-05-after-task.png)): o primeiro corte aplicado pela
   fixa e o segundo rejeitado pela gerada. as duas telas e os contadores
   ficaram iguais (1 aplicado, 1 rejeitado, 2 s cortados); na gerada, o
   botão da decisão tomada fica desabilitado e "apply all" também.

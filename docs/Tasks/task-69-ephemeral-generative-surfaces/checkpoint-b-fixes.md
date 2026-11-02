@@ -206,7 +206,7 @@ card do resumo vertical com gap `sm`, o item do corte horizontal com gap
 xl`. verificada pelo verificador do `uir` contra o registro do app
 (`GenerationPolicy::default()`, como as fixtures da 4b), no teste e no
 regress. com o código de antes, a encenação dela reproduz a
-[`04-generated-claude.png`](../../img/task-69-checkpoint-b/04-generated-claude.png) (os sliders sem rótulo nem valor, o botão de
+[`04-generated-claude.png`](img/04-generated-claude.png) (os sliders sem rótulo nem valor, o botão de
 detectar na dobra).
 
 ### o regress: a página num estado
@@ -240,8 +240,8 @@ proposer foi chamado.
 
 | vista | antes, a rodada real | antes, a mesma encenação com o código de antes | depois (baseline) |
 | --- | --- | --- | --- |
-| regras, 1200x800 core | [`03-generated-rules.png`](../../img/task-69-checkpoint-b/03-generated-rules.png) | `before/silences-review-by-the-rules@core@1200x800/frame.png` | `tool/bench/regress/baselines/silences-review-by-the-rules@core@1200x800/frame.png` |
-| Claude, 1200x800 core | [`04-generated-claude.png`](../../img/task-69-checkpoint-b/04-generated-claude.png) | `before/silences-review-by-the-claude-fixture@core@1200x800/frame.png` | `tool/bench/regress/baselines/silences-review-by-the-claude-fixture@core@1200x800/frame.png` |
+| regras, 1200x800 core | [`03-generated-rules.png`](img/03-generated-rules.png) | `before/silences-review-by-the-rules@core@1200x800/frame.png` | `tool/bench/regress/baselines/silences-review-by-the-rules@core@1200x800/frame.png` |
+| Claude, 1200x800 core | [`04-generated-claude.png`](img/04-generated-claude.png) | `before/silences-review-by-the-claude-fixture@core@1200x800/frame.png` | `tool/bench/regress/baselines/silences-review-by-the-claude-fixture@core@1200x800/frame.png` |
 | regras, 1280x800 core e hoff | | | `.../silences-review-by-the-rules@{core,hoff}@1280x800/frame.png` |
 | Claude, 1280x800 core e hoff | | | `.../silences-review-by-the-claude-fixture@{core,hoff}@1280x800/frame.png` |
 

@@ -28,16 +28,16 @@ as ações por `plev act` como o agente `orquestrador`, e cada tela
 fotografada pelo espelho da task-79 (`mirror --frames 1 --png`), na
 janela de 1200x800. imagens em `checkpoint-b/`.
 
-- **tela fixa** ([`02-fixed-detected.png`](../../img/task-69-checkpoint-b/02-fixed-detected.png)): o frame do vídeo, a linha do
+- **tela fixa** ([`02-fixed-detected.png`](img/02-fixed-detected.png)): o frame do vídeo, a linha do
   tempo com os dois silêncios, a detecção, os contadores, e a lista com
   frame, faixa, "2.0 s of silence", o estado e aplicar/rejeitar. o
   segundo corte fica abaixo da dobra.
-- **gerada pelas regras** ([`03-generated-rules.png`](../../img/task-69-checkpoint-b/03-generated-rules.png), instantânea, grátis):
+- **gerada pelas regras** ([`03-generated-rules.png`](img/03-generated-rules.png), instantânea, grátis):
   quebrada na janela padrão. na linha do corte, os textos saem um
   caractere por linha (a coluna encolhe a quase zero), os números saem
   crus ("3.018594") e os botões "preview segment" e "apply cut" passam
   da borda direita.
-- **gerada pelo Claude** ([`04-generated-claude.png`](../../img/task-69-checkpoint-b/04-generated-claude.png), 119,2 s, 2
+- **gerada pelo Claude** ([`04-generated-claude.png`](img/04-generated-claude.png), 119,2 s, 2
   tentativas, 0,196 USD): completa em função (arquivo, duração, frame
   original e resultado, detecção, resumo com os contadores, e a lista
   com frame, faixa, estado, duração, prévia, aplicar e rejeitar por
@@ -47,7 +47,7 @@ janela de 1200x800. imagens em `checkpoint-b/`.
   diga a diferença; as durações saem cruas ("1.996916").
 - **o que funcionou:** o estado é um só. aplicar o primeiro corte pela
   fixa e rejeitar o segundo pela gerada deixou as duas telas e os
-  contadores iguais ([`05-after-task.png`](../../img/task-69-checkpoint-b/05-after-task.png)); cada ação passou pelo
+  contadores iguais ([`05-after-task.png`](img/05-after-task.png)); cada ação passou pelo
   dispatcher; um propose foi recusado como stale porque o próprio agente
   tinha mudado a intenção depois de olhar, e passou depois de observar.
 - **veredito desta rodada: a gerada é pior de usar hoje.** duas causas

@@ -184,7 +184,6 @@ fn the_docs_keep_their_parts_by_kind() {
         "TERMS.toml",
         "Tasks",
         "adr",
-        "img",
     ];
     let got = tracked("docs");
     assert_eq!(got, want, "docs/ holds exactly these");

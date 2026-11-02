@@ -31,7 +31,9 @@ top-level folders and the shape of `adr/` and `Research/`.
 | `Research/<Theme>/` | what is known about a subject: references studied, comparisons, the thesis and the program of the generative runtime, how each subsystem was designed, the manuals of the repository and of this archive, and what taught the way of working | `research-<name>`, `architecture-…`, `operations-…`, `platform-…`, and the names of the thesis, program and plan |
 | `Research/Exploring/` | one page per experiment: question, setup, results, limits, and the task pages that hold the full record | `experiment-<slug>` |
 | `Tasks/task-NN-<slug>/` | one folder per task: `task-NN-<slug>.md`, its note, with the plan, execution, delivery and what stayed open; the phases of a long task as pages beside it | `task-NN`, a phase `task-NN/<page>` |
-| `img/` | images the pages show | the path |
+
+An image lives in an `img/` folder beside the pages that show it, as
+`Tasks/task-69-ephemeral-generative-surfaces/img/` does, so a task carries its own evidence.
 
 A folder that is one thing (an ADR, a task, an index) has its page named like the folder,
 so every tool shows a page by its own name: `Tasks/Tasks.md`, `Research/Research.md`,
