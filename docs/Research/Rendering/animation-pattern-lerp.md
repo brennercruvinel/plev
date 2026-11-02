@@ -64,3 +64,9 @@ escalar `font_size` proporcionalmente ao scale de um avatar causa re-shaping a c
 - sem curvas de easing customizáveis (sempre exponencial)
 - sem duração fixa (converge assintoticamente)
 - task-27 resolverá com delta-time, curvas de easing, e tween<t> com duração
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-27: animation system](../../Tasks/task-27-animation-system/task-27-animation-system.md)
+<!-- /related -->

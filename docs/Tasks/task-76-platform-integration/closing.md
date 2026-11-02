@@ -111,3 +111,20 @@ dá, roteiro onde não dá; device lost sobrevive a uma perda forçada) estão
 cumpridos no que o agente pode provar; o "funcionando no macOS" com
 janela, dispositivo, impressora e sistema de verdade é o que os roteiros
 pedem.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0054: a lost GPU device is recovered in place, and the next frame draws the same](../../adr/Rendering/0054-gpu-device-loss-recovers-in-place/0054-gpu-device-loss-recovers-in-place.md)
+- [ADR 0055: file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person](../../adr/Interface/0055-file-dialogs-and-drops-are-capabilities/0055-file-dialogs-and-drops-are-capabilities.md)
+- [ADR 0056: a window is a host of what dies with it; the app owns the state](../../adr/Structure/0056-windows-are-hosts-the-app-owns-the-state/0056-windows-are-hosts-the-app-owns-the-state.md)
+- [ADR 0057: a native menu is another view of the app's capabilities](../../adr/Interface/0057-native-menus-are-another-view-of-capabilities/0057-native-menus-are-another-view-of-capabilities.md)
+- [ADR 0058: a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](../../adr/Interface/0058-native-dialogs-answer-the-same-contract/0058-native-dialogs-answer-the-same-contract.md)
+- [ADR 0059: the tray and the notifications are capabilities out of the window](../../adr/Interface/0059-tray-and-notifications-are-capabilities-out-of-the-window/0059-tray-and-notifications-are-capabilities-out-of-the-window.md)
+- [ADR 0060: a covered window does not draw, and wakes with a new frame](../../adr/Rendering/0060-a-covered-window-does-not-draw-and-wakes-new/0060-a-covered-window-does-not-draw-and-wakes-new.md)
+- [ADR 0061: printing is the frame on paper](../../adr/Rendering/0061-printing-is-the-frame-on-paper/0061-printing-is-the-frame-on-paper.md)
+- [ADR 0062: capture is a job the person turns on](../../adr/Interface/0062-capture-is-a-job-the-person-turns-on/0062-capture-is-a-job-the-person-turns-on.md)
+- [ADR 0063: a link is not a person](../../adr/Interface/0063-a-link-is-not-a-person/0063-a-link-is-not-a-person.md)
+- [task-58: action with precondition, dispatch and receipts](../task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+<!-- /related -->

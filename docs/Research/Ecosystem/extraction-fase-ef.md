@@ -282,3 +282,10 @@ additionally, `ObserverState` has an `untracked: bool` field. this enables `untr
 3. **add RAII observer guard**, replace explicit `observer_stack.push()`/`pop()` with a drop guard that restores the previous observer. prevents stack corruption on panic (pattern 6).
 
 4. **add constant-signal optimization**, if a signal has never been written to (`state` is still `Clean` after creation and no `set()` was ever called), skip dependency tracking on `get()`. track a `has_been_set: bool` flag on the node (pattern 5).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-33: WASM plugin architecture](../../Tasks/task-33-wasm-plugins/task-33-wasm-plugins.md)
+- [task-34: exploration and extraction of ideas from the reference repos](../../Tasks/task-34-exploration-extraction/task-34-exploration-extraction.md)
+<!-- /related -->

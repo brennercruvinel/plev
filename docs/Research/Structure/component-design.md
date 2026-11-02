@@ -47,3 +47,10 @@ o design original sugeria estado via viewcontext. o design final é mais simples
 - `on_update` pode ser gated por signal dirty flags
 - `state_mut()` permite signals escreverem no estado externamente
 - nenhuma mudança na trait lifecycle será necessária
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-02: component state management](../../Tasks/task-02-component-state-management/task-02-component-state-management.md)
+- [task-04: signal system (reactivity)](../../Tasks/task-04-signal-system/task-04-signal-system.md)
+<!-- /related -->

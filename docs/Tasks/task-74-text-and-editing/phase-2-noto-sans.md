@@ -290,3 +290,10 @@ colorido com pixel medido (fase 5), benchmark de um milhão de linhas
 (fase 7). as fases 6, 8 e 9 não têm item no critério.
 
 o agente gastou uns 250 mil tokens.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0071: embed Noto Sans subsets for the non-Latin scripts](../../adr/Rendering/0071-embedded-fonts-by-script/0071-embedded-fonts-by-script.md)
+- [task-74: text and editing](task-74-text-and-editing.md)
+<!-- /related -->

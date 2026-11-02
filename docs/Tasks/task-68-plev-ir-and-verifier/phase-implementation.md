@@ -357,7 +357,7 @@ o registro de antes do rebase, mantido: sobre 8a7a0ea eram 2179 antes e
 
 - as entradas do `uir` no `README.md` e no `docs/ATLAS.toml` estão
   feitas (2461bb5). fica a linha do índice de ADR, que é do orquestrador:
-  `| 2026-09-24 | [plev-ir-typed-and-verified](../../adr/Generative/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md) | proposed | crate uir, puro (sem, serde): o plev IR (id, componente de um vocabulário fechado espelho do comps, props só por token do theme, layout por primitivas, estado e ações ligados a capacidades que o app declara, repetição mínima sobre List/Set com [{item}]); um leitor só com erro por JSON pointer; Capabilities saem do Snapshot; verify com oito regras é o único caminho a um VerifiedIr; JSON schema gerado das mesmas tabelas (task-68) |`
+  `| 2026-09-24 | [plev-ir-typed-and-verified](../../adr/Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md) | proposed | crate uir, puro (sem, serde): o plev IR (id, componente de um vocabulário fechado espelho do comps, props só por token do theme, layout por primitivas, estado e ações ligados a capacidades que o app declara, repetição mínima sobre List/Set com [{item}]); um leitor só com erro por JSON pointer; Capabilities saem do Snapshot; verify com oito regras é o único caminho a um VerifiedIr; JSON schema gerado das mesmas tabelas (task-68) |`
 - rebaseada sobre `main` @ 39a76cf (as tasks 91 e 65 e a nota de
   aprendizado sobre este briefing) sem conflito; os testes `uir_fixture`
   do ide e do showcase passam, então as projeções gravadas ainda são as
@@ -392,7 +392,7 @@ ausência.
   the plev IR: a surface described by meaning (ids, a closed component
   vocabulary, props by theme token, state and actions bound to the
   capabilities an app projects), and `verify`, the only way to a
-  `VerifiedIr` ([docs/adr/Generative/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md](../../adr/Generative/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md))."
+  `VerifiedIr` ([docs/adr/Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md](../../adr/Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md))."
 - `docs/ATLAS.toml`:
 
   ```toml
@@ -466,3 +466,13 @@ severidade do que ficou:
   o app pede confirmação só a agentes (`Confirm::ForAgents`); o sentido
   certo é "o app não pede a todo ator". o `arc_sync_guard` compara
   substring.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0049: the plev IR is typed, references only declared capabilities, and runs only once verified](../../adr/Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md)
+- [task-65: pixel to code and development inspector](../task-65-pixel-to-source/task-65-pixel-to-source.md)
+- [task-68: plev IR and verifier](task-68-plev-ir-and-verifier.md)
+- [task-69: ephemeral and generated surfaces](../task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-91: the dispatcher knows when the agent looked](../task-91-the-dispatcher-knows-when-the-agent-looked/task-91-the-dispatcher-knows-when-the-agent-looked.md)
+<!-- /related -->

@@ -577,3 +577,12 @@ nenhuma outra dependencia necessaria, accesskit_winit puxa os platform adapters 
 - [bevy a11y module](https://docs.rs/bevy/latest/bevy/a11y/index.html)
 - [slint accesskit pr](https://github.com/slint-ui/slint/pull/2865)
 - [libraries.io accesskit_winit](https://libraries.io/cargo/accesskit_winit)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-28: editable text](../../Tasks/task-28-editable-text/task-28-editable-text.md)
+- [task-30: accessibility (accesskit)](../../Tasks/task-30-accessibility/task-30-accessibility.md)
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [technology radar, plev](../Ecosystem/technology-radar.md)
+<!-- /related -->

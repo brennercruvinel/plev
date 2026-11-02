@@ -251,3 +251,13 @@ dentro da fase (e fecharam); o terceiro fica:
   pixel: é quase todo o custo dos 381 frames da medição b. é do engine
   (o limiar de repouso) ou da task-73 (frame só com mudança visível).
   fica.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0042: a tick asks for a deadline, not for every frame](../../adr/Rendering/0042-a-tick-asks-for-a-deadline/0042-a-tick-asks-for-a-deadline.md)
+- [task-66b: SVG export and `--semantics` in headless mode](../task-66b-svg-export/task-66b-svg-export.md)
+- [task-73: incremental dependency system](../task-73-incremental-dependency-system/task-73-incremental-dependency-system.md)
+- [task-82: the caret cannot request 60 frames per second](task-82-caret-blink-render-on-demand.md)
+- [caret blink as a deadline: frames drawn with a focused, idle field](../../Research/Exploring/caret-render-on-demand.md)
+<!-- /related -->

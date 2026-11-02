@@ -98,3 +98,11 @@ tamanho, humano ou agente.
 - ide: -2 160 linhas de tema e componentes locais.
 - testes: 855 -> 1 414 no workspace, 64 -> 80 no urnaui.
 - tempo de rebuild completo depois do `cargo clean`: ~2 min em debug.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0027: comps: one design system crate, every value a token](0027-comps-one-design-system-crate.md)
+- [ui component catalog](../../../Research/Structure/component-catalog.md)
+- [how to validate visuals by pixel](../../../Research/Workflows/validate-visuals-by-pixel.md)
+<!-- /related -->

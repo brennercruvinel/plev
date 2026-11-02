@@ -8,10 +8,10 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [platform, rendering, agents]
-relations: [adr-0060, task-66, task-66b, task-76]
+relations: [adr-0060, task-66, task-66b, task-76, learning-cycle-0061]
 source: docs/adr/rendering/0061-printing-is-the-frame-on-paper.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -30,7 +30,7 @@ approximation reported (task-66b). nothing reached the system's printing
 queue, and no app offered "print this page" as a capability.
 
 the probe (the handoff of item 9 in
-[task-76-platform-integration.md](../../../Tasks/task-76-platform-integration/README.md)) measured:
+[task-76-platform-integration.md](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)) measured:
 
 - this machine has no destination: `lpstat -p -d` says "No destinations
   added." (exit 1, 0.14 s), `lp <file>` says "No default destination.",
@@ -180,3 +180,19 @@ olhada a cada 100 ms (`ShowcaseView::print_wake`, somado em
 `App::frame_wake`), a mesma forma do Claude da Surface. o teste
 `a_print_thread_out_keeps_a_deadline_until_it_answers` prova o prazo
 enquanto a thread está fora e o fim dele quando responde.
+
+## learnings
+
+- [what the autonomous cycle taught: printing is the frame on paper](learned-printing-is-the-frame-on-paper.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0060: a covered window does not draw, and wakes with a new frame](../0060-a-covered-window-does-not-draw-and-wakes-new/0060-a-covered-window-does-not-draw-and-wakes-new.md)
+- [what the autonomous cycle taught: printing is the frame on paper](learned-printing-is-the-frame-on-paper.md)
+- [task-66: headless as a first-class citizen](../../../Tasks/task-66-headless-first-class/task-66-headless-first-class.md)
+- [task-66b: SVG export and `--semantics` in headless mode](../../../Tasks/task-66b-svg-export/task-66b-svg-export.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-76, closing: what went in and what remains](../../../Tasks/task-76-platform-integration/closing.md)
+- [task-76, item 9: printing](../../../Tasks/task-76-platform-integration/item-9-printing.md)
+<!-- /related -->

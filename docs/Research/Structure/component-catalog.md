@@ -280,3 +280,18 @@ cada passo passa o gate inteiro antes do próximo.
 - urnaui: `Field` vira alias de `TextField`; layouts recebem o tema.
 - examples: `todo` e `text_input` absorvidos pelo showcase; `editor` foi pra `rust/engine/src/widgets/examples`; `input`, `layers`, `mobile_input`, `scene3d` leem `Theme::default()`.
 - o que ficou como constante nomeada, de propósito: tempos de plataforma (blink 0,53 s, delay de tooltip 0,45 s, multi-click 0,4 s, fade da scrollbar 1 s, velocidade do spinner), a geometria pura dos charts (gaps mínimos, raio máximo de barra, furo do donut), o mundo do grafo (`WORLD`, `NODE_R`, `CLICK_DIST`), a fração de largura da mensagem do empty state. nada disso é cor, raio, altura ou padding de design.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0023: official app pattern: state in structs, retained widgets, explicit invalidation](../../adr/Structure/0023-official-app-pattern/0023-official-app-pattern.md)
+- [ADR 0027: comps: one design system crate, every value a token](../../adr/Structure/0027-comps-one-design-system-crate/0027-comps-one-design-system-crate.md)
+- [ADR 0030: showcase: one page per component, the sidebar as a folding tree](../../adr/Structure/0030-showcase-one-page-per-component/0030-showcase-one-page-per-component.md)
+- [ADR 0035: semantic binding beside the scene, and the click as a request](../../adr/Semantics/0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md)
+- [comps session: what worked and what bit us](../../adr/Structure/0027-comps-one-design-system-crate/comps.md)
+- [showcase pages session: what worked and what bit us](../../adr/Structure/0030-showcase-one-page-per-component/showcase-pages.md)
+- [task-59: semantic binding with the render and one operational path](../../Tasks/task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-68: plev IR and verifier](../../Tasks/task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [Reorganization of the repository tree (issue #130, PR #131)](../../Tasks/task-98-workspace-reorganization/change-record.md)
+- [how to code against the plev engine](../Workflows/code-against-the-plev-engine.md)
+<!-- /related -->

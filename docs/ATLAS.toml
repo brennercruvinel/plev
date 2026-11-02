@@ -36,7 +36,7 @@ sites = "apps/quartzweb (a submodule, the tiamatio/quartz fork) and apps/zolavie
 demos = "demo (one crate per demo: arcade, camera, commit, graphs, inputs, intent, layers, lottie, mobile, mockup, player, primes, shapes, ticker)"
 tooling = "tool (bench/measure and bench/regress: the measurement and the structural regression; tasks: the scripts; tests: the architecture tests)"
 data = "data (media/lottie: the lottie references the importer and the gates read; graphs/<format>: the graph inputs a demo draws, d3 and cytoscape, from the gramorph corpus)"
-knowledge = "docs (CHANGELOG.md the history; Tasks/, one folder per task; adr/<Theme>/NNNN-<slug>/, one folder per decision with its learnings beside it; Research/<Theme>/, what is known, by the same nine themes as adr/ (Ecosystem, Generative, Importing, Interface, Recording, Rendering, Semantics, Structure, Workflows); Experiments/; Learnings/, what belongs to no single decision; img/; the conventions in docs/Research/Workflows/docs-conventions.md, checked by tool/tasks/docbase.py; this file lives at docs/ATLAS.toml, the glossary at docs/TERMS.toml)"
+knowledge = "docs (CHANGELOG.md the history; Tasks/<task>/<task>.md, one folder per task; adr/<Theme>/NNNN-<slug>/NNNN-<slug>.md, one folder per decision with its learnings beside it; Research/<Theme>/, what is known, by the same nine themes as adr/ (Ecosystem, Importing, Interface, Recording, Rendering, Semantics, Structure, Synthesis, Workflows), and Research/Exploring/, the experiments; img/; every page ends with a Related list written from the relations of the headers; the conventions in docs/Research/Workflows/docs-conventions.md, checked by tool/tasks/docbase.py; this file lives at docs/ATLAS.toml, the glossary at docs/TERMS.toml)"
 web = "tool/tasks/webtarget.sh <target> [serve|build]: uigallery (apps/uigallery/web, from :8080, the default), urnadbapp (apps/urnadbapp/web, from :8081), graphs (demo/graphs, from :8082), primes (demo/primes, from :8083); serve takes the next free port when the first is taken; each a Trunk.toml + index.html + dist output, each wasm bin named apart from its lib (uigallery-web, urnadbapp-web, graphs-web, primes)"
 scripts = "tool/tasks (fullcheck.sh = the gate: test, clippy, fmt, wasm check, docs links, urnadbapp leg; webtarget.sh = trunk dev loop; screencap.sh web|ios|android = one gallery page or all of them on a target, classified against the desktop frame; mobileapp.sh android|ios|ios-run = the mobile builds; figmapull.py = a .fig screen to the importer's Figma fixture; subsetter.py = the embedded Noto subsets, reproducible, --check compares byte for byte; depscheck.sh, namecheck.sh = the architecture tests; precommit = the git hook)"
 contracts = ".devops/check (lychee, nextest and typos configs); .github/workflows/gatecheck.yml is the CI"
@@ -403,7 +403,7 @@ component-catalog = "docs/Research/Structure/component-catalog.md"
 decisions = "docs/adr/"
 web-target = "docs/Research/Workflows/build-and-serve-the-web-target.md"
 agent-orchestration = "docs/Research/Workflows/orchestrate-coding-agents-on-this-repo.md"
-program = "docs/Research/Generative/generative-runtime-program.md (goal, task graph, ownership; thesis and guidelines beside it)"
+program = "docs/Research/Synthesis/generative-runtime-program.md (goal, task graph, ownership; thesis and guidelines beside it)"
 
 # binding contracts. violations are defects even if the pixels look right.
 [contracts]

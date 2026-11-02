@@ -55,3 +55,9 @@ frame, so nothing depends on swapchain contents.
   persistent canvas, trails will flicker as images cycle.
 - never reach for `EffectProcessor` expecting feedback; it blurs a frame, it
   does not carry one forward.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-49: prime number creatures, port of entropic life](../../../Tasks/task-49-prime-creatures/task-49-prime-creatures.md)
+<!-- /related -->

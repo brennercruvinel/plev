@@ -101,3 +101,11 @@ oito corridas das rodadas 4 e 5, com ou sem pergunta. duas corridas por
 braço não medem taxa; medem que o caminho existe e é achado pelo
 contrato. P3 no backlog: qual ato leva o `--ask` na linha; o motivo da
 pessoa no `declined`.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](task-62-ide-human-agent-proof.md)
+- [task-94: the refusal that names a person points to the question](../task-94-the-refusal-points-at-the-question/task-94-the-refusal-points-at-the-question.md)
+- [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](../../Research/Exploring/agent-proof-checkpoint-a.md)
+<!-- /related -->

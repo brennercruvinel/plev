@@ -20,7 +20,7 @@ review: reviewed
 Decides on a single knowledge tree in `docs/` and a root that keeps only what the tools resolve there. Before, the knowledge lived in three places at once (`kdb/`, `doc/arc/` and the root), with a duplicated changelog. The result is that the reader starts at two points: the README for the surface and `docs/` for depth. The paths in the body are those of the time of the decision, and the name correction of 2026-09-21 is in the text itself.
 
 correction (2026-09-21): the decisions directory is docs/adr/ (upper
-case, the acronym), its index is docs/adr/README.md so github renders it
+case, the acronym), its index is docs/adr/adr.md so github renders it
 on the directory page, and the changelog is [docs/log/changelog.md](../../../CHANGELOG.md) at the
 knowledge tree's root. the paths below are as written when the decision
 was taken.
@@ -92,3 +92,11 @@ every crate docstring that cited kdb/adr/ now cites docs/adr/.
   build if the trio drifts from Cargo.toml again.
 - the web target relocates its build output to web/dist/; anything serving
   the old root dist/ path follows [docs/Research/Workflows/build-and-serve-the-web-target.md](../../../Research/Workflows/build-and-serve-the-web-target.md).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0013: engine at root, libraries and apps in crates, demos in examples](../0013-workspace-engine-at-root-libs-in-crates-demos-in-examples/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md)
+- [mon experiment](../../../Research/Importing/mon-experiment-notes.md)
+- [how to build and serve the web target](../../../Research/Workflows/build-and-serve-the-web-target.md)
+<!-- /related -->

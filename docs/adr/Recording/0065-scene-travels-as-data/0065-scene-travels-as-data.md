@@ -8,11 +8,11 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [agents, rendering, recording, semantics]
-relations: [adr-0037, adr-0062, task-59, task-61, task-76, task-79, task-104]
+relations: [adr-0037, adr-0062, task-59, task-61, task-76, task-79, task-104, learning-cycle-0065]
 evidence: [919655eb, dc9e146e, 7728da47]
 source: docs/adr/recording/0065-scene-travels-as-data.md
 source_revision: ec0a224c
-revised: 2026-11-01
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -500,3 +500,22 @@ manteve assim, porque o diff dela mostra conteúdo de arquivo e o lado
 seguro é o padrão; a máscara sai quando a página Git projetar. o agente
 também achou o teste da câmera da fase 1 procurando só 16 das 200 cores
 da câmera falsa e o corrigiu para todas.
+
+## learnings
+
+- [what the autonomous cycle taught: the scene travels as data](learned-scene-travels-as-data.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0037: session recording: replay, not re-execution](../0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md)
+- [ADR 0062: capture is a job the person turns on](../../Interface/0062-capture-is-a-job-the-person-turns-on/0062-capture-is-a-job-the-person-turns-on.md)
+- [what the autonomous cycle taught: the scene travels as data](learned-scene-travels-as-data.md)
+- [task-104: the 35 empty or borrowed gallery tabs become kit components](../../../Tasks/task-104-gallery-components-from-the-kit/task-104-gallery-components-from-the-kit.md)
+- [task-59: semantic binding with the render and one operational path](../../../Tasks/task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-61: agent surface (local socket, observe, act)](../../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-79: scene over socket](../../../Tasks/task-79-scene-over-socket/task-79-scene-over-socket.md)
+- [phase 1 (task-79a): the probe](../../../Tasks/task-79-scene-over-socket/phase-79a-probe.md)
+- [phase 2 (task-79b): the probe](../../../Tasks/task-79-scene-over-socket/phase-79b-probe.md)
+<!-- /related -->

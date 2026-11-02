@@ -81,3 +81,14 @@ python3 -m http.server 8090 --directory web/dist
   (`apps/uigallery/src/shell/window/events/mod.rs`); on wasm an exit freezes
   the canvas until reload. Escape no longer exits anywhere (it closes what is
   open, nothing more), and the quit keys are desktop only
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0001: async GPU initialization and one wasm entry point per module](../../adr/Rendering/0001-async-gpu-init-and-single-wasm-entry/0001-async-gpu-init-and-single-wasm-entry.md)
+- [ADR 0022: one knowledge tree, and a minimal root](../../adr/Structure/0022-one-knowledge-tree-and-a-minimal-root/0022-one-knowledge-tree-and-a-minimal-root.md)
+- [task-61: agent surface (local socket, observe, act)](../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-75: production-ready platform accessibility](../../Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md)
+- [orchestrator and agent guidelines](generative-runtime-guidelines.md)
+- [how to validate visuals by pixel](validate-visuals-by-pixel.md)
+<!-- /related -->

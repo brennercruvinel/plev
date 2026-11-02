@@ -133,3 +133,25 @@ agent observes is a question of scope, and scope belongs to task-61.
   projected as semantic state.
 - a whole document projected node by node.
 - a revision computed with a std, seeded or platform hasher.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0033: actions carry the state their actor observed](../0033-actions-carry-observed-state/0033-actions-carry-observed-state.md)
+- [ADR 0035: semantic binding beside the scene, and the click as a request](../0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md)
+- [ADR 0036: a commit checks the index it observed](../0036-commit-checks-the-index-it-observed/0036-commit-checks-the-index-it-observed.md)
+- [ADR 0038: accessibility projects the semantic snapshot](../../Interface/0038-accessibility-projects-the-semantic-snapshot/0038-accessibility-projects-the-semantic-snapshot.md)
+- [ADR 0039: agents act through the semantic contract](../0039-agents-act-through-the-semantic-contract/0039-agents-act-through-the-semantic-contract.md)
+- [ADR 0048: view source for pixels: a control leads to its projection, a text to its literal](../../Workflows/0048-view-source-for-pixels/0048-view-source-for-pixels.md)
+- [ADR 0049: the plev IR is typed, references only declared capabilities, and runs only once verified](../../Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md)
+- [ADR 0051: a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](../../Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)
+- [task-57: semantic contract (crate `sem`)](../../../Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
+- [task-59: semantic binding with the render and one operational path](../../../Tasks/task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-60: accessibility as a projection of the contract](../../../Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-61: agent surface (local socket, observe, act)](../../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-63: session flight recorder](../../../Tasks/task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-73: incremental dependency system](../../../Tasks/task-73-incremental-dependency-system/task-73-incremental-dependency-system.md)
+- [task-80: proof of qualitatively different software](../../../Tasks/task-80-proof-qualitatively-different-software/task-80-proof-qualitatively-different-software.md)
+- [how to code against the plev engine](../../../Research/Workflows/code-against-the-plev-engine.md)
+<!-- /related -->

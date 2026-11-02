@@ -28,7 +28,7 @@ Libraries live in `rust/`, applications in `apps/`, demos in `demo/` and tools i
 
 ## Consequences
 
-Public paths change even when the item's behavior stays the same: the report records that no behavior changed and that 13 of 19 crates have an API identical line by line, with the other 6 explained in the report itself (lines 49 and 61 to 69). Comparing the API requires translating the paths, without hiding incompatibilities from consumers. Separate move commits make it possible to trace where the files came from: `d3e65544` contains only R100 renames. The proofs and limits are in [task 98](../../../Tasks/task-98-workspace-reorganization/README.md).
+Public paths change even when the item's behavior stays the same: the report records that no behavior changed and that 13 of 19 crates have an API identical line by line, with the other 6 explained in the report itself (lines 49 and 61 to 69). Comparing the API requires translating the paths, without hiding incompatibilities from consumers. Separate move commits make it possible to trace where the files came from: `d3e65544` contains only R100 renames. The proofs and limits are in [task 98](../../../Tasks/task-98-workspace-reorganization/task-98-workspace-reorganization.md).
 
 ## Alternatives
 
@@ -39,3 +39,9 @@ Keeping libraries and apps mixed together would preserve the old paths, but woul
 - [`d3e65544`](https://github.com/brennercruvinel/plev/commit/d3e6554467ad0a84ab9b6eaba01a996c17527354)
 - [`9e31564e`](https://github.com/brennercruvinel/plev/commit/9e31564eb75aa261d87f2a9f734a7ebdac97193c)
 - [`6c4d6ff3`](https://github.com/brennercruvinel/plev/commit/6c4d6ff3cf292b9d9e815394843933de03c26918)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-98: workspace reorganization](../../../Tasks/task-98-workspace-reorganization/task-98-workspace-reorganization.md)
+<!-- /related -->

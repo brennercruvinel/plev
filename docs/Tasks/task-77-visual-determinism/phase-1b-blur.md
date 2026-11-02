@@ -409,3 +409,11 @@ delta máximo de 1 a 5).
 - o fixture de escala 1 só compara no apple M4 com metal; outra máquina
   precisa gravar o seu, ou fica no limite entre GPUs do ADR.
 - iOS e android sem compilar nesta máquina.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0064: what identical means](../../adr/Workflows/0064-what-identical-means/0064-what-identical-means.md)
+- [task-77: visual determinism](task-77-visual-determinism.md)
+- [desktop gallery pages: same pixels across scales, themes and runs](../../Research/Exploring/visual-determinism-captures.md)
+<!-- /related -->

@@ -232,7 +232,7 @@ caminho do shell (as máscaras da projeção, o codec, o `Server`, o
    toggle da câmera pelo espelho volta `not_authorized`, o visualizador
    diz a recusa, e a câmera fica como estava.
 6. a preferência de accessibility da pessoa nunca sai pelo port nem vai
-   para o prompt: [`0067-adaptive-transforms-preserve-identity.md`](../../adr/Generative/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md)
+   para o prompt: [`0067-adaptive-transforms-preserve-identity.md`](../../adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md)
    (fase 4: a faixa do Silences, `PERSON_ONLY`, e a projeção igual com e
    sem preferência), `view/apps/silences/generated/access.rs:12, 182`.
    contra o input: o clique do espelho em "larger text" é recusado, e a
@@ -460,3 +460,13 @@ cargo run -p mirroring -- --show
   cifrado), o gravador guardar os pixels das imagens fixas, o custo de
   uma imagem fixa grande no fio do app, override da câmera, vídeo de
   pixels, multiusuário, iOS e android.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0065: the scene travels as data](../../adr/Recording/0065-scene-travels-as-data/0065-scene-travels-as-data.md)
+- [ADR 0067: adaptive transformations are small verified operations that preserve identity](../../adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md)
+- [task-79: scene over socket](task-79-scene-over-socket.md)
+- [closure (orchestrator, 2026-09-25)](closing.md)
+- [phase 1 (task-79a): the probe](phase-79a-probe.md)
+<!-- /related -->

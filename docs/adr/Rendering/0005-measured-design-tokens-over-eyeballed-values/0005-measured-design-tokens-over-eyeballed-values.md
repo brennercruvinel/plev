@@ -60,3 +60,9 @@ reference does not frost content cards).
   actually composes on screen
 - do not let a verifier approve "looks the same". the working protocol is
   numeric: sample, compare, state the delta
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [hoff visual tokens (measured)](../../../Research/Rendering/hoff-visual-tokens.md)
+<!-- /related -->

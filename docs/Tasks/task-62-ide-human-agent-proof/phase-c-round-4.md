@@ -135,3 +135,13 @@ severidade do que saiu daqui:
 - P2: a recusa que nomeia uma pessoa aponta para o `--ask` (task-94);
 - P3: o texto da pergunta no `completed`; a pessoa responder com texto;
   a revisão do `completed` (já registrada na terceira rodada).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](task-62-ide-human-agent-proof.md)
+- [task-92: the agent asks the person](../task-92-the-agent-asks-the-person/task-92-the-agent-asks-the-person.md)
+- [task-93: the person in the lab answers](../task-93-the-lab-person-answers/task-93-the-lab-person-answers.md)
+- [task-94: the refusal that names a person points to the question](../task-94-the-refusal-points-at-the-question/task-94-the-refusal-points-at-the-question.md)
+- [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](../../Research/Exploring/agent-proof-checkpoint-a.md)
+<!-- /related -->

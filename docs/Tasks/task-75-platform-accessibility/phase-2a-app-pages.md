@@ -478,3 +478,12 @@ verde.
 - o ide não liga a ponte (`apps/idestudio/src`: sem `Bridge`); a página Git da
   galeria não projeta.
 - windows, AT-SPI, iOS e android seguem esperando o alvo ou o adapter.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0068: accessibility is production-ready per platform](../../adr/Interface/0068-accessibility-is-production-ready-per-platform/0068-accessibility-is-production-ready-per-platform.md)
+- [task-60: accessibility as a projection of the contract](../task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-70: adaptive transformations](../task-70-adaptive-transformations/task-70-adaptive-transformations.md)
+- [task-75: production-ready platform accessibility](task-75-platform-accessibility.md)
+<!-- /related -->

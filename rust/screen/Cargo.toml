@@ -1,5 +1,5 @@
 # screen: the host of surfaces materialized from verified plev IR
-# (task-69, docs/adr/Generative/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md). a
+# (task-69, docs/adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md). a
 # `plevir::VerifiedIr` becomes a live surface: laid out by the engine's
 # LayoutEngine, every token read from the Theme, drawn by the engine::widgets
 # widgets, projected from the IR itself, and every event a accord::Request

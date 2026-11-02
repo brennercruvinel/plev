@@ -47,3 +47,11 @@ item no critério; o campo usa o estilo do corpo (um título fica menor
 enquanto edita) e não acompanha um scroll.
 
 o agente gastou uns 245 mil tokens.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-65: pixel to code and development inspector](task-65-pixel-to-source.md)
+- [task-65 phases a and b: from pixel to code](phase-a-b.md)
+- [task-65 phase c: edit the text and write the literal](phase-c.md)
+<!-- /related -->

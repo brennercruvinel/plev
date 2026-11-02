@@ -49,3 +49,11 @@ decisões do orquestrador para a fase c:
    um `build.rs` que nunca falha o build; a task-65 usa.
 6. a gravação não é ligada em nenhum app nesta rodada: a task-60 está no
    shell do showcase; o atalho de debug e o panic hook entram depois dela.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-60: accessibility as a projection of the contract](../task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-63: session flight recorder](task-63-flight-recorder.md)
+- [task-73: incremental dependency system](../task-73-incremental-dependency-system/task-73-incremental-dependency-system.md)
+<!-- /related -->

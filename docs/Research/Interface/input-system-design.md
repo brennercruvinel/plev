@@ -47,3 +47,9 @@ winit cursormoved entrega physicalposition<f64>. projeção ortográfica do plev
 
 ## viewid
 resetado a cada frame (begin_frame reseta next_id para 0). viewid é estável entre frames desde que a ordem de registro não mude (immediate mode).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-09: input system, keyboard + mouse](../../Tasks/task-09-input-system-keyboard-mouse/task-09-input-system-keyboard-mouse.md)
+<!-- /related -->

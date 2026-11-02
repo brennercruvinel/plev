@@ -73,3 +73,15 @@ key that includes weight and letter spacing.
 ## learnings
 
 - [why the apps bypassed the engine, and what that costs](../0002-content-driven-layout-not-fixed-constants/apps-bypass-the-engine.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0002: container geometry derives from available space, never from constants](../0002-content-driven-layout-not-fixed-constants/0002-content-driven-layout-not-fixed-constants.md)
+- [ADR 0086: the adaptive foundation reads preferences once into the theme](../../Interface/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme.md)
+- [why the apps bypassed the engine, and what that costs](../0002-content-driven-layout-not-fixed-constants/apps-bypass-the-engine.md)
+- [task-48: ide, native git client in plev](../../../Tasks/task-48-ide-git-client/task-48-ide-git-client.md)
+- [task-66: headless as a first-class citizen](../../../Tasks/task-66-headless-first-class/task-66-headless-first-class.md)
+- [Reorganization of the repository tree (issue #130, PR #131)](../../../Tasks/task-98-workspace-reorganization/change-record.md)
+- [how to code against the plev engine](../../../Research/Workflows/code-against-the-plev-engine.md)
+<!-- /related -->

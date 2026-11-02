@@ -4,12 +4,12 @@
 // plev-book plugin does.
 //
 //   docs/README.md          -> content/_index.md, the home page
-//   docs/<dir>/README.md    -> content/<dir>/_index.md: a collection (an
-//                              index README: cards of what it holds, its
-//                              written index folded below) or a document (a
-//                              task or an experiment: its text, then cards
-//                              of its phases)
-//   a folder of pages without a README -> a generated collection
+//   docs/<dir>/<dir>.md     -> content/<dir>/_index.md: the folder's note (or
+//   docs/<dir>/README.md       a README) is a collection (an index: cards of
+//                              what it holds, its written index folded below)
+//                              or a document (a task or an ADR: its text, then
+//                              cards of its phases or its learnings)
+//   a folder of pages without a note -> a generated collection
 //   docs/<path>.md          -> content/<path>.md, an article (paths in lowercase)
 //   any other file          -> static/docs/<path>, served at /docs/<path>
 //   ATLAS.toml, TERMS.toml  -> content/atlas.md, content/terms.md, one
@@ -81,12 +81,18 @@ const NOUNS = {
 // the non-markdown files that get a page of their own
 const EMBEDS = { "atlas.toml": ["atlas.md", "Atlas"], "terms.toml": ["terms.md", "Terms"] }
 // the home lists the book in the order a reader meets it
-const HOME_ORDER = ["changelog.md", "blog", "tasks", "adr", "experiments", "learnings", "research", "ref", "atlas.md", "terms.md"]
+const HOME_ORDER = ["changelog.md", "blog", "tasks", "adr", "research", "atlas.md", "terms.md"]
 
-const isReadme = (p) => /(^|\/)readme\.md$/.test(p)
+// a folder's note: its README, or the page named like the folder (adr/adr.md,
+// tasks/task-01-x/task-01-x.md), the shape docs/ uses since 2026-11
+const isReadme = (p) =>
+  /(^|\/)readme\.md$/.test(p) || (p.includes("/") && path.posix.basename(p, ".md") === path.posix.basename(parentOf(p)))
+const noteOf = (dir, catalog) => catalog.byPath.get(`${dir}/readme.md`) ?? catalog.byPath.get(`${dir}/${path.posix.basename(dir)}.md`)
+// the Related list docbase.py writes into every page; the book draws its own from the relations
+const withoutRelated = (text) => text.replace(/\n*<!-- related:[\s\S]*?<!-- \/related -->\n?/, "\n")
 // a TEMPLATE.md is the form a new record starts from; links to it open the forge
 const isTemplate = (p) => /(^|\/)template\.md$/.test(p)
-const outPath = (p) => p.replace(/(^|\/)readme\.md$/, "$1_index.md")
+const outPath = (p) => (isReadme(p) ? `${parentOf(p) === "." ? "" : `${parentOf(p)}/`}_index.md` : p)
 const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v))
 const parentOf = (dir) => path.posix.dirname(dir)
 
@@ -146,14 +152,14 @@ function nodesOf(files, catalog) {
     else for (let d = parentOf(p); d !== "."; d = parentOf(d)) sectionDirs.add(d)
   }
   for (const dir of readmeDirs) {
-    const type = catalog.byPath.get(`${dir}/readme.md`)?.type
+    const type = noteOf(dir, catalog)?.type
     if (dir !== "." && (type === "index" || sectionDirs.has(dir))) {
       for (let d = dir; d !== "."; d = parentOf(d)) sectionDirs.add(d)
     }
   }
   for (const [p, real] of files) {
     if (!p.endsWith(".md") || isTemplate(p)) continue
-    const text = fs.readFileSync(real, "utf8")
+    const text = withoutRelated(fs.readFileSync(real, "utf8"))
     const entry = catalog.byPath.get(p) ?? ownEntry(p, real, text)
     const dir = parentOf(p)
     const fallback = path.posix.basename(p, ".md").replace(/[-_]/g, " ")

@@ -84,3 +84,14 @@ page.
   honored by every browser.
 - `Approximation.node` is formatted text; a typed location would serve
   task-67 better and is the first thing to change when it starts.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0040: the semantic form is lean, and one rule redacts a secret](../../Semantics/0040-lean-semantic-form-and-one-redaction/0040-lean-semantic-form-and-one-redaction.md)
+- [task-63: session flight recorder](../../../Tasks/task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-66: headless as a first-class citizen](../../../Tasks/task-66-headless-first-class/task-66-headless-first-class.md)
+- [task-66b: SVG export and `--semantics` in headless mode](../../../Tasks/task-66b-svg-export/task-66b-svg-export.md)
+- [task-67: structural regression before pixels](../../../Tasks/task-67-structural-regression/task-67-structural-regression.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+<!-- /related -->

@@ -288,3 +288,12 @@ isso nao precisa estar no scope de task-27, mas nao deve ser impedido pelo desig
 **mina**, comunidade muito pequena (21 stars), API instavel (v0.1.1), dependencia em enum-map. conceito de stateanimator e valioso como referencia, nao como dependencia.
 
 **easer / easing / interpolation**, easing functions e interpolacao sao triviais de implementar. adicionar dependencia para <200 LOC de matematica pura nao se justifica para um engine que visa zero dependencias desnecessarias.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-27: animation system](../../Tasks/task-27-animation-system/task-27-animation-system.md)
+- [task-31: vector path rendering (lyon integration)](../../Tasks/task-31-vector-paths/task-31-vector-paths.md)
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [technology radar, plev](../Ecosystem/technology-radar.md)
+<!-- /related -->

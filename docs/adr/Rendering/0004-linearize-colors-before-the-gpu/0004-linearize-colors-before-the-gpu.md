@@ -64,3 +64,10 @@ point they enter GPU memory.
 ## learnings
 
 - [the two gamma bugs: one assumption, two opposite failures](the-two-gamma-bugs.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0007: render into an sRGB view when the surface format cannot be sRGB](../0007-render-into-an-srgb-view-format/0007-render-into-an-srgb-view-format.md)
+- [the two gamma bugs: one assumption, two opposite failures](the-two-gamma-bugs.md)
+<!-- /related -->

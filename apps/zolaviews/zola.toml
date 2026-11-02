@@ -3,7 +3,7 @@
 
 title = "plev"
 base_url = "http://127.0.0.1:1112"
-description = "The plev knowledge base: the tasks, the decisions, the experiments and what each mistake taught."
+description = "The plev knowledge base: the tasks, the decisions, what we know by theme, the experiments and what each mistake taught."
 theme = "ametrine"
 
 compile_sass = true
@@ -90,12 +90,11 @@ links = [
   { name = "The work", category = [
     { url = "@/tasks/_index.md", name = "Tasks", icon = "list-checks" },
     { url = "@/adr/_index.md", name = "Decisions", icon = "signpost" },
-    { url = "@/experiments/_index.md", name = "Experiments", icon = "flask" },
   ] },
   { name = "What we know", category = [
-    { url = "@/learnings/_index.md", name = "Learnings", icon = "lightbulb" },
     { url = "@/research/_index.md", name = "Research", icon = "magnifying-glass" },
-    { url = "@/ref/_index.md", name = "Reference", icon = "book-open" },
+    { url = "@/research/exploring/_index.md", name = "Experiments", icon = "flask" },
+    { url = "@/research/workflows/_index.md", name = "Workflows", icon = "book-open" },
   ] },
   { name = "Maps", category = [
     { url = "@/atlas.md", name = "Atlas", icon = "map-trifold" },

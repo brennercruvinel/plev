@@ -141,3 +141,10 @@ pipeline GPU: `pipelines.rs`, `render.rs`, `gpu.rs`.
 6. executar `cargo check` e `cargo test`.
 7. verificar `cargo check --examples` se existirem.
 8. confirmar zero warnings com `cargo clippy -- -D warnings`.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0015: adr-003: modularizacao por single responsibility principle](../../adr/Structure/0015-srp-modularization/0015-srp-modularization.md)
+- [task-52: modularization by single responsibility principle](../../Tasks/task-52-srp-modularization/task-52-srp-modularization.md)
+<!-- /related -->

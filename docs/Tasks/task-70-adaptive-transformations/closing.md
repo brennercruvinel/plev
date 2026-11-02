@@ -32,3 +32,14 @@ da pessoa (P3); o rótulo do stat a 4,13 com mais contraste (tema ou
 `comps`, do brenner); o prompt de mudança não cita as partes novas do
 `restyle` (P3); o botão promovido no tamanho padrão, a composta num
 corte já aplicado, `REPEATS=2` e a legenda da página Surface (P3).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-70: adaptive transformations](task-70-adaptive-transformations.md)
+- [task-75: production-ready platform accessibility](../task-75-platform-accessibility/task-75-platform-accessibility.md)
+- [task-70: phase 1, the operations, the inverse, the verification and the host](phase-1-operations.md)
+- [task-70: phase 2, the transformation proposer](phase-2-proposer.md)
+- [task-70: phase 3, composite capabilities](phase-3-composite-capabilities.md)
+- [task-70: phase 4, accessibility as a transformation](phase-4-accessibility.md)
+<!-- /related -->

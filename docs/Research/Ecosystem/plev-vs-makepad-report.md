@@ -480,7 +480,7 @@ for (source, action) in action_queue.drain() {
 }
 ```
 
-**LOC estimado:** ~100 LOC. combina com [task-42](../../Tasks/task-42-plev-event-dispatch/README.md) (event dispatch em andamento).
+**LOC estimado:** ~100 LOC. combina com [task-42](../../Tasks/task-42-plev-event-dispatch/task-42-plev-event-dispatch.md) (event dispatch em andamento).
 
 ---
 
@@ -674,3 +674,9 @@ docknode recursivo, lazy instantiation, typed actions) e implementa-los de forma
 que se integrem naturalmente com a arquitetura hash-based dirty tracking do plev.
 
 a meta e: **mesma qualidade visual, metade do codigo, o dobro dos testes.**
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-42: plev event dispatch + gitbutler UI port](../../Tasks/task-42-plev-event-dispatch/task-42-plev-event-dispatch.md)
+<!-- /related -->

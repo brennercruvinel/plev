@@ -410,9 +410,9 @@ nenhuma GPU aberta (os 173 de antes iguais, 2 novos). todo cargo com o
 `PLEV_CLAUDE` apontando para o stub que só falha; nenhum `claude -p`
 chamado.
 
-### linha de ADR para o índice (o [`adr/`](../../adr/README.md) não está na minha lista)
+### linha de ADR para o índice (o [`adr/`](../../adr/adr.md) não está na minha lista)
 
-| 2026-09-24 | [adaptive-transforms-preserve-identity](../../adr/Generative/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md) | adição proposta | fase 3: `propose::compose`; o detector lê o fluxo de estágios de um dispatcher, ao vivo (`Listener`, um `ReceiptSink`) e gravado (os `Kind::Stage` do `rec`), pela mesma chamada; passos iguais pela ação e pelo nó, ou por itens da mesma coleção com um item por repetição, do mesmo ator, contíguos; passo com parâmetro, recusado, que esperou pessoa ou composto corta, e nenhum valor de parâmetro fica; a composta é ação do app declarada depois da projeção (`SnapshotBuilder::declared` e `reopen`, a única adição ao `sem`), ligada pelo primeiro passo, com a política mais estreita dos passos; o aceite é o request da pessoa (`install`/`dismiss` `PERSON_ONLY`), não `confirm`; o host promove no template do item com o template como membro do registro; a cadeia roda cada passo como request do mesmo ator, observado sobre o que o anterior deixou, e o primeiro recusado falha a composta dizendo qual passo e por quê; sem rollback (task-70 fase 3) |
+| 2026-09-24 | [adaptive-transforms-preserve-identity](../../adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md) | adição proposta | fase 3: `propose::compose`; o detector lê o fluxo de estágios de um dispatcher, ao vivo (`Listener`, um `ReceiptSink`) e gravado (os `Kind::Stage` do `rec`), pela mesma chamada; passos iguais pela ação e pelo nó, ou por itens da mesma coleção com um item por repetição, do mesmo ator, contíguos; passo com parâmetro, recusado, que esperou pessoa ou composto corta, e nenhum valor de parâmetro fica; a composta é ação do app declarada depois da projeção (`SnapshotBuilder::declared` e `reopen`, a única adição ao `sem`), ligada pelo primeiro passo, com a política mais estreita dos passos; o aceite é o request da pessoa (`install`/`dismiss` `PERSON_ONLY`), não `confirm`; o host promove no template do item com o template como membro do registro; a cadeia roda cada passo como request do mesmo ator, observado sobre o que o anterior deixou, e o primeiro recusado falha a composta dizendo qual passo e por quê; sem rollback (task-70 fase 3) |
 
 ### o que fica aberto para fechar a task-70
 
@@ -440,3 +440,16 @@ chamado.
   o seguinte; a cadeia para com o motivo, em vez de agir sobre o que não
   viu.
 - a adição ao ADR está como proposta; o índice é do orquestrador.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0067: adaptive transformations are small verified operations that preserve identity](../../adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md)
+- [task-58: action with precondition, dispatch and receipts](../task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-63: session flight recorder](../task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-70: adaptive transformations](task-70-adaptive-transformations.md)
+- [task-70: task closure, by the orchestrator](closing.md)
+- [task-70: phase 1, the operations, the inverse, the verification and the host](phase-1-operations.md)
+- [task-70: phase 2, the transformation proposer](phase-2-proposer.md)
+- [task-70: phase 4, accessibility as a transformation](phase-4-accessibility.md)
+<!-- /related -->

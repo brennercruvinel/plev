@@ -333,3 +333,11 @@ this is separate from the render loop: input events trigger immediate re-renders
 3. **partial render flag (pattern 2):** extends plev's existing per-layer fxhash dirty tracking with explicit "skip frame entirely" and "update only animation layers" states. reduces wasted frames during idle.
 
 4. **layer-based action routing (pattern 3):** plev needs modal keyboard input for text editing vs navigation vs dialog contexts. the layer enum + fallthrough pattern provides a clean model.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-30: accessibility (accesskit)](../../Tasks/task-30-accessibility/task-30-accessibility.md)
+- [task-33: WASM plugin architecture](../../Tasks/task-33-wasm-plugins/task-33-wasm-plugins.md)
+- [task-34: exploration and extraction of ideas from the reference repos](../../Tasks/task-34-exploration-extraction/task-34-exploration-extraction.md)
+<!-- /related -->

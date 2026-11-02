@@ -175,3 +175,10 @@ mapa de posicionamento
 o nicho único do plev: motor de composição GPU-first (nível skia/impeller) com
 acessibilidade nativa, dirty tracking por hash, shaders webgpu unificados e ~30k
 LOC. nenhum outro projeto rust combina todas essas propriedades simultaneamente.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [makepad visual feature inventory vs plev gap analysis](makepad-gap-analysis.md)
+- [technology radar, plev](technology-radar.md)
+<!-- /related -->

@@ -8,10 +8,10 @@ date: 2026-09-25
 date_basis: header
 recorded: 2026-09-25
 topics: [importing, ir, formats]
-relations: [adr-0011, adr-0012, adr-0049, adr-0051, adr-0064, task-68, task-69, task-71]
+relations: [adr-0011, adr-0012, adr-0049, adr-0051, adr-0064, task-68, task-69, task-71, learning-cycle-0069]
 source: docs/adr/importing/0069-importers-target-plev-ir.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -27,14 +27,14 @@ droplist with file:line ([adr-0012](../0012-transpiler-reports-every-unmapped-co
 the thesis (sections 3 and 14) asks more of an importer: sources of UI
 converge on plev IR, and every construct is supported, transformed,
 approximated or impossible, never an equivalence claimed in silence. the
-IR exists (task-68, `rust/plevir`, [adr-0049](../../Generative/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md))
+IR exists (task-68, `rust/plevir`, [adr-0049](../../Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md))
 and so does its materialization (task-69, `rust/screen`,
-[adr-0051](../../Generative/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)). the runtime never
+[adr-0051](../../Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)). the runtime never
 carries the source's execution model
 ([adr-0011](../0011-import-foreign-formats-by-conversion-not-embedding/0011-import-foreign-formats-by-conversion-not-embedding.md)).
 
 the probe of task-71 phase 1 (in
-[`task-71-compiler-target.md`](../../../Tasks/task-71-compiler-target/README.md)) found that the
+[`task-71-compiler-target.md`](../../../Tasks/task-71-compiler-target/task-71-compiler-target.md)) found that the
 `ParserNode` loses what the IR needs: the source tag (a `<button>` and a
 `<div>` were one `Tag::Div`), the attributes other than `className`, and
 where each prop came from (the resolvers only counted). the IR itself
@@ -267,3 +267,23 @@ with a fixture, goldens (IR, report, builder code) and a census test.
 - a layout read from positions without its rule and its difference in the
   report, or an override, a variable or an image dropped by the export
   without a mark.
+
+## learnings
+
+- [what the autonomous cycle taught: importers target plev IR, with a report in four categories](learned-importers-target-plev-ir.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0011: import foreign formats by conversion, never by embedding a foreign runtime](../0011-import-foreign-formats-by-conversion-not-embedding/0011-import-foreign-formats-by-conversion-not-embedding.md)
+- [ADR 0012: the transpiler reports every unmapped construct, never drops silently](../0012-transpiler-reports-every-unmapped-construct/0012-transpiler-reports-every-unmapped-construct.md)
+- [ADR 0049: the plev IR is typed, references only declared capabilities, and runs only once verified](../../Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md)
+- [ADR 0051: a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](../../Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)
+- [ADR 0064: what identical means](../../Workflows/0064-what-identical-means/0064-what-identical-means.md)
+- [what the autonomous cycle taught: importers target plev IR, with a report in four categories](learned-importers-target-plev-ir.md)
+- [task-68: plev IR and verifier](../../../Tasks/task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-69: ephemeral and generated surfaces](../../../Tasks/task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-71: plev as compiler target (importers to IR)](../../../Tasks/task-71-compiler-target/task-71-compiler-target.md)
+- [task-71 phase 1: probe and handoff of the plev IR emitter](../../../Tasks/task-71-compiler-target/phase-1-ir-emitter.md)
+- [task-71 phase 2: probe and handoff of the HTML/CSS and Figma sources](../../../Tasks/task-71-compiler-target/phase-2-html-and-figma.md)
+<!-- /related -->

@@ -68,4 +68,13 @@ Tab sequence. that is a change to `sem` and waits for Brenner's ok.
 
 ## learnings
 
-- [Generative runtime session: what worked and what bit us](../../Generative/0070-generative-runtime-results/generative-runtime.md)
+- [Generative runtime session: what worked and what bit us](../../Synthesis/0070-generative-runtime-results/generative-runtime.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0068: accessibility is production-ready per platform](../0068-accessibility-is-production-ready-per-platform/0068-accessibility-is-production-ready-per-platform.md)
+- [ADR 0086: the adaptive foundation reads preferences once into the theme](../0086-the-adaptive-foundation-reads-preferences-once-into-the-theme/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme.md)
+- [Generative runtime session: what worked and what bit us](../../Synthesis/0070-generative-runtime-results/generative-runtime.md)
+- [task-75: production-ready platform accessibility](../../../Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md)
+<!-- /related -->

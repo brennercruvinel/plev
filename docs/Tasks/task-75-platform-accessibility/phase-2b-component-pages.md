@@ -531,3 +531,11 @@ as páginas escolhidas, uma por tipo:
 - breadcrumb: `breadcrumb@core@1280x800`
 - link de navegação: `navigation-menu@core@1280x800`
 - split: `resizable@core@1280x800`
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0068: accessibility is production-ready per platform](../../adr/Interface/0068-accessibility-is-production-ready-per-platform/0068-accessibility-is-production-ready-per-platform.md)
+- [task-59: semantic binding with the render and one operational path](../task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-75: production-ready platform accessibility](task-75-platform-accessibility.md)
+<!-- /related -->

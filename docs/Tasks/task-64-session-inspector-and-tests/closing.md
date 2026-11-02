@@ -47,3 +47,11 @@ coluna só (o rótulo é alinhado com espaços numa fonte proporcional); a
 dica com o `SemId` cobre a borda de cima do frame.
 
 o agente gastou uns 360 mil tokens.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-64: session inspector, bug report and session for testing](task-64-session-inspector-and-tests.md)
+- [task-64 phase b: inspector UI](phase-b-ui.md)
+- [task-64 phase c: session to test, and export](phase-c-session-to-test.md)
+<!-- /related -->

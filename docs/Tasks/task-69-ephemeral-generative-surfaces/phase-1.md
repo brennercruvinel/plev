@@ -465,9 +465,9 @@ check wasm do showcase com `-D warnings` verdes (dentro do gate).
 
 ### linhas de ADR
 
-- novo, proposto: [`0051-materialized-surfaces-from-verified-ir.md`](../../adr/Generative/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md).
+- novo, proposto: [`0051-materialized-surfaces-from-verified-ir.md`](../../adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md).
   linha do índice para o orquestrador:
-  `| 2026-09-24 | [materialized-surfaces-from-verified-ir](../../adr/Generative/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md) | proposed | crate surface (uir, sem, engine, comps): só VerifiedIr materializa; o IR se desenrola sobre o snapshot vivo (repeat por item, ids chaveados pelo item) num widget retido do comps por SemId; layout pelo LayoutEngine (grid como linha com flex_wrap, overlay uma passada por camada), tokens pelo Theme num match exaustivo (control_size do botão aproximado pela escada ButtonSize); projeção do IR no builder do app, reads com o nome do estado que a superfície mostra; cada evento é um Request pelo dispatcher do app, observado no snapshot mostrado; route leva o ato num nó da superfície à capacidade; a página Surface do showcase (task-69) |`
+  `| 2026-09-24 | [materialized-surfaces-from-verified-ir](../../adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md) | proposed | crate surface (uir, sem, engine, comps): só VerifiedIr materializa; o IR se desenrola sobre o snapshot vivo (repeat por item, ids chaveados pelo item) num widget retido do comps por SemId; layout pelo LayoutEngine (grid como linha com flex_wrap, overlay uma passada por camada), tokens pelo Theme num match exaustivo (control_size do botão aproximado pela escada ButtonSize); projeção do IR no builder do app, reads com o nome do estado que a superfície mostra; cada evento é um Request pelo dispatcher do app, observado no snapshot mostrado; route leva o ato num nó da superfície à capacidade; a página Surface do showcase (task-69) |`
 - atualizado: [`0023-official-app-pattern.md`](../../adr/Structure/0023-official-app-pattern/0023-official-app-pattern.md) ganhou o adendo "the
   second pattern, a surface materialized from verified IR", com quando
   usar cada padrão.
@@ -599,3 +599,13 @@ severidade do que ficou:
   superfície; `icon_button` com um ícone só; `image` desenha só a casca.
 
 próximo: fase 2 (transformar por `SemId`, com o que o handoff lista).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0051: a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](../../adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)
+- [task-58: action with precondition, dispatch and receipts](../task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-59: semantic binding with the render and one operational path](../task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-68: plev IR and verifier](../task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-69: ephemeral and generated surfaces](task-69-ephemeral-generative-surfaces.md)
+<!-- /related -->

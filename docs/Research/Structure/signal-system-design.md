@@ -60,3 +60,9 @@ via closure no momento da criação. isso permite comparar box<dyn any> sem conh
 com 17+ agentes claude code compartilhando o mesmo diretório, `git checkout` e `git stash`
 causam race conditions constantes. worktrees (`git worktree add /tmp/...`) são a única forma
 segura de trabalhar. o worktree `/tmp/plev-task04` foi usado para esta task.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-04: signal system (reactivity)](../../Tasks/task-04-signal-system/task-04-signal-system.md)
+<!-- /related -->

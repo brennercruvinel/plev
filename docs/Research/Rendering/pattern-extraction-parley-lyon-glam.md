@@ -335,3 +335,11 @@ the three repos confirm plev's integration roadmap:
 3. **glam adds convenience but not value yet.** plev's `[f32; 2/4]` arrays work fine through bytemuck. glam's SIMD benefits (NEON on apple silicon) would only matter for matrix operations (projection, transforms) which plev does minimally. worth adding alongside lyon to avoid `euclid`<->`[f32;N]` conversions.
 
 4. **parley is WASM-compatible** (no target restrictions in cargo.toml, `no_std` with `libm` feature). lyon is `#![no_std]`. glam supports `no_std` + wasm simd128. all three align with plev's 6-platform target.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-31: vector path rendering (lyon integration)](../../Tasks/task-31-vector-paths/task-31-vector-paths.md)
+- [task-32: text system upgrade assessment](../../Tasks/task-32-text-upgrade-assessment/task-32-text-upgrade-assessment.md)
+- [task-34: exploration and extraction of ideas from the reference repos](../../Tasks/task-34-exploration-extraction/task-34-exploration-extraction.md)
+<!-- /related -->

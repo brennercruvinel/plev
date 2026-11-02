@@ -17,7 +17,7 @@ review: reviewed
 
 # hot reload session: what worked and what bit us
 
-Records the session that turned hot reload on for real in plev ([adr-0031](0031-hot-reload-on-by-default-in-gpu-context.md) and [task-56](../../../Tasks/task-56-hot-reload/README.md)). The audit of the three 2024 ADRs found six defects before any new mechanism, and the integration ended up in the `GpuContext` and in `present_frame`, with no lines in the apps. It was written for whoever works on the dev loop, human or agent, so as not to repeat the morning.
+Records the session that turned hot reload on for real in plev ([adr-0031](0031-hot-reload-on-by-default-in-gpu-context.md) and [task-56](../../../Tasks/task-56-hot-reload/task-56-hot-reload.md)). The audit of the three 2024 ADRs found six defects before any new mechanism, and the integration ended up in the `GpuContext` and in `present_frame`, with no lines in the apps. It was written for whoever works on the dev loop, human or agent, so as not to repeat the morning.
 
 registro da sessão que ligou o hot reload de verdade no plev (adr
 hot-reload-on-by-default-in-gpu-context, task-56). escrito pra quem for
@@ -106,3 +106,12 @@ mexer no dev loop, humano ou agente, e pra não repetir a manhã.
   (rust-conventions.md, crate boundary).
 - o chokepoint de um override de dev mantém o `cfg` numa linha só; o
   caminho de produção lê sem ele.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0018: adotamos runtime parser + override map para hot reload de plev_narrate! DSL](../0018-narrate-hot-reload/0018-narrate-hot-reload.md)
+- [ADR 0019: adotamos shader hot reload via notify file watcher sobre dylib reloading](../0019-shader-hot-reload/0019-shader-hot-reload.md)
+- [ADR 0031: hot reload on by default: shaders and literals in place, code by rebuild](0031-hot-reload-on-by-default-in-gpu-context.md)
+- [task-56: hot reload](../../../Tasks/task-56-hot-reload/task-56-hot-reload.md)
+<!-- /related -->

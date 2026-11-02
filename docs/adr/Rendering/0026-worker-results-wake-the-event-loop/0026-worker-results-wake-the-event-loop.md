@@ -8,7 +8,7 @@ date: 2026-09-18
 date_basis: header
 recorded: 2026-09-18
 topics: [urna, performance, rendering]
-relations: [learning-subprocesses-and-pipes, task-99]
+relations: [learning-subprocesses-and-pipes, task-99, learning-cycle-0026]
 source: docs/adr/rendering/0026-worker-results-wake-the-event-loop.md
 source_revision: ec0a224c
 revised: 2026-11-02
@@ -72,3 +72,19 @@ an exit, and both sides wait forever until the timeout kills the child.
 ## learnings
 
 - [Why waiting for a process can block reading its output](subprocesses-and-pipes.md)
+- [what the autonomous cycle taught: background results wake the event loop; child pipes drain from the start](learned-worker-results-wake-the-event-loop.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0025: urnaui: decode media frames in place with ffmpeg's subfile protocol](../../Importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md)
+- [ADR 0029: embed an app view by giving it a frame origin](../0029-embed-an-app-view-by-frame-origin/0029-embed-an-app-view-by-frame-origin.md)
+- [ADR 0039: agents act through the semantic contract](../../Semantics/0039-agents-act-through-the-semantic-contract/0039-agents-act-through-the-semantic-contract.md)
+- [what the autonomous cycle taught: background results wake the event loop; child pipes drain from the start](learned-worker-results-wake-the-event-loop.md)
+- [Why waiting for a process can block reading its output](subprocesses-and-pipes.md)
+- [task-60: accessibility as a projection of the contract](../../../Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-61: agent surface (local socket, observe, act)](../../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-78: AI-native applications](../../../Tasks/task-78-ai-native-apps/task-78-ai-native-apps.md)
+- [task-99: explorer integration and platform fixes](../../../Tasks/task-99-integration-and-portability/task-99-integration-and-portability.md)
+- [how to code against the plev engine](../../../Research/Workflows/code-against-the-plev-engine.md)
+<!-- /related -->

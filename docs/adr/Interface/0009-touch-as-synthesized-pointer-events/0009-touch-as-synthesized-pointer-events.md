@@ -66,3 +66,10 @@ primary finger into synthetic pointer events injected into the same
 ## learnings
 
 - [why the apps bypassed the engine, and what that costs](../../Rendering/0002-content-driven-layout-not-fixed-constants/apps-bypass-the-engine.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0002: container geometry derives from available space, never from constants](../../Rendering/0002-content-driven-layout-not-fixed-constants/0002-content-driven-layout-not-fixed-constants.md)
+- [why the apps bypassed the engine, and what that costs](../../Rendering/0002-content-driven-layout-not-fixed-constants/apps-bypass-the-engine.md)
+<!-- /related -->

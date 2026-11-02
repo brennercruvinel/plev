@@ -650,3 +650,18 @@ let _guard = observer.replace(new_observer);
 | 10 | c4 repeat/reverse/delay | patterns comuns de animacao | ~80 LOC | animation.rs |
 
 **total: 38 patterns extraidos de 18 repos em 6 fases.**
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-30: accessibility (accesskit)](../../Tasks/task-30-accessibility/task-30-accessibility.md)
+- [task-31: vector path rendering (lyon integration)](../../Tasks/task-31-vector-paths/task-31-vector-paths.md)
+- [task-32: text system upgrade assessment](../../Tasks/task-32-text-upgrade-assessment/task-32-text-upgrade-assessment.md)
+- [task-33: WASM plugin architecture](../../Tasks/task-33-wasm-plugins/task-33-wasm-plugins.md)
+- [task-34: exploration and extraction of ideas from the reference repos](../../Tasks/task-34-exploration-extraction/task-34-exploration-extraction.md)
+- [task-35: fix spring<t>, analytical solver](../../Tasks/task-35-spring-analytical-solver/task-35-spring-analytical-solver.md)
+- [task-36: signal system hardening](../../Tasks/task-36-signal-hardening/task-36-signal-hardening.md)
+- [task-37: animation enhancements](../../Tasks/task-37-animation-enhancements/task-37-animation-enhancements.md)
+- [task-38: event batching](../../Tasks/task-38-event-batching/task-38-event-batching.md)
+- [task-39: scene cache, memoization + dirty flag bubbling](../../Tasks/task-39-scene-cache-memoization/task-39-scene-cache-memoization.md)
+<!-- /related -->

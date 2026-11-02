@@ -73,3 +73,11 @@ web, with the embedded faces alone, measures them otherwise.
 - dropping the system's faces from the desktop database: the scripts the
   embedded faces do not cover (thai, greek beyond the latin faces, ...)
   would lose their only faces.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0071: embed Noto Sans subsets for the non-Latin scripts](../0071-embedded-fonts-by-script/0071-embedded-fonts-by-script.md)
+- [ADR 0078: the web build fetches the Noto faces when a text first needs them](../0078-the-web-fetches-the-noto-faces-on-demand/0078-the-web-fetches-the-noto-faces-on-demand.md)
+- [task-101: on-demand fonts and deterministic fallback](../../../Tasks/task-101-fonts-by-script/task-101-fonts-by-script.md)
+<!-- /related -->

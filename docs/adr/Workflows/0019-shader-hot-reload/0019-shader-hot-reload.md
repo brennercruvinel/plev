@@ -113,9 +113,18 @@ perdemos: polling vs push. em teoria, push seria mais imediato, mas com debounce
 | `mission/rules.md` | +9 | hot reload section |
 | [`hot-reload-design.md`](../../../Research/Workflows/hot-reload-design.md) | +123 | design doc (pesquisa) |
 | `mission/steps/ongoing/GAP-1-hot-reload.md` | +59 | task checklist |
-| [`task-56-hot-reload.md`](../../../Tasks/task-56-hot-reload/README.md) | +22 | changelog |
+| [`task-56-hot-reload.md`](../../../Tasks/task-56-hot-reload/task-56-hot-reload.md) | +22 | changelog |
 | `CLAUDE.md` | +3 | comando hot-reload |
 
 ## learnings
 
 - [hot reload session: what worked and what bit us](../0031-hot-reload-on-by-default-in-gpu-context/hot-reload.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0031: hot reload on by default: shaders and literals in place, code by rebuild](../0031-hot-reload-on-by-default-in-gpu-context/0031-hot-reload-on-by-default-in-gpu-context.md)
+- [hot reload session: what worked and what bit us](../0031-hot-reload-on-by-default-in-gpu-context/hot-reload.md)
+- [task-56: hot reload](../../../Tasks/task-56-hot-reload/task-56-hot-reload.md)
+- [hot reload design - plev](../../../Research/Workflows/hot-reload-design.md)
+<!-- /related -->

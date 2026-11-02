@@ -210,3 +210,17 @@ consequences of phase c:
 - a write through the dispatcher, or the edit projected as a capability.
 - a write that skips the code check, or finds its literal by text alone.
 - byte ranges kept in the baseline: they are read at the write.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0031: hot reload on by default: shaders and literals in place, code by rebuild](../0031-hot-reload-on-by-default-in-gpu-context/0031-hot-reload-on-by-default-in-gpu-context.md)
+- [ADR 0032: semantic contract as a pure projection of app state](../../Semantics/0032-semantic-contract-as-pure-projection/0032-semantic-contract-as-pure-projection.md)
+- [ADR 0035: semantic binding beside the scene, and the click as a request](../../Semantics/0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md)
+- [task-63: session flight recorder](../../../Tasks/task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-65: pixel to code and development inspector](../../../Tasks/task-65-pixel-to-source/task-65-pixel-to-source.md)
+- [task-65 phases a and b: from pixel to code](../../../Tasks/task-65-pixel-to-source/phase-a-b.md)
+- [task-65 phase c: edit the text and write the literal](../../../Tasks/task-65-pixel-to-source/phase-c.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+- [autonomous cycle journal](../../../Research/Workflows/autonomous-cycle-journal.md)
+<!-- /related -->

@@ -46,3 +46,10 @@ Source: [apps/urnadbapp/src/backend/workers/subprocess.rs](https://github.com/br
 ## Evidence
 
 - [`701d2993`](https://github.com/brennercruvinel/plev/commit/701d2993266b090acdfc13f641d88df2d57c74e6)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0026: background results wake the event loop; child pipes drain from the start](0026-worker-results-wake-the-event-loop.md)
+- [task-99: explorer integration and platform fixes](../../../Tasks/task-99-integration-and-portability/task-99-integration-and-portability.md)
+<!-- /related -->

@@ -8,10 +8,10 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [platform, rendering, semantics, agents]
-relations: [adr-0060, task-76]
+relations: [adr-0060, task-76, learning-cycle-0062]
 source: docs/adr/interface/0062-capture-is-a-job-the-person-turns-on.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -31,7 +31,7 @@ desktop machines the showcase already runs it on (the Silences page),
 with an input device per platform.
 
 the probe (the handoff of item 10 in
-[task-76](../../../Tasks/task-76-platform-integration/README.md)) opened no
+[task-76](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)) opened no
 device, ever: ffmpeg read `-f lavfi` sources only, paced by `-re` as a
 device paces itself, and the rest was read from `ffmpeg-devices(1)` and
 the strings of libavdevice.
@@ -204,3 +204,19 @@ página começa com `NoCapture` e só o shell de janela real instala o
 `default_capture()`; o estado `Starting` conta como vivo e pede prazo
 ao laço. P3 registrado: no tema core o interruptor da câmera e do
 microfone quase não aparece.
+
+## learnings
+
+- [what the autonomous cycle taught: capture is a job the person turns on](learned-capture-is-a-job-the-person-turns-on.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0060: a covered window does not draw, and wakes with a new frame](../../Rendering/0060-a-covered-window-does-not-draw-and-wakes-new/0060-a-covered-window-does-not-draw-and-wakes-new.md)
+- [ADR 0065: the scene travels as data](../../Recording/0065-scene-travels-as-data/0065-scene-travels-as-data.md)
+- [what the autonomous cycle taught: capture is a job the person turns on](learned-capture-is-a-job-the-person-turns-on.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-76, closing: what went in and what remains](../../../Tasks/task-76-platform-integration/closing.md)
+- [task-76, item 10: camera and microphone](../../../Tasks/task-76-platform-integration/item-10-camera-and-microphone.md)
+- [phase 1 (task-79a): the probe](../../../Tasks/task-79-scene-over-socket/phase-79a-probe.md)
+<!-- /related -->

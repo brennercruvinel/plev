@@ -598,11 +598,11 @@ warnings` verdes, dentro do gate. `df -h /` antes do gate: 13 GB livres.
 
 ### linha de ADR
 
-novo, proposto: [`0052-proposers-propose-the-runtime-verifies.md`](../../adr/Generative/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md).
-linha do índice para o orquestrador (o [`adr/`](../../adr/README.md) é proibido
+novo, proposto: [`0052-proposers-propose-the-runtime-verifies.md`](../../adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md).
+linha do índice para o orquestrador (o [`adr/`](../../adr/adr.md) é proibido
 aqui):
 
-`| 2026-09-24 | [proposers-propose-the-runtime-verifies](../../adr/Generative/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md) | proposed | crate propose (uir, sem, serde_json; sem engine, comps ou rede): trait Proposer sobre Ask (intenção, Capabilities, Snapshot, VerifiedIr mostrado, GenerationPolicy) devolve Ir não verificado; propose_verified é a única saída, VerifiedIr ou os erros; Rules, determinístico, gramática pequena em inglês e português (add, filter, counts, compact, two columns, everything) ligada por estrutura do registro, nunca por nomes do app, palavras que escolhem só do app (NoMatch lista as dele), ids do que fica mantidos; Llm atrás de Model, prompt com regras, componentes, registro, superfície atual e ids a manter e o schema, erros do verifier de volta, 3 tentativas, Exhausted; a página Surface propõe pelo dispatcher do todo (TodoPage::with_dispatcher); o provedor é a fase 3b (task-69) |`
+`| 2026-09-24 | [proposers-propose-the-runtime-verifies](../../adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md) | proposed | crate propose (uir, sem, serde_json; sem engine, comps ou rede): trait Proposer sobre Ask (intenção, Capabilities, Snapshot, VerifiedIr mostrado, GenerationPolicy) devolve Ir não verificado; propose_verified é a única saída, VerifiedIr ou os erros; Rules, determinístico, gramática pequena em inglês e português (add, filter, counts, compact, two columns, everything) ligada por estrutura do registro, nunca por nomes do app, palavras que escolhem só do app (NoMatch lista as dele), ids do que fica mantidos; Llm atrás de Model, prompt com regras, componentes, registro, superfície atual e ids a manter e o schema, erros do verifier de volta, 3 tentativas, Exhausted; a página Surface propõe pelo dispatcher do todo (TodoPage::with_dispatcher); o provedor é a fase 3b (task-69) |`
 
 ### decisões
 
@@ -674,3 +674,12 @@ aqui):
   ao modelo como erro brando (continuidade não é regra do verifier);
 - qual proponente a página usa: as regras primeiro e o modelo quando
   elas não entendem, ou só o modelo.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0052: proposers propose, the runtime verifies](../../adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md)
+- [task-68: plev IR and verifier](../task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-69: ephemeral and generated surfaces](task-69-ephemeral-generative-surfaces.md)
+- [task-95: the todo projects its items as a list](../task-95-the-todo-projects-its-items-as-a-list/task-95-the-todo-projects-its-items-as-a-list.md)
+<!-- /related -->

@@ -8,10 +8,10 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [generated-surfaces, semantics, agents]
-relations: [adr-0025, task-69]
+relations: [adr-0025, task-69, learning-cycle-0053]
 source: docs/adr/structure/0053-the-silences-app-is-the-fixed-screen.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -222,3 +222,17 @@ frame it can decode: `silences.video:original` (the instant shown) and
 `silences.video@4.017052`; an `image` of a generated surface binds its
 `source` to one of them and the page decodes the frame through
 `surface::Frames`. `silences.video:range` carries the span shown.
+
+## learnings
+
+- [what the autonomous cycle taught: the silences app is the fixed screen the generated one is compared against](learned-the-silences-app-is-the-fixed-screen.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0025: urnaui: decode media frames in place with ffmpeg's subfile protocol](../../Importing/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile/0025-urnaui-media-frames-in-place-via-ffmpeg-subfile.md)
+- [what the autonomous cycle taught: the silences app is the fixed screen the generated one is compared against](learned-the-silences-app-is-the-fixed-screen.md)
+- [task-69: ephemeral and generated surfaces](../../../Tasks/task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-69, phase 4a: the silences app and the fixed screen](../../../Tasks/task-69-ephemeral-generative-surfaces/phase-4a.md)
+- [task-69, phase 4b: the generated screen of the silences](../../../Tasks/task-69-ephemeral-generative-surfaces/phase-4b.md)
+<!-- /related -->

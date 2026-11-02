@@ -20,14 +20,14 @@ review: reviewed
 <!-- copy this file to docs/adr/<Theme>/NNNN-<the-title-in-kebab-case>/,
      named like its folder (NNNN-<the-title-in-kebab-case>.md): NNNN is the
      next free number across every theme, the theme is the directory whose
-     decisions this one sits with (Ecosystem, Generative, Importing,
-     Interface, Recording, Rendering, Semantics, Structure, Workflows), the
+     decisions this one sits with (Ecosystem, Importing, Interface,
+     Recording, Rendering, Semantics, Structure, Synthesis, Workflows), the
      same name Research/ uses for what is known about the subject. a learning
      that led to this decision sits beside it and is listed under
      "## learnings" at the end.
      status: proposed until someone decides, then accepted (or superseded,
      with the record that supersedes it in relations). write it in the
-     present tense, without hedging. list it in docs/adr/README.md. the
+     present tense, without hedging. list it in docs/adr/adr.md. the
      header fields are in docs/Research/Workflows/docs-conventions.md. -->
 
 ## context

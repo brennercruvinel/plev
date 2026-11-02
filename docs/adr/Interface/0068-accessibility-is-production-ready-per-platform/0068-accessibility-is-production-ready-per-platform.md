@@ -8,10 +8,10 @@ date: 2026-09-25
 date_basis: header
 recorded: 2026-09-25
 topics: [accessibility, platform, semantics, web-wasm]
-relations: [adr-0038, task-60, task-75]
+relations: [adr-0038, task-60, task-75, learning-cycle-0068]
 source: docs/adr/interface/0068-accessibility-is-production-ready-per-platform.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -34,7 +34,7 @@ accesskit_winit 0.32.2, accesskit_macos 0.26.1, accesskit_windows 0.32.1,
 accesskit_unix 0.21.1 over accesskit_atspi_common 0.18.1, the consumers
 0.35.0 and 0.36.0, winit 0.30.13) and every page of the gallery. the
 matrix with file and line is in
-[`task-75-platform-accessibility.md`](../../../Tasks/task-75-platform-accessibility/README.md), section
+[`task-75-platform-accessibility.md`](../../../Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md), section
 "fase 1: a sonda".
 
 ## decision
@@ -338,3 +338,22 @@ accesskit_windows 0.32.1); macOS and AT-SPI do.
   regress names a layer that way), its content unchanged.
 - a gallery page whose widget gains a projection in comps joins by one
   line in the table and its `Component`.
+
+## learnings
+
+- [what the autonomous cycle taught: accessibility is production-ready per platform](learned-accessibility-is-production-ready-per-platform.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0038: accessibility projects the semantic snapshot](../0038-accessibility-projects-the-semantic-snapshot/0038-accessibility-projects-the-semantic-snapshot.md)
+- [ADR 0076: the keyboard walks the projection](../0076-the-keyboard-walks-the-projection/0076-the-keyboard-walks-the-projection.md)
+- [ADR 0086: the adaptive foundation reads preferences once into the theme](../0086-the-adaptive-foundation-reads-preferences-once-into-the-theme/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme.md)
+- [what the autonomous cycle taught: accessibility is production-ready per platform](learned-accessibility-is-production-ready-per-platform.md)
+- [task-104: the 35 empty or borrowed gallery tabs become kit components](../../../Tasks/task-104-gallery-components-from-the-kit/task-104-gallery-components-from-the-kit.md)
+- [task-60: accessibility as a projection of the contract](../../../Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-75: production-ready platform accessibility](../../../Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md)
+- [task-75 phase 1: the probe and the manual test scripts](../../../Tasks/task-75-platform-accessibility/phase-1-probe-and-scripts.md)
+- [task-75 phase 2a: app pages that already project](../../../Tasks/task-75-platform-accessibility/phase-2a-app-pages.md)
+- [task-75 phase 2b: component pages](../../../Tasks/task-75-platform-accessibility/phase-2b-component-pages.md)
+<!-- /related -->

@@ -72,3 +72,10 @@ the same monotonic curve, so screenshots look "stylistically dark" or
 against the token's intended value exposes the transfer error. this is a
 core argument for the pixel-validation protocol
 (kdb/how-to/validate-visuals-by-pixel.md).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0004: linearize colors before they reach the GPU](0004-linearize-colors-before-the-gpu.md)
+- [ADR 0007: render into an sRGB view when the surface format cannot be sRGB](../0007-render-into-an-srgb-view-format/0007-render-into-an-srgb-view-format.md)
+<!-- /related -->

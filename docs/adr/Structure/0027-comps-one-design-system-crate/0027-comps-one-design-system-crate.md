@@ -104,3 +104,11 @@ width. [docs/Research/Structure/component-catalog.md](../../../Research/Structur
 ## learnings
 
 - [comps session: what worked and what bit us](comps.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0073: design for ranges, not screens and devices](../../Rendering/0073-design-for-ranges-not-screens-and-devices/0073-design-for-ranges-not-screens-and-devices.md)
+- [comps session: what worked and what bit us](comps.md)
+- [ui component catalog](../../../Research/Structure/component-catalog.md)
+<!-- /related -->

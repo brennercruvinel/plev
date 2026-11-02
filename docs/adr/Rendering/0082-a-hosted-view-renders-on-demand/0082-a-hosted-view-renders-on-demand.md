@@ -49,3 +49,9 @@ apps to adopt the trait would widen the scope of the delivery.
 
 - [`da4be63a`](https://github.com/brennercruvinel/plev/commit/da4be63ab386c4a7218add9e320ef6e60d842a1a)
 - [`4aa9706b`](https://github.com/brennercruvinel/plev/commit/4aa9706bdfdd63f2eff7d9b9b59cf6dda4ab225b)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-100: interactive graphs and corpus import](../../../Tasks/task-100-interactive-graphs/task-100-interactive-graphs.md)
+<!-- /related -->

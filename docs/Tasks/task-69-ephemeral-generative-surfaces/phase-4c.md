@@ -371,7 +371,7 @@ achados sobre superfície gerada com o que cada um pede do checkpoint.
 escolhi o ADR da gravação, não o do inspector: os achados são sobre o que
 a sessão guarda (o request roteado, a revisão do snapshot só do app, a
 ligação duplicada), não sobre como o inspector lê. para o orquestrador
-(fora da lista): a linha do índice [`adr/`](../../adr/README.md) pode ganhar no
+(fora da lista): a linha do índice [`adr/`](../../adr/adr.md) pode ganhar no
 fim "; desde a task-69 fase 4c o showcase grava como o ide, e a demo do
 editor de vídeo é uma sessão em `apps/uigallery/tests/fixtures/sessions`";
 `docs/ATLAS.toml`: `showcase::app::record`, o exemplo `demo` e
@@ -455,3 +455,11 @@ editor de vídeo é uma sessão em `apps/uigallery/tests/fixtures/sessions`";
   800 são material para ele;
 - um mp4 da tela é decisão do brenner (a demo é a sessão `.monster`);
 - as linhas do índice de ADR, do arc e do CHANGELOG, pelo orquestrador.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0037: session recording: replay, not re-execution](../../adr/Recording/0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md)
+- [task-63: session flight recorder](../task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-69: ephemeral and generated surfaces](task-69-ephemeral-generative-surfaces.md)
+<!-- /related -->

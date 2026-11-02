@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [semantics, git, agents]
-relations: [adr-0033, adr-0035, task-58, task-58b, task-59, task-60, task-61, task-69, task-84, task-85]
+relations: [adr-0033, adr-0035, task-58, task-58b, task-59, task-60, task-61, task-69, task-84, task-85, learning-cycle-0036]
 source: docs/adr/semantics/0036-commit-checks-the-index-it-observed.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -187,3 +187,27 @@ naming who asks for what; its confirm calls `Dispatcher::confirm` as
   (`apps/idestudio/src/main.rs`), editing that
   [`0035-semantic-binding-beside-the-scene.md`](../0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md) exempts. navigation moves
   `changes:selected`, accepted under "one workbench" above.
+
+## learnings
+
+- [what the autonomous cycle taught: a commit checks the index it observed](learned-commit-checks-the-index-it-observed.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0032: semantic contract as a pure projection of app state](../0032-semantic-contract-as-pure-projection/0032-semantic-contract-as-pure-projection.md)
+- [ADR 0033: actions carry the state their actor observed](../0033-actions-carry-observed-state/0033-actions-carry-observed-state.md)
+- [ADR 0035: semantic binding beside the scene, and the click as a request](../0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md)
+- [what the autonomous cycle taught: a commit checks the index it observed](learned-commit-checks-the-index-it-observed.md)
+- [task-58: action with precondition, dispatch and receipts](../../../Tasks/task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-58b: declining a confirmation](../../../Tasks/task-58b-decline-a-confirmation/task-58b-decline-a-confirmation.md)
+- [task-59: semantic binding with the render and one operational path](../../../Tasks/task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-60: accessibility as a projection of the contract](../../../Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-61: agent surface (local socket, observe, act)](../../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-69: ephemeral and generated surfaces](../../../Tasks/task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-84: an old refresh does not undo what the ide has already accepted](../../../Tasks/task-84-ide-refresh-never-goes-back/task-84-ide-refresh-never-goes-back.md)
+- [task-85: the commit that the receipt announces is already in the projection, with the files](../../../Tasks/task-85-the-commit-a-receipt-announces-is-projected/task-85-the-commit-a-receipt-announces-is-projected.md)
+- [task-62 phases a and b: close-out (2026-09-23)](../../../Tasks/task-62-ide-human-agent-proof/phase-ab-closing.md)
+- [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](../../../Research/Exploring/agent-proof-checkpoint-a.md)
+<!-- /related -->

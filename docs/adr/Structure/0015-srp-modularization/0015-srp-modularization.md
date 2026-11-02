@@ -8,10 +8,10 @@ date: 2024-05-21
 date_basis: reconstructed
 recorded: 2026-04-05
 topics: [workspace, process]
-relations: []
+relations: [learning-cycle-0015]
 source: docs/adr/structure/0015-srp-modularization.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -74,3 +74,15 @@ neutras:
 - maior arquivo: 300 linhas (message_dock/ui.rs)
 - 271 arquivos .rs totais
 - distribuicao: 45% (0-100 linhas), 31% (101-200), 24% (201-300)
+
+## learnings
+
+- [what the autonomous cycle taught: adr-003: modularizacao por single responsibility principle](learned-srp-modularization.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [what the autonomous cycle taught: adr-003: modularizacao por single responsibility principle](learned-srp-modularization.md)
+- [task-52: modularization by single responsibility principle](../../../Tasks/task-52-srp-modularization/task-52-srp-modularization.md)
+- [SRP modularization with a 300-line limit](../../../Research/Structure/srp-modularization.md)
+<!-- /related -->

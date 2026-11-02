@@ -54,3 +54,15 @@ limitações que seguem:
 
 falta a fase c: o experimento com agente externo pelo socket (61) e a
 sessão gravada (63).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0036: a commit checks the index it observed](../../adr/Semantics/0036-commit-checks-the-index-it-observed/0036-commit-checks-the-index-it-observed.md)
+- [task-58b: declining a confirmation](../task-58b-decline-a-confirmation/task-58b-decline-a-confirmation.md)
+- [task-61: agent surface (local socket, observe, act)](../task-61-agent-surface/task-61-agent-surface.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](task-62-ide-human-agent-proof.md)
+- [task-63: session flight recorder](../task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-73: incremental dependency system](../task-73-incremental-dependency-system/task-73-incremental-dependency-system.md)
+- [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](../../Research/Exploring/agent-proof-checkpoint-a.md)
+<!-- /related -->

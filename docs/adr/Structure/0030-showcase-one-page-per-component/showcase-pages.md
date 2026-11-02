@@ -17,7 +17,7 @@ review: reviewed
 
 # showcase pages session: what worked and what bit us
 
-Records the session that turned the showcase into one page per component ([adr-0030](0030-showcase-one-page-per-component.md) and [task-55](../../../Tasks/task-55-showcase-one-page-per-component/README.md)). The result was treating the page as data and not as an enum, with table tests that catch data errors without running the app, and aliases with declared debt instead of duplicated pages. It was written for whoever does the next large reorganization, human or agent.
+Records the session that turned the showcase into one page per component ([adr-0030](0030-showcase-one-page-per-component.md) and [task-55](../../../Tasks/task-55-showcase-one-page-per-component/task-55-showcase-one-page-per-component.md)). The result was treating the page as data and not as an enum, with table tests that catch data errors without running the app, and aliases with declared debt instead of duplicated pages. It was written for whoever does the next large reorganization, human or agent.
 
 registro da sessão que virou o showcase em uma página por componente
 (adr showcase-one-page-per-component, task-55). escrito pra quem for
@@ -95,3 +95,11 @@ fazer a próxima reorganização grande, humano ou agente.
   Popover e Hover Card, Combobox, Item, Kbd, Label no comps
 - `view/pages/table.rs` é dado (492 linhas): se crescer, um arquivo por
   grupo
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0030: showcase: one page per component, the sidebar as a folding tree](0030-showcase-one-page-per-component.md)
+- [task-55: showcase, one page per component](../../../Tasks/task-55-showcase-one-page-per-component/task-55-showcase-one-page-per-component.md)
+- [ui component catalog](../../../Research/Structure/component-catalog.md)
+<!-- /related -->

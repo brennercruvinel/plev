@@ -119,3 +119,13 @@ one frame path with two targets.
 - `Renderer::new` (it blocks) from anything reachable on wasm.
 - drawing into a view whose size differs from `gpu.surface_config`:
   resize the renderer instead.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-66: headless as a first-class citizen](../../../Tasks/task-66-headless-first-class/task-66-headless-first-class.md)
+- [task-77: visual determinism](../../../Tasks/task-77-visual-determinism/task-77-visual-determinism.md)
+- [phase 1 (task-77a): the probe](../../../Tasks/task-77-visual-determinism/phase-1a-probe.md)
+- [plev: thesis of the generative interaction runtime](../../../Research/Synthesis/generative-runtime-thesis.md)
+- [how to code against the plev engine](../../../Research/Workflows/code-against-the-plev-engine.md)
+<!-- /related -->

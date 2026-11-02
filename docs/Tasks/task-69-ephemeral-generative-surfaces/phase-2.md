@@ -388,10 +388,10 @@ no teste.
 ### linha de ADR
 
 o adendo datado "a surface changes form (task-69 phase 2, proposed)" em
-[`0051-materialized-surfaces-from-verified-ir.md`](../../adr/Generative/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md). linha do índice
-para o orquestrador (o [`adr/`](../../adr/README.md) é proibido aqui):
+[`0051-materialized-surfaces-from-verified-ir.md`](../../adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md). linha do índice
+para o orquestrador (o [`adr/`](../../adr/adr.md) é proibido aqui):
 
-`| 2026-09-24 | [materialized-surfaces-from-verified-ir](../../adr/Generative/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md) | accepted, adendo da fase 2 proposto | fase 2: SurfaceHost::transform reconcilia por SemId e pelo widget do comps (o mesmo mantém foco, caret e arraste; outro é widget novo sobre o estado do app); geometria por SemId; a semântica muda na hora (o que sai é NotFound) e os frames depois: entrada e saída na mola do overlay, movimento num Tween de theme.duration.slow, fade até um degrau de 8 bits; render on demand (37 de 120 turnos no mixer); reduced motion recebido de quem o tem (o engine não expõe, task-75); close some com fade e solta; a página Surface alterna compacta e duas colunas (task-69) |`
+`| 2026-09-24 | [materialized-surfaces-from-verified-ir](../../adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md) | accepted, adendo da fase 2 proposto | fase 2: SurfaceHost::transform reconcilia por SemId e pelo widget do comps (o mesmo mantém foco, caret e arraste; outro é widget novo sobre o estado do app); geometria por SemId; a semântica muda na hora (o que sai é NotFound) e os frames depois: entrada e saída na mola do overlay, movimento num Tween de theme.duration.slow, fade até um degrau de 8 bits; render on demand (37 de 120 turnos no mixer); reduced motion recebido de quem o tem (o engine não expõe, task-75); close some com fade e solta; a página Surface alterna compacta e duas colunas (task-69) |`
 
 ### decisões
 
@@ -485,3 +485,11 @@ severidade do que ficou:
   cima dos nós vivos; `open` sem entrada animada.
 
 próximo: fase 3 (proponentes). o provedor do LLM é decisão do brenner.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0051: a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](../../adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)
+- [task-69: ephemeral and generated surfaces](task-69-ephemeral-generative-surfaces.md)
+- [task-75: production-ready platform accessibility](../task-75-platform-accessibility/task-75-platform-accessibility.md)
+<!-- /related -->

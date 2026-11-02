@@ -8,10 +8,10 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [rendering, gpu, platform]
-relations: [task-76]
+relations: [task-76, learning-cycle-0056]
 source: docs/adr/structure/0056-windows-are-hosts-the-app-owns-the-state.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -34,7 +34,7 @@ panel, an inspector, a dialog of its own) and closes one without closing
 the app.
 
 the probe (task-76 item 2, the handoff in
-[task-76-platform-integration.md](../../../Tasks/task-76-platform-integration/README.md)) measured
+[task-76-platform-integration.md](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)) measured
 what a second window would share with the first: two `GpuContext`s with
 two compositors drew two scenes in one loop and each frame showed only
 what was pushed into it (the glyph atlas, the layer textures, the
@@ -177,3 +177,17 @@ routes the second's events as if they were the first's.
   draws only for its own reasons.
 - adding the window to the one-window projection: the goldens and the
   baselines are the contract with every agent that reads one window.
+
+## learnings
+
+- [what the autonomous cycle taught: a window is a host of what dies with it; the app owns the state](learned-windows-are-hosts-the-app-owns-the-state.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0057: a native menu is another view of the app's capabilities](../../Interface/0057-native-menus-are-another-view-of-capabilities/0057-native-menus-are-another-view-of-capabilities.md)
+- [what the autonomous cycle taught: a window is a host of what dies with it; the app owns the state](learned-windows-are-hosts-the-app-owns-the-state.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-76, closing: what went in and what remains](../../../Tasks/task-76-platform-integration/closing.md)
+- [task-76, item 2: multiple windows](../../../Tasks/task-76-platform-integration/item-2-multiple-windows.md)
+<!-- /related -->

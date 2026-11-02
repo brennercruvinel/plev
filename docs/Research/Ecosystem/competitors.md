@@ -267,3 +267,11 @@ makepad (live shader editing), dioxus (hot-patching de rust), compose (hot reloa
 plev ocupa um nicho unico: **engine de composicao GPU-first em rust via wgpu com scene graph, dirty tracking por layer, e premultiplied alpha pipeline**. nenhum dos competidores oferece isso como biblioteca standalone. makepad e o mais proximo, mas e um framework completo (nao uma engine). blitz (dioxus) e um browser engine. slint e um toolkit. plev e a *camada mais baixa*, o que fica entre wgpu e qualquer framework UI.
 
 o modelo mental: **plev e para rust UI o que skia e para flutter/chrome**, engine de rendering que outros frameworks consomem.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [competitive positioning, plev](competitive-positioning.md)
+- [technology radar, plev](technology-radar.md)
+<!-- /related -->

@@ -31,7 +31,7 @@ person: any web page, mail or other app can open one, with no one at the
 screen having chosen it.
 
 the probe (the handoff of item 6 in
-[task-76-platform-integration.md](../../../Tasks/task-76-platform-integration/README.md)) found:
+[task-76-platform-integration.md](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)) found:
 
 - windows (a registry key with `URL Protocol` and `"<exe>" "%1"`) and
   linux (a `.desktop` with `x-scheme-handler/<scheme>` and `%u`) start a
@@ -230,3 +230,13 @@ bundle. a revisão conferiu: todo pedido sai como `Actor::Agent` de nome
 recusado aparece escapado na mensagem (`escape_default`), e o texto
 decodificado com controle ou marca de direção é recusado sem eco, então
 o aviso na tela não carrega texto de fora sem checagem.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0057: a native menu is another view of the app's capabilities](../0057-native-menus-are-another-view-of-capabilities/0057-native-menus-are-another-view-of-capabilities.md)
+- [ADR 0059: the tray and the notifications are capabilities out of the window](../0059-tray-and-notifications-are-capabilities-out-of-the-window/0059-tray-and-notifications-are-capabilities-out-of-the-window.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-76, closing: what went in and what remains](../../../Tasks/task-76-platform-integration/closing.md)
+- [task-76, item 6: deep links](../../../Tasks/task-76-platform-integration/item-6-deep-links.md)
+<!-- /related -->

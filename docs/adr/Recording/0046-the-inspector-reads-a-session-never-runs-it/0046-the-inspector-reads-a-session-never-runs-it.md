@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [recording, semantics, agents]
-relations: [task-62, task-63, task-64, task-83, task-87, task-90, task-91, generative-runtime-program, operations-code-against-the-plev-engine]
+relations: [task-62, task-63, task-64, task-83, task-87, task-90, task-91, generative-runtime-program, operations-code-against-the-plev-engine, learning-cycle-0046]
 source: docs/adr/recording/0046-the-inspector-reads-a-session-never-runs-it.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -228,3 +228,26 @@ outside the workspace.
 - a dependency of the window on anything that dispatches or sends, a
   recorded control bound in the window's compositor, or an answer in the
   window that the model does not give.
+
+## learnings
+
+- [what the autonomous cycle taught: the inspector reads a session, it never runs it](learned-the-inspector-reads-a-session-never-runs-it.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0050: sessions become regression tests](../0050-sessions-become-regression-tests/0050-sessions-become-regression-tests.md)
+- [what the autonomous cycle taught: the inspector reads a session, it never runs it](learned-the-inspector-reads-a-session-never-runs-it.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-63: session flight recorder](../../../Tasks/task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-64: session inspector, bug report and session for testing](../../../Tasks/task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](../../../Tasks/task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)
+- [task-87: a terminal stage carries the revision the app was left in](../../../Tasks/task-87-a-terminal-stage-carries-the-revision/task-87-a-terminal-stage-carries-the-revision.md)
+- [task-90: a refusal names who acted since the agent looked](../../../Tasks/task-90-a-refusal-names-who-acted-since-the-look/task-90-a-refusal-names-who-acted-since-the-look.md)
+- [task-91: the dispatcher knows when the agent looked](../../../Tasks/task-91-the-dispatcher-knows-when-the-agent-looked/task-91-the-dispatcher-knows-when-the-agent-looked.md)
+- [task-64 phase a: inspector model and the plev-inspect CLI](../../../Tasks/task-64-session-inspector-and-tests/phase-a-model.md)
+- [task-64 phase b: inspector UI](../../../Tasks/task-64-session-inspector-and-tests/phase-b-ui.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+- [how to code against the plev engine](../../../Research/Workflows/code-against-the-plev-engine.md)
+- [autonomous cycle journal](../../../Research/Workflows/autonomous-cycle-journal.md)
+<!-- /related -->

@@ -446,7 +446,7 @@ trait e o falso, o `rfd` sem features no desktop, o evento de drop com
 posição opcional e a junção, o drop como request, a regra "diálogo
 nativo só abre por pessoa" na policy, o que o wasm faz, o que os itens 4
 e 8 reaproveitam. linha pro índice, que é do orquestrador
-([`adr/`](../../adr/README.md) é proibido aqui):
+([`adr/`](../../adr/adr.md) é proibido aqui):
 
 | 2026-09-24 | [file-dialogs-and-drops-are-capabilities](../../adr/Interface/0055-file-dialogs-and-drops-are-capabilities/0055-file-dialogs-and-drops-are-capabilities.md) | proposed | `engine::platform::files` (trait síncrono por caminho, `rfd` no desktop sem features padrão, `FakeDialogs` pra teste, `NoDialogs` em wasm e mobile) e `engine::input::FileDrop` (uma tradução dos três eventos do winit, posição opcional, junção dos N por arquivo no `App`); o urnaui usa os dois sem segunda implementação; a página Files do showcase projeta `open_file` só pra pessoa e `drop_files` pra todo ator, pelo dispatcher; diálogo nativo só abre por pessoa (task-76 item 3) |
 
@@ -541,3 +541,11 @@ cargo run --offline -p uigallery -- --render Files --theme core --out files.png 
 UIR_BLESS=1 cargo test --offline -p uigallery --lib files::tests::the_page_projection   (regrava o golden)
 cargo run --offline -p regress -- bless --page Files --theme core --png   (e --theme hoff)
 ```
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0055: file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person](../../adr/Interface/0055-file-dialogs-and-drops-are-capabilities/0055-file-dialogs-and-drops-are-capabilities.md)
+- [task-58: action with precondition, dispatch and receipts](../task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+<!-- /related -->

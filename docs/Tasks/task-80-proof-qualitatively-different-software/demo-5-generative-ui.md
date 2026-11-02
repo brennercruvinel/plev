@@ -347,3 +347,14 @@ faixa. o botão "show diff" de cada commit na superfície passou a ler
 `diff:target` como o app o guarda (antes, `proposed.diff.target:text`,
 o texto que mostrava o id), porque a superfície não mostra mais esse
 estado; o stale continua o mesmo (o teste da task-96 passa igual).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-69: ephemeral and generated surfaces](../task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-80: proof of qualitatively different software](task-80-proof-qualitatively-different-software.md)
+- [task-93: the person in the lab answers](../task-93-the-lab-person-answers/task-93-the-lab-person-answers.md)
+- [task-96: a generated surface in the ide](../task-96-ide-generated-surface/task-96-ide-generated-surface.md)
+- [task-97: code and diff in the IR vocabulary](../task-97-code-and-diff-in-the-ir/task-97-code-and-diff-in-the-ir.md)
+- [five demos of qualitatively different software, each with its method written before it ran](../../Research/Exploring/five-demos.md)
+<!-- /related -->

@@ -554,3 +554,14 @@ por uns 6 s e gravou dois cliques do brenner num repositório de
 rascunho. nada mudou fora dele. retenção de pixels de imagem e o shell do
 showcase continuam fora, sem task (P2 quando a 64 fase b precisar de
 imagem).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0037: session recording: replay, not re-execution](../../adr/Recording/0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md)
+- [task-63: session flight recorder](task-63-flight-recorder.md)
+- [task-64: session inspector, bug report and session for testing](../task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-88: the lab measures what the agent rested on](../task-88-the-lab-measures-what-the-agent-rested-on/task-88-the-lab-measures-what-the-agent-rested-on.md)
+- [task-89: an act relies only on what was shown to the agent](../task-89-an-act-rests-only-on-what-was-shown/task-89-an-act-rests-only-on-what-was-shown.md)
+- [task-90: a refusal names who acted since the agent looked](../task-90-a-refusal-names-who-acted-since-the-look/task-90-a-refusal-names-who-acted-since-the-look.md)
+<!-- /related -->

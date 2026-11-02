@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [recording, formats, semantics, rendering]
-relations: [task-57, task-58, task-60, task-62, task-63, task-64, task-65, task-69, task-83, task-88, task-104, adr-0043, adr-0065, generative-runtime-thesis]
+relations: [task-57, task-58, task-60, task-62, task-63, task-64, task-65, task-69, task-83, task-88, task-104, adr-0043, adr-0065, generative-runtime-thesis, learning-cycle-0037]
 source: docs/adr/recording/0037-session-recording-replay-not-reexecution.md
 source_revision: ec0a224c
-revised: 2026-11-01
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -470,3 +470,33 @@ the magic carries the difference.
 - widening monster's IR to follow the compositor enum; report what raise
   cannot carry instead.
 - evaluating a chunk between frame times.
+
+## learnings
+
+- [what the autonomous cycle taught: session recording: replay, not re-execution](learned-session-recording-replay-not-reexecution.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0043: a delta carries the node it adds, and a stale refusal names who acted](../../Semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md)
+- [ADR 0050: sessions become regression tests](../0050-sessions-become-regression-tests/0050-sessions-become-regression-tests.md)
+- [ADR 0065: the scene travels as data](../0065-scene-travels-as-data/0065-scene-travels-as-data.md)
+- [what the autonomous cycle taught: session recording: replay, not re-execution](learned-session-recording-replay-not-reexecution.md)
+- [task-104: the 35 empty or borrowed gallery tabs become kit components](../../../Tasks/task-104-gallery-components-from-the-kit/task-104-gallery-components-from-the-kit.md)
+- [task-57: semantic contract (crate `sem`)](../../../Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
+- [task-58: action with precondition, dispatch and receipts](../../../Tasks/task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-60: accessibility as a projection of the contract](../../../Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-63: session flight recorder](../../../Tasks/task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-64: session inspector, bug report and session for testing](../../../Tasks/task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-65: pixel to code and development inspector](../../../Tasks/task-65-pixel-to-source/task-65-pixel-to-source.md)
+- [task-69: ephemeral and generated surfaces](../../../Tasks/task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](../../../Tasks/task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)
+- [task-88: the lab measures what the agent rested on](../../../Tasks/task-88-the-lab-measures-what-the-agent-rested-on/task-88-the-lab-measures-what-the-agent-rested-on.md)
+- [task-63 phase c: session file, persistence and excerpt](../../../Tasks/task-63-flight-recorder/phase-c.md)
+- [task-63 phase d: the ide records the session the inspector reads](../../../Tasks/task-63-flight-recorder/phase-d.md)
+- [task-63 phase d re-scoped: the ide records the session](../../../Tasks/task-63-flight-recorder/phase-d-rescope.md)
+- [task-69, phase 4c: recording and the recorded demo](../../../Tasks/task-69-ephemeral-generative-surfaces/phase-4c.md)
+- [plev: thesis of the generative interaction runtime](../../../Research/Synthesis/generative-runtime-thesis.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+<!-- /related -->

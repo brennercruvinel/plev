@@ -63,3 +63,13 @@ and its display list maps one to one onto our scene model).
 - when an importer cannot represent a feature, log it once and drop it
   visibly; do not approximate it into a silent wrong result without saying
   so.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0066: ui asset compiler: an asset leaves the runtime on a measured number](../0066-ui-asset-compiler/0066-ui-asset-compiler.md)
+- [ADR 0069: importers target plev IR, with a report in four categories](../0069-importers-target-plev-ir/0069-importers-target-plev-ir.md)
+- [task-44: lot, lottie importer and bridge to .monster](../../../Tasks/task-44-lot-lottie-importer/task-44-lot-lottie-importer.md)
+- [task-71: plev as compiler target (importers to IR)](../../../Tasks/task-71-compiler-target/task-71-compiler-target.md)
+- [mon experiment](../../../Research/Importing/mon-experiment-notes.md)
+<!-- /related -->

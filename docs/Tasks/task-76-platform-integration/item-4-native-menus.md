@@ -307,7 +307,7 @@ o modelo puro do menu, o clique como o request do botão, o trait com o
 real, o falso e o nenhum, por app no macOS e por janela onde a
 plataforma diz, o shell projetado e onde ele aparece, a barra do
 showcase, o que o tray e os diálogos reaproveitam. linha pro índice, que
-é do orquestrador ([`adr/`](../../adr/README.md) é proibido aqui):
+é do orquestrador ([`adr/`](../../adr/adr.md) é proibido aqui):
 
 | 2026-09-24 | [native-menus-are-another-view-of-capabilities](../../adr/Interface/0057-native-menus-are-another-view-of-capabilities/0057-native-menus-are-another-view-of-capabilities.md) | proposed | `engine::platform::menu`: um `MenuModel` puro que o app monta da própria `Snapshot` (cada item é um `SemId` e uma ação, com label, atalho, habilitado e marca como a projeção diz), `NativeMenu` (`install`, `update`, `poll`) com o `muda` no desktop (macOS: a barra do app, uma pra todas as janelas; windows: por hwnd), `FakeMenu` pra teste e `NoMenu` em wasm e mobile; o clique volta como `Clicked` e vira o mesmo `Request::observe` por `Actor::Human` do botão, pelo mesmo dispatcher; o showcase projeta o shell (`shell.page`, `shell.theme`, `shell.detach` só pessoa, `shell.save_session` só pessoa) na projeção da galeria que a porta serve, e monta a barra dela e da página ativa; a projeção da página não muda (task-76 item 4) |
 
@@ -431,3 +431,11 @@ cargo run --offline -p regress -- check
 PLEV_BACKGROUND=1 RUST_LOG=showcase=info cargo run --offline -p uigallery -- Todo   (a barra instala; sem clique aqui)
 cargo run --offline -p uigallery -- Todo   (a barra plev / view / Todo; do orquestrador)
 ```
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0057: a native menu is another view of the app's capabilities](../../adr/Interface/0057-native-menus-are-another-view-of-capabilities/0057-native-menus-are-another-view-of-capabilities.md)
+- [task-59: semantic binding with the render and one operational path](../task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+<!-- /related -->

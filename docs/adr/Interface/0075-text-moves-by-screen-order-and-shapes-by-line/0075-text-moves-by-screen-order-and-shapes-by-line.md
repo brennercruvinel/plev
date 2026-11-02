@@ -74,4 +74,11 @@ lines and with a million. the benchmark is
 
 ## learnings
 
-- [Generative runtime session: what worked and what bit us](../../Generative/0070-generative-runtime-results/generative-runtime.md)
+- [Generative runtime session: what worked and what bit us](../../Synthesis/0070-generative-runtime-results/generative-runtime.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [Generative runtime session: what worked and what bit us](../../Synthesis/0070-generative-runtime-results/generative-runtime.md)
+- [task-74: text and editing](../../../Tasks/task-74-text-and-editing/task-74-text-and-editing.md)
+<!-- /related -->

@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [semantics, agents, recording]
-relations: [adr-0040, task-57b, task-62, task-83, task-86, task-89, task-90, task-91]
+relations: [adr-0040, task-57b, task-62, task-83, task-86, task-89, task-90, task-91, learning-cycle-0043]
 source: docs/adr/semantics/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -24,7 +24,7 @@ Decides that a `node_added` in a delta carries the whole node, and that a `stale
 checkpoint a (task-62 phase c) had two LLM agents operate the ide through
 the contract only. the contract held, and the agents pointed at three
 gaps, none of which stopped the task
-([`task-62-ide-human-agent-proof.md`](../../../Tasks/task-62-ide-human-agent-proof/README.md), "o que o
+([`task-62-ide-human-agent-proof.md`](../../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md), "o que o
 experimento mostrou"):
 
 - a `node_added` in a delta carried only the id
@@ -288,3 +288,25 @@ commit's node in place and their `commit.submit` receipts as recorded
 - a value, a parameter or anything of the state in `Acted`.
 - a delta whose node carries `source` or state keys the observation did
   not ask for.
+
+## learnings
+
+- [what the autonomous cycle taught: a delta carries the node it adds, and a stale refusal names who acted](learned-a-delta-carries-the-node-a-refusal-names-who-acted.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0037: session recording: replay, not re-execution](../../Recording/0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md)
+- [ADR 0039: agents act through the semantic contract](../0039-agents-act-through-the-semantic-contract/0039-agents-act-through-the-semantic-contract.md)
+- [ADR 0040: the semantic form is lean, and one rule redacts a secret](../0040-lean-semantic-form-and-one-redaction/0040-lean-semantic-form-and-one-redaction.md)
+- [ADR 0047: an act rests on what its actor was shown](../0047-an-act-rests-on-what-its-actor-was-shown/0047-an-act-rests-on-what-its-actor-was-shown.md)
+- [what the autonomous cycle taught: a delta carries the node it adds, and a stale refusal names who acted](learned-a-delta-carries-the-node-a-refusal-names-who-acted.md)
+- [task-57b: lean JSON wire form and a single redaction](../../../Tasks/task-57b-lean-wire-form-and-one-redaction/task-57b-lean-wire-form-and-one-redaction.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](../../../Tasks/task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)
+- [task-86: the ide people use opens the agent port](../../../Tasks/task-86-the-ide-opens-the-agent-port/task-86-the-ide-opens-the-agent-port.md)
+- [task-89: an act relies only on what was shown to the agent](../../../Tasks/task-89-an-act-rests-only-on-what-was-shown/task-89-an-act-rests-only-on-what-was-shown.md)
+- [task-90: a refusal names who acted since the agent looked](../../../Tasks/task-90-a-refusal-names-who-acted-since-the-look/task-90-a-refusal-names-who-acted-since-the-look.md)
+- [task-91: the dispatcher knows when the agent looked](../../../Tasks/task-91-the-dispatcher-knows-when-the-agent-looked/task-91-the-dispatcher-knows-when-the-agent-looked.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+<!-- /related -->

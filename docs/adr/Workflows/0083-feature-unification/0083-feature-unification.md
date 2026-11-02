@@ -54,3 +54,9 @@ recorded round; the decision adopted the tool configured in the project.
 
 - [`540e218d`](https://github.com/brennercruvinel/plev/commit/540e218d61b8529784a9c958ce7bfd6210af60ce)
 - [`706dfa82`](https://github.com/brennercruvinel/plev/commit/706dfa82c907975688797748001e2236bdb8faef)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-102: reusable builds and web commands](../../../Tasks/task-102-builds-and-web-commands/task-102-builds-and-web-commands.md)
+<!-- /related -->

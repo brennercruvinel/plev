@@ -278,3 +278,11 @@ tinha. nenhum outro pacote.
   sobreposição.
 - um `<img>` do card do corpus react passaria a `image` (só no IR); o
   corpus não está neste checkout, então não foi conferido.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0069: importers target plev IR, with a report in four categories](../../adr/Importing/0069-importers-target-plev-ir/0069-importers-target-plev-ir.md)
+- [task-68: plev IR and verifier](../task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-71: plev as compiler target (importers to IR)](task-71-compiler-target.md)
+<!-- /related -->

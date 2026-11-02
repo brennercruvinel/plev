@@ -8,10 +8,10 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [platform, semantics, agents, input]
-relations: [adr-0055, adr-0056, adr-0058, adr-0059, task-76]
+relations: [adr-0055, adr-0056, adr-0058, adr-0059, task-76, learning-cycle-0057]
 source: docs/adr/interface/0057-native-menus-are-another-view-of-capabilities.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -37,7 +37,7 @@ recording. none of them was projected, so no menu, no screen reader and
 no agent could ask for them.
 
 the probe (the handoff of item 4 in
-[task-76](../../../Tasks/task-76-platform-integration/README.md)) measured:
+[task-76](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)) measured:
 
 - `muda` 0.20 with its default features off resolves offline into the
   root lock as `muda` and `keyboard-types` alone; the features only pick
@@ -200,3 +200,21 @@ the probe (the handoff of item 4 in
 - adding the shell to the page's projection: the goldens and the
   baselines are the contract with everyone who reads one page.
 - a test that constructs `MudaMenu` or any `muda` type.
+
+## learnings
+
+- [what the autonomous cycle taught: a native menu is another view of the app's capabilities](learned-native-menus-are-another-view-of-capabilities.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0055: file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person](../0055-file-dialogs-and-drops-are-capabilities/0055-file-dialogs-and-drops-are-capabilities.md)
+- [ADR 0056: a window is a host of what dies with it; the app owns the state](../../Structure/0056-windows-are-hosts-the-app-owns-the-state/0056-windows-are-hosts-the-app-owns-the-state.md)
+- [ADR 0058: a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](../0058-native-dialogs-answer-the-same-contract/0058-native-dialogs-answer-the-same-contract.md)
+- [ADR 0059: the tray and the notifications are capabilities out of the window](../0059-tray-and-notifications-are-capabilities-out-of-the-window/0059-tray-and-notifications-are-capabilities-out-of-the-window.md)
+- [ADR 0063: a link is not a person](../0063-a-link-is-not-a-person/0063-a-link-is-not-a-person.md)
+- [what the autonomous cycle taught: a native menu is another view of the app's capabilities](learned-native-menus-are-another-view-of-capabilities.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-76, closing: what went in and what remains](../../../Tasks/task-76-platform-integration/closing.md)
+- [task-76, item 4: native menus](../../../Tasks/task-76-platform-integration/item-4-native-menus.md)
+<!-- /related -->

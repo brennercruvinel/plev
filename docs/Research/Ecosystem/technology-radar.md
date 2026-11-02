@@ -74,3 +74,28 @@ estas sao referencias para insight. plev nao precisa de nenhuma dessas libs para
 | [`emulators-wasm-runtimes.md`](emulators-wasm-runtimes.md) | 5 runtimes WASM |
 | [`competitive-positioning.md`](competitive-positioning.md) | matriz comparativa |
 | [`integration-candidates.md`](integration-candidates.md) | ranking adopt/evaluate/watch/hold |
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-27: animation system](../../Tasks/task-27-animation-system/task-27-animation-system.md)
+- [task-28: editable text](../../Tasks/task-28-editable-text/task-28-editable-text.md)
+- [task-29: app demo real (proof of life)](../../Tasks/task-29-app-demo-real/task-29-app-demo-real.md)
+- [task-30: accessibility (accesskit)](../../Tasks/task-30-accessibility/task-30-accessibility.md)
+- [task-31: vector path rendering (lyon integration)](../../Tasks/task-31-vector-paths/task-31-vector-paths.md)
+- [task-32: text system upgrade assessment](../../Tasks/task-32-text-upgrade-assessment/task-32-text-upgrade-assessment.md)
+- [task-33: WASM plugin architecture](../../Tasks/task-33-wasm-plugins/task-33-wasm-plugins.md)
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [reference analysis: accessibility (accesskit)](../Interface/accessibility.md)
+- [reference analysis: animation and motion](../Rendering/animation-motion.md)
+- [reference analysis: charts and visualization](../Rendering/charts-visualization.md)
+- [competitive positioning, plev](competitive-positioning.md)
+- [competitor analysis, gui/rendering frameworks](competitors.md)
+- [competitors by tier](competitors-by-tier.md)
+- [reference analysis: emulators and WASM runtimes](emulators-wasm-runtimes.md)
+- [integration candidates, ranking](integration-candidates.md)
+- [linebender ecosystem, analysis for plev](linebender-ecosystem.md)
+- [reference analysis: math, physics and geometry](../Rendering/math-physics-geometry.md)
+- [reference analysis: tui patterns](../Interface/tui-patterns.md)
+- [reference analysis: WASM tooling ecosystem](wasm-tooling.md)
+<!-- /related -->

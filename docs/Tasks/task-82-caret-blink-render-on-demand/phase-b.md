@@ -314,3 +314,12 @@ usuário real hoje): o blink do `EditorView` sem foco; o caret do dock da
 demo; a ponte de acessibilidade pedindo frame sem mudança visível; a mola
 do toast levando ~1,7 s para repousar abaixo de um pixel; o exemplo
 `measure` modelando o shell sem o tick de alcance.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-82: the caret cannot request 60 frames per second](task-82-caret-blink-render-on-demand.md)
+- [task-85: the commit that the receipt announces is already in the projection, with the files](../task-85-the-commit-a-receipt-announces-is-projected/task-85-the-commit-a-receipt-announces-is-projected.md)
+- [task-87: a terminal stage carries the revision the app was left in](../task-87-a-terminal-stage-carries-the-revision/task-87-a-terminal-stage-carries-the-revision.md)
+- [caret blink as a deadline: frames drawn with a focused, idle field](../../Research/Exploring/caret-render-on-demand.md)
+<!-- /related -->

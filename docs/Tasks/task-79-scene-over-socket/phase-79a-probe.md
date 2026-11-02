@@ -561,3 +561,14 @@ cargo run -p mirroring -- --show
 - o custo de uma imagem fixa grande no fio do app: codificar as linhas no
   fio do escritor.
 - vídeo de pixels, multiusuário, iOS e android seguem fora.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0062: capture is a job the person turns on](../../adr/Interface/0062-capture-is-a-job-the-person-turns-on/0062-capture-is-a-job-the-person-turns-on.md)
+- [ADR 0065: the scene travels as data](../../adr/Recording/0065-scene-travels-as-data/0065-scene-travels-as-data.md)
+- [task-76: platform integration](../task-76-platform-integration/task-76-platform-integration.md)
+- [task-79: scene over socket](task-79-scene-over-socket.md)
+- [closure (orchestrator, 2026-09-25)](closing.md)
+- [phase 2 (task-79b): the probe](phase-79b-probe.md)
+<!-- /related -->

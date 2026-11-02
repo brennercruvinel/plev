@@ -18,9 +18,9 @@ review: reviewed
 # operating mode: autonomous orchestrator
 
 desde 2026-09-23 o brenner não supervisiona cada integração. o orquestrador
-segue sozinho dentro da missão ([`generative-runtime-thesis.md`](../Generative/generative-runtime-thesis.md)),
+segue sozinho dentro da missão ([`generative-runtime-thesis.md`](../Synthesis/generative-runtime-thesis.md)),
 das regras ([`generative-runtime-guidelines.md`](generative-runtime-guidelines.md)) e do programa
-([`generative-runtime-program.md`](../Generative/generative-runtime-program.md)). o objetivo não é executar a
+([`generative-runtime-program.md`](../Synthesis/generative-runtime-program.md)). o objetivo não é executar a
 lista de tasks: é manter um ciclo contínuo de implementação, validação,
 aprendizado e reorganização do programa.
 
@@ -78,7 +78,7 @@ o agente sondar primeiro, parando se o resultado for outro.
    no handoff, ou uma classe de erro se repetiu: corrigir o caso e o sistema
    que o permitiu (teste ou gate para a classe, contrato ou briefing menos
    ambíguo, regra de ownership, automação, revisão obrigatória antes do
-   briefing). registrado em [`general.md`](../../Learnings/general.md), seção "processo".
+   briefing). registrado em [`general.md`](autonomous-cycle-learnings.md), seção "processo".
 
 ## severidade antes de priorizar
 
@@ -186,8 +186,8 @@ arquitetura pela arquitetura.
 | registro | arquivo | o que guarda |
 |---|---|---|
 | truth | `truth.md` | o que o código faz agora, com arquivo:linha; reescrito quando uma integração muda um contrato |
-| program | [`generative-runtime-program.md`](../Generative/generative-runtime-program.md) | o que falta construir e por quê: tasks, grafo, ondas, contratos, ownership, decisões, estado |
-| learnings | [`general.md`](../../Learnings/general.md) | o que experimentos e implementações ensinaram, e o que isso mudou no programa |
+| program | [`generative-runtime-program.md`](../Synthesis/generative-runtime-program.md) | o que falta construir e por quê: tasks, grafo, ondas, contratos, ownership, decisões, estado |
+| learnings | [`general.md`](autonomous-cycle-learnings.md) | o que experimentos e implementações ensinaram, e o que isso mudou no programa |
 
 mais um: [`journal.md`](autonomous-cycle-journal.md), o diário do ciclo autônomo (integrações,
 decisões autônomas, bugs, métricas, em ordem), que alimenta o `status`.
@@ -211,3 +211,21 @@ um agente acorda o orquestrador na hora). `caffeinate -i -w <pid>` mantém o
 Mac acordado enquanto a sessão existir; um hook `Notification` avisa o
 brenner no macOS quando o orquestrador espera por ele. regras de disco e de
 build em [`orchestrate-coding-agents-on-this-repo.md`](orchestrate-coding-agents-on-this-repo.md).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0085: integration into main is a pull request merged by merge commit](../../adr/Workflows/0085-integration-by-merge-commit/0085-integration-by-merge-commit.md)
+- [what the autonomous cycle taught about the way of working](autonomous-cycle-learnings.md)
+- [Generative runtime session: what worked and what bit us](../../adr/Synthesis/0070-generative-runtime-results/generative-runtime.md)
+- [task-75: production-ready platform accessibility](../../Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md)
+- [task-96: a generated surface in the ide](../../Tasks/task-96-ide-generated-surface/task-96-ide-generated-surface.md)
+- [task-97: code and diff in the IR vocabulary](../../Tasks/task-97-code-and-diff-in-the-ir/task-97-code-and-diff-in-the-ir.md)
+- [task-62 phase c, second round (2026-09-23)](../../Tasks/task-62-ide-human-agent-proof/phase-c-round-2.md)
+- [task-62 phase c, third round: the task-89 rule (2026-09-24)](../../Tasks/task-62-ide-human-agent-proof/phase-c-round-3.md)
+- [plev: thesis of the generative interaction runtime](../Synthesis/generative-runtime-thesis.md)
+- [program: from GPU UI engine to generative interaction runtime](../Synthesis/generative-runtime-program.md)
+- [orchestrator and agent guidelines](generative-runtime-guidelines.md)
+- [how to orchestrate coding agents on this repo](orchestrate-coding-agents-on-this-repo.md)
+- [autonomous cycle journal](autonomous-cycle-journal.md)
+<!-- /related -->

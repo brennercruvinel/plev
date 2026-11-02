@@ -403,3 +403,16 @@ task-104 study:
     depends on it.
 15. **Sweep step.** Keep 8 px on every axis, as the epic says, or keep 8
     px only at text scale 1.0 and Comfortable, after the HF measurement.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0002: container geometry derives from available space, never from constants](../../Rendering/0002-content-driven-layout-not-fixed-constants/0002-content-driven-layout-not-fixed-constants.md)
+- [ADR 0006: one TextStyle per text run, shared by measurement and drawing](../../Rendering/0006-one-text-style-for-measurement-and-drawing/0006-one-text-style-for-measurement-and-drawing.md)
+- [ADR 0068: accessibility is production-ready per platform](../0068-accessibility-is-production-ready-per-platform/0068-accessibility-is-production-ready-per-platform.md)
+- [ADR 0071: embed Noto Sans subsets for the non-Latin scripts](../../Rendering/0071-embedded-fonts-by-script/0071-embedded-fonts-by-script.md)
+- [ADR 0073: design for ranges, not screens and devices](../../Rendering/0073-design-for-ranges-not-screens-and-devices/0073-design-for-ranges-not-screens-and-devices.md)
+- [ADR 0076: the keyboard walks the projection](../0076-the-keyboard-walks-the-projection/0076-the-keyboard-walks-the-projection.md)
+- [task-104: the 35 empty or borrowed gallery tabs become kit components](../../../Tasks/task-104-gallery-components-from-the-kit/task-104-gallery-components-from-the-kit.md)
+- [task-75: production-ready platform accessibility](../../../Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md)
+<!-- /related -->

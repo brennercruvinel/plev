@@ -38,3 +38,11 @@ integrada. pendências (não viram fase nem task sem o ok do brenner):
 - sair do localhost com pareamento e transporte cifrado;
 - o gravador guardar os pixels das imagens fixas; o custo de uma imagem
   fixa grande no fio do app.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-79: scene over socket](task-79-scene-over-socket.md)
+- [phase 1 (task-79a): the probe](phase-79a-probe.md)
+- [phase 2 (task-79b): the probe](phase-79b-probe.md)
+<!-- /related -->

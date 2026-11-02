@@ -357,7 +357,7 @@ frame desenhado.
 
 ### linha de ADR (para o orquestrador; o ADR não está na minha lista)
 
-em [`0051-materialized-surfaces-from-verified-ir.md`](../../adr/Generative/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md), consequências:
+em [`0051-materialized-surfaces-from-verified-ir.md`](../../adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md), consequências:
 "uma linha encolhe o que encolhe e, se ainda passa da borda, quebra; um
 texto nunca fica mais estreito que a sua palavra mais longa; o slider
 mostra rótulo e valor acima do trilho; um número aparece com no máximo
@@ -404,3 +404,13 @@ na 03, a linha do corte inteira dentro do card, os números com duas
 casas; na 04, se a proposta nova põe a lista dos cortes no topo (o
 prompt), se os sliders mostram rótulo e valor, se as durações saem "2",
 e se ela repete a detecção da fixa sem a intenção pedir.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0051: a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](../../adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)
+- [task-69: ephemeral and generated surfaces](task-69-ephemeral-generative-surfaces.md)
+- [task-75: production-ready platform accessibility](../task-75-platform-accessibility/task-75-platform-accessibility.md)
+- [task-77: visual determinism](../task-77-visual-determinism/task-77-visual-determinism.md)
+- [generated silences screen against the fixed screen, checkpoint b of task-69](../../Research/Exploring/generated-surface-checkpoint-b.md)
+<!-- /related -->

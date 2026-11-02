@@ -418,9 +418,9 @@ nenhuma GPU aberta (os 175 de antes iguais, 1 novo). todo cargo com o
 `PLEV_CLAUDE` apontando para o stub que só falha; nenhum `claude -p`
 chamado (o teste do prompt usa o `claude` falso do repositório).
 
-### linha de ADR para o índice (o [`adr/`](../../adr/README.md) não está na minha lista)
+### linha de ADR para o índice (o [`adr/`](../../adr/adr.md) não está na minha lista)
 
-| 2026-09-25 | [adaptive-transforms-preserve-identity](../../adr/Generative/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md) | adição proposta | fase 4: `uir::Preferences` (texto maior, mais contraste, densidade) viram operações da fase 1 por token, cada uma verificada (`emphasize` em texto e stat; `restyle` para `text` e badge preenchido, com o `restyle` alcançando o fundo do badge e a tinta de slider, tabela e imagem; `density`); o host desenha as preferências como a última camada, desde o primeiro frame, e desligar deixa o que outros pediram; só a pessoa liga (`SurfaceHost::prefer` recusa agente; a faixa `PERSON_ONLY` da Silences, projetada só aberta, sem estado); a projeção e o prompt são os mesmos com e sem preferência; contraste medido como a 75, o rótulo do stat listado; o reduced motion da thread sem transição no primeiro frame; o `promote` de template no `uir`, sem o `registry` do host (task-70 fase 4) |
+| 2026-09-25 | [adaptive-transforms-preserve-identity](../../adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md) | adição proposta | fase 4: `uir::Preferences` (texto maior, mais contraste, densidade) viram operações da fase 1 por token, cada uma verificada (`emphasize` em texto e stat; `restyle` para `text` e badge preenchido, com o `restyle` alcançando o fundo do badge e a tinta de slider, tabela e imagem; `density`); o host desenha as preferências como a última camada, desde o primeiro frame, e desligar deixa o que outros pediram; só a pessoa liga (`SurfaceHost::prefer` recusa agente; a faixa `PERSON_ONLY` da Silences, projetada só aberta, sem estado); a projeção e o prompt são os mesmos com e sem preferência; contraste medido como a 75, o rótulo do stat listado; o reduced motion da thread sem transição no primeiro frame; o `promote` de template no `uir`, sem o `registry` do host (task-70 fase 4) |
 
 ### o que fica aberto
 
@@ -445,3 +445,14 @@ chamado (o teste do prompt usa o `claude` falso do repositório).
   recusada por já estar feita na superfície pedida (um `restyle` para o
   papel que ela já tem): a preferência da pessoa ganha.
 - a adição ao ADR está como proposta; o índice é do orquestrador.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0067: adaptive transformations are small verified operations that preserve identity](../../adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md)
+- [task-70: adaptive transformations](task-70-adaptive-transformations.md)
+- [task-75: production-ready platform accessibility](../task-75-platform-accessibility/task-75-platform-accessibility.md)
+- [task-70: task closure, by the orchestrator](closing.md)
+- [task-70: phase 1, the operations, the inverse, the verification and the host](phase-1-operations.md)
+- [task-70: phase 3, composite capabilities](phase-3-composite-capabilities.md)
+<!-- /related -->

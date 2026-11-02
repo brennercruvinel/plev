@@ -224,3 +224,9 @@ continuam abertos no critério: o roteiro de IME executado (fase 4, pede
 o brenner) e o benchmark de um milhão de linhas (fase 7).
 
 o agente gastou uns 235 mil tokens.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-74: text and editing](task-74-text-and-editing.md)
+<!-- /related -->

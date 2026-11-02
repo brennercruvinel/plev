@@ -110,3 +110,11 @@ fn plev_log(msg_ptr: *const u8, msg_len: u32)
 | + wasmer singlepass | ~12mb (+4mb) |
 
 WASM target is already 2.4mb. plugin support would not apply to WASM builds.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-30: accessibility (accesskit)](../../Tasks/task-30-accessibility/task-30-accessibility.md)
+- [task-31: vector path rendering (lyon integration)](../../Tasks/task-31-vector-paths/task-31-vector-paths.md)
+- [task-33: WASM plugin architecture](../../Tasks/task-33-wasm-plugins/task-33-wasm-plugins.md)
+<!-- /related -->

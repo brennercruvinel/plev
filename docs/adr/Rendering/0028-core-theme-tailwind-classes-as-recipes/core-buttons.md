@@ -102,3 +102,12 @@ escrito pra quem for migrar a próxima página do kit, humano ou agente.
 - `apps/urnadbapp/src/view/{search,chunks,overview}.rs` e
   `comps/src/editor/tests.rs` passam de 639 linhas; dividir quando forem
   tocados de verdade
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0028: core theme: the tailwind class lists as button recipes](0028-core-theme-tailwind-classes-as-recipes.md)
+- [ADR 0029: embed an app view by giving it a frame origin](../0029-embed-an-app-view-by-frame-origin/0029-embed-an-app-view-by-frame-origin.md)
+- [task-53: editor and git in the showcase](../../../Tasks/task-53-editor-and-git-in-the-showcase/task-53-editor-and-git-in-the-showcase.md)
+- [task-54: core theme, buttons poc](../../../Tasks/task-54-core-theme-buttons-poc/task-54-core-theme-buttons-poc.md)
+<!-- /related -->

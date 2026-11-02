@@ -189,3 +189,10 @@ o sistema view/component de plev (`view.rs`, `component.rs`, `builder.rs`) ja de
 - **degradacao graciosa** (ohmyzsh) e aplicavel ao sistema de componentes de plev. componentes opcionais devem ter fallback (render vazio, noop handlers) em vez de panic quando dependencias estao ausentes.
 - **lifecycle de carregamento ordenado** (ohmyzsh: libs -> custom -> plugins -> theme) e relevante para inicializacao de apps plev. o mount order de componentes deveria ser determinístico e documentado.
 - **plugin system via scripting** (yazi/lua) nao e prioridade para plev engine, mas apps construidas sobre plev poderiam adotar o pattern de yazi: runtime lua embutido com API globals tipadas para acesso controlado ao estado da aplicacao.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [technology radar, plev](../Ecosystem/technology-radar.md)
+<!-- /related -->

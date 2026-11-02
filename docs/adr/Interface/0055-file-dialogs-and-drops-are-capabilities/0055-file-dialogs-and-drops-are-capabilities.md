@@ -33,7 +33,7 @@ integration that is an action to be a capability of the contract: the
 several representations.
 
 the probe (the handoff of item 3 in
-[task-76](../../../Tasks/task-76-platform-integration/README.md)) measured:
+[task-76](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)) measured:
 
 - `rfd` 0.15 has a backend for macos, windows, linux and wasm, none for
   android or ios; on wasm it is asynchronous only and answers bytes (a
@@ -140,3 +140,13 @@ the probe (the handoff of item 3 in
 - an agent that may request an action which opens a native panel.
 - a position invented for a drop from the last cursor position.
 - a test that constructs `NativeDialogs` and asks it anything.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0057: a native menu is another view of the app's capabilities](../0057-native-menus-are-another-view-of-capabilities/0057-native-menus-are-another-view-of-capabilities.md)
+- [ADR 0058: a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](../0058-native-dialogs-answer-the-same-contract/0058-native-dialogs-answer-the-same-contract.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-76, closing: what went in and what remains](../../../Tasks/task-76-platform-integration/closing.md)
+- [task-76, item 3: file dialogs and drag and drop](../../../Tasks/task-76-platform-integration/item-3-files-and-drop.md)
+<!-- /related -->

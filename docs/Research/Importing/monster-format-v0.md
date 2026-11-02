@@ -211,3 +211,10 @@ play.rs (player), fixtures/ (golden), benches vs the lottie sample table.
 rhai behind feature "script", config default-features=false,
 features=["std","f32_float"] (wasm-safe; measured 226 KB gzip dieted).
 every file under 369 lines.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-43: monster, binary animation codec v0](../../Tasks/task-43-monster-codec/task-43-monster-codec.md)
+- [program: from GPU UI engine to generative interaction runtime](../Synthesis/generative-runtime-program.md)
+<!-- /related -->

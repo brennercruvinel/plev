@@ -257,3 +257,10 @@ como emuladores e runtimes de linguagens funcionam dentro de WASM, referencia pa
 - **performance de interpretadores:** um runtime WASM interpretado (como pywasm) e ordens de magnitude mais lento que compilado. para targets nativos do plev, usar wasmer/wasmtime como backend (nao implementar interpretador proprio).
 - **sharedarraybuffer:** requer headers coop/coep no servidor. sem ele, a transferencia de frame buffers entre worker e main thread copia dados.
 - **wasm gc:** necessario para linguagens com gc. a proposal e recente e nem todos os browsers suportam completamente.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [technology radar, plev](technology-radar.md)
+<!-- /related -->

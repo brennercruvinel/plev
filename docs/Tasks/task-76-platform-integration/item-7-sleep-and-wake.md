@@ -304,7 +304,7 @@ com os testes). tudo abaixo de 639.
 três estados e quem os entrega em cada plataforma, a regra dos frames e
 das deadlines, os relógios que saltam, o contrato do `Background` e como
 cada app o aplica, o que o sleep do sistema tem e não tem. linha pro
-índice ([`adr/`](../../adr/README.md) está fora da lista, fica para a integração):
+índice ([`adr/`](../../adr/adr.md) está fora da lista, fica para a integração):
 
 ```text
 | 2026-09-24 | [a-covered-window-does-not-draw-and-wakes-new](a-covered-window-does-not-draw-and-wakes-new.md) | proposed | task-76 item 7: `WindowHost` sabe quando está coberta (`WindowEvent::Occluded`, no macOS minimizada, escondida ou totalmente atrás; no iOS o background) e quando o app dorme (`Windows::sleep`/`wake`, e `suspend`/`resume`); enquanto uma das duas, `request_redraw` é retido, `needs_redraw` é false e o `deadline` é None, então nenhum frame nem `WaitUntil` por ela e um `Wake` contínuo espera; ao mostrar ou acordar cada host invalida e pede um frame, construído do estado de então, nunca o de antes; os relógios saltam (o catch-up tica com o tempo real); `engine::window::Background` é o mesmo fato para o trabalho ao lado dos frames (thread-local, um app por processo): resultado que chega dormindo fica no canal e aplica no primeiro wake acordado, o Claude da Surface fica retido em `Pending` e começa ao acordar, o git do ide segue; o desktop não ouve o sleep do sistema (a feature `NSWorkspace` do `objc2-app-kit` não está no lock) e o `suspended` de verdade é do bring-up mobile; provado headless com `Occluded` injetado e byte a byte contra um host de controle |
@@ -413,3 +413,10 @@ cargo test --offline -p engine -p uigallery
 cargo run --offline -p regress -- check
 RUST_LOG=engine=debug cargo run --offline -p uigallery -- Spinner   (minimizar e restaurar; do orquestrador)
 ```
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0060: a covered window does not draw, and wakes with a new frame](../../adr/Rendering/0060-a-covered-window-does-not-draw-and-wakes-new/0060-a-covered-window-does-not-draw-and-wakes-new.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+<!-- /related -->

@@ -179,8 +179,6 @@ fn the_docs_keep_their_parts_by_kind() {
         "ATLAS.toml",
         "CATALOG.json",
         "CHANGELOG.md",
-        "Experiments",
-        "Learnings",
         "README.md",
         "Research",
         "TERMS.toml",
@@ -195,15 +193,18 @@ fn the_docs_keep_their_parts_by_kind() {
 /// the themes adr/ and Research/ share (tool/tasks/docbase.py keeps the same list)
 const THEMES: [&str; 9] = [
     "Ecosystem",
-    "Generative",
     "Importing",
     "Interface",
     "Recording",
     "Rendering",
     "Semantics",
     "Structure",
+    "Synthesis",
     "Workflows",
 ];
+
+/// Research/ has one theme more: the experiments, what was measured
+const EXPLORING: &str = "Exploring";
 
 /// a lowercase kebab name: digits, letters and dashes
 fn kebab(name: &str) -> bool {
@@ -215,13 +216,13 @@ fn kebab(name: &str) -> bool {
 
 /// the tracked names under `docs/<dir>` that are folders of themes: every
 /// other name is reported unless it is one of `files`
-fn themes(dir: &str, files: &[&str], bad: &mut Vec<String>) -> Vec<String> {
+fn themes(dir: &str, files: &[&str], extra: &[&str], bad: &mut Vec<String>) -> Vec<String> {
     let mut out = Vec::new();
     for name in tracked(&format!("docs/{dir}")) {
         if files.contains(&name.as_str()) {
             continue;
         }
-        if THEMES.contains(&name.as_str()) {
+        if THEMES.contains(&name.as_str()) || extra.contains(&name.as_str()) {
             out.push(name);
         } else {
             bad.push(format!(
@@ -236,7 +237,7 @@ fn themes(dir: &str, files: &[&str], bad: &mut Vec<String>) -> Vec<String> {
 fn a_decision_record_is_numbered_once_and_sits_in_its_theme() {
     let mut numbers: BTreeMap<u32, Vec<String>> = BTreeMap::new();
     let mut bad = Vec::new();
-    for theme in themes("adr", &["README.md", "TEMPLATE.md"], &mut bad) {
+    for theme in themes("adr", &["adr.md", "TEMPLATE.md"], &[], &mut bad) {
         for folder in tracked(&format!("docs/adr/{theme}")) {
             let (num, rest) = folder.split_at(folder.len().min(5));
             let well_named = num.len() == 5
@@ -282,7 +283,7 @@ fn a_decision_record_is_numbered_once_and_sits_in_its_theme() {
 #[test]
 fn research_sits_in_the_themes_of_the_decisions() {
     let mut bad = Vec::new();
-    for theme in themes("Research", &["README.md"], &mut bad) {
+    for theme in themes("Research", &["Research.md"], &[EXPLORING], &mut bad) {
         for file in tracked(&format!("docs/Research/{theme}")) {
             if !file.strip_suffix(".md").is_some_and(kebab) {
                 bad.push(format!("docs/Research/{theme}/{file}: not kebab-name.md"));
@@ -292,6 +293,29 @@ fn research_sits_in_the_themes_of_the_decisions() {
     assert!(
         bad.is_empty(),
         "research out of shape:\n  {}",
+        bad.join("\n  ")
+    );
+}
+
+#[test]
+fn a_task_is_a_folder_with_its_note_named_like_it() {
+    let mut bad = Vec::new();
+    for folder in tracked("docs/Tasks") {
+        if folder == "Tasks.md" {
+            continue;
+        }
+        let inside = tracked(&format!("docs/Tasks/{folder}"));
+        if !folder.starts_with("task-") || !kebab(&folder) {
+            bad.push(format!(
+                "docs/Tasks/{folder}: not a folder task-NN-kebab-title"
+            ));
+        } else if !inside.contains(&format!("{folder}.md")) {
+            bad.push(format!("docs/Tasks/{folder}: holds no {folder}.md"));
+        }
+    }
+    assert!(
+        bad.is_empty(),
+        "tasks out of shape:\n  {}",
         bad.join("\n  ")
     );
 }

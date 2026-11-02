@@ -314,7 +314,7 @@ um `draw.rs`.
 [`0062-capture-is-a-job-the-person-turns-on.md`](../../adr/Interface/0062-capture-is-a-job-the-person-turns-on/0062-capture-is-a-job-the-person-turns-on.md) (proposed): o trait, o
 ffmpeg como filho e por quê, a permissão como estado, só pessoa, a imagem
 de fluxo, coberto ou dormindo solta o dispositivo, o que o bring-up muda.
-linha para o índice ([`adr/`](../../adr/README.md) está fora da lista, fica para a
+linha para o índice ([`adr/`](../../adr/adr.md) está fora da lista, fica para a
 integração):
 
 ```text
@@ -459,3 +459,11 @@ cargo run --offline -p uigallery -- --render Capture --out capture.png   (a pág
   como vivo).
 - P3: no tema core o interruptor da câmera e do microfone quase não
   aparece (baseline `capture@core`).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0062: capture is a job the person turns on](../../adr/Interface/0062-capture-is-a-job-the-person-turns-on/0062-capture-is-a-job-the-person-turns-on.md)
+- [task-58: action with precondition, dispatch and receipts](../task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+<!-- /related -->

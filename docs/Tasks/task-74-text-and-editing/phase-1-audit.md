@@ -259,3 +259,10 @@ TEXT_AUDIT_OUT=/tmp/text-audit cargo test -p engine --test text_audit -- --nocap
 #   escreve Inclusive-Sans.png, Inter.png, pixels.txt e desktop.txt
 TEXT_AUDIT_UPDATE=1 cargo test -p engine --test text_audit  # regrava o golden após mudança intencional
 ```
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-74: text and editing](task-74-text-and-editing.md)
+- [text coverage per writing system, and the cost of large documents in the editor](../../Research/Exploring/text-coverage-and-large-documents.md)
+<!-- /related -->

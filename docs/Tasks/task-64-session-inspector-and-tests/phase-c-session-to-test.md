@@ -464,3 +464,14 @@ severidade do que ficou:
 - P2: o showcase não grava sessão nem tem fixture; com a segunda fixture
   o harness vira crate próprio; a fase b (UI) marca valores e escreve o
   `.marks`.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0050: sessions become regression tests](../../adr/Recording/0050-sessions-become-regression-tests/0050-sessions-become-regression-tests.md)
+- [task-63: session flight recorder](../task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-64: session inspector, bug report and session for testing](task-64-session-inspector-and-tests.md)
+- [task-68: plev IR and verifier](../task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-69: ephemeral and generated surfaces](../task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-64 closing: acceptance criterion checked](closing.md)
+<!-- /related -->

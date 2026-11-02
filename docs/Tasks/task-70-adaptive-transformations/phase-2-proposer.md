@@ -517,9 +517,9 @@ não gasta chamada; pelas regras, o mesmo resultado da baseline
 `...-too-much-information`. e pelo port, que cada receipt é do
 `orquestrador`.
 
-### linha de ADR para o índice (o [`adr/`](../../adr/README.md) não está na minha lista)
+### linha de ADR para o índice (o [`adr/`](../../adr/adr.md) não está na minha lista)
 
-| 2026-09-24 | [adaptive-transforms-preserve-identity](../../adr/Generative/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md) | adição proposta | fase 2: `propose::Transformer` ao lado do `Proposer`, `transform_verified` só devolve operações com o `Adapted` verificado; a gramática de mudanças das regras (menos, comparar com dificuldade, maior, desfazer, en e pt) por estrutura e registro; o prompt de mudança com `{"ops": [...]}` e reparo; o mesmo `propose` da linha com uma superfície aberta, sem ação nova (a projeção das baselines não muda); o host guarda a política de cada superfície e os pedidos (`apply_all`, `undo_asked`); ênfase de stat por `typography` e de badge por `background`; a linha do item das regras por sentido, a decisão como badge (task-70 fase 2) |
+| 2026-09-24 | [adaptive-transforms-preserve-identity](../../adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md) | adição proposta | fase 2: `propose::Transformer` ao lado do `Proposer`, `transform_verified` só devolve operações com o `Adapted` verificado; a gramática de mudanças das regras (menos, comparar com dificuldade, maior, desfazer, en e pt) por estrutura e registro; o prompt de mudança com `{"ops": [...]}` e reparo; o mesmo `propose` da linha com uma superfície aberta, sem ação nova (a projeção das baselines não muda); o host guarda a política de cada superfície e os pedidos (`apply_all`, `undo_asked`); ênfase de stat por `typography` e de badge por `background`; a linha do item das regras por sentido, a decisão como badge (task-70 fase 2) |
 
 ### o que a fase 3 precisa desta
 
@@ -552,3 +552,15 @@ não gasta chamada; pelas regras, o mesmo resultado da baseline
 - "reduz densidade": segui o briefing, `density denser` (o espaçamento
   aperta); se a intenção deveria afrouxar, é uma linha em `reshape.rs`.
 - a adição ao ADR está como proposta; o índice é do orquestrador.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0067: adaptive transformations are small verified operations that preserve identity](../../adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md)
+- [task-58: action with precondition, dispatch and receipts](../task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-69: ephemeral and generated surfaces](../task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-70: adaptive transformations](task-70-adaptive-transformations.md)
+- [task-70: task closure, by the orchestrator](closing.md)
+- [task-70: phase 1, the operations, the inverse, the verification and the host](phase-1-operations.md)
+- [task-70: phase 3, composite capabilities](phase-3-composite-capabilities.md)
+<!-- /related -->

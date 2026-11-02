@@ -133,3 +133,14 @@ hipótese central continua de pé com o app corrigido, e as correções
 aparecem no comportamento dos agentes. nenhuma condição de parada. a
 onda 5 abre. antes, duas correções pequenas do que esta rodada achou: o
 aviso sem segunda pessoa e a revisão no `completed`.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](task-62-ide-human-agent-proof.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](../task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)
+- [task-84: an old refresh does not undo what the ide has already accepted](../task-84-ide-refresh-never-goes-back/task-84-ide-refresh-never-goes-back.md)
+- [task-85: the commit that the receipt announces is already in the projection, with the files](../task-85-the-commit-a-receipt-announces-is-projected/task-85-the-commit-a-receipt-announces-is-projected.md)
+- [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](../../Research/Exploring/agent-proof-checkpoint-a.md)
+- [operating mode: autonomous orchestrator](../../Research/Workflows/autonomy.md)
+<!-- /related -->

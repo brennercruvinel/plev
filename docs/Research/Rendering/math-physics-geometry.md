@@ -203,3 +203,10 @@ todos suportam WASM. glam e lyon sao `no_std` friendly. nalgebra suporta `no_std
 ### nao adotar
 
 **nalgebra**, nao ha caso de uso que justifique nalgebra sobre glam para plev. se rapier/parry for adotado no futuro, nalgebra entra como dependencia transitiva e fica encapsulada, plev nao deve usar nalgebra diretamente na API publica.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [technology radar, plev](../Ecosystem/technology-radar.md)
+<!-- /related -->

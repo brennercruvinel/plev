@@ -388,9 +388,9 @@ e depois. `cargo run --offline -p regress --
 check` (com o `main.rs` tocado): 170 baselines, 170 iguais, nenhum frame
 desenhado, nenhuma GPU aberta; os 169 de antes iguais, um novo.
 
-### linha de ADR para o índice (o [`adr/`](../../adr/README.md) não está na minha lista)
+### linha de ADR para o índice (o [`adr/`](../../adr/adr.md) não está na minha lista)
 
-| 2026-09-24 | [adaptive-transforms-preserve-identity](../../adr/Generative/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md) | proposed | módulo `uir::transform`, puro: nove operações como dado (`Op`, serde com `op`) sobre um `Adapted` (o `VerifiedIr` e os nós guardados de lado); cada resultado verificado de novo, com a inversa exata (a operação contrária onde ela é exata: hide e show, reorder, swap_view; o pedaço de antes onde não: props e layout de emphasize, restyle e density, o pai de group e promote); identidade: todo id na árvore ou guardado, só o hide tira da árvore, sem campo novo no `IrNode`; operação sobre template vale para todo item, id de instância recusado com o template; swap_view só dentro de uma família (valor, bool, escolha, lista) e nunca de uma lista que repete; promote só de ação que o registro declara para quem pediu; `SurfaceHost::apply` e `undo` com histórico (`Change`: operação, inversa, ator), reconciliado por `SemId` como a troca inteira; telas fixas: exprimir em IR, não transformar a projeção (task-70 fase 1) |
+| 2026-09-24 | [adaptive-transforms-preserve-identity](../../adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md) | proposed | módulo `uir::transform`, puro: nove operações como dado (`Op`, serde com `op`) sobre um `Adapted` (o `VerifiedIr` e os nós guardados de lado); cada resultado verificado de novo, com a inversa exata (a operação contrária onde ela é exata: hide e show, reorder, swap_view; o pedaço de antes onde não: props e layout de emphasize, restyle e density, o pai de group e promote); identidade: todo id na árvore ou guardado, só o hide tira da árvore, sem campo novo no `IrNode`; operação sobre template vale para todo item, id de instância recusado com o template; swap_view só dentro de uma família (valor, bool, escolha, lista) e nunca de uma lista que repete; promote só de ação que o registro declara para quem pediu; `SurfaceHost::apply` e `undo` com histórico (`Change`: operação, inversa, ator), reconciliado por `SemId` como a troca inteira; telas fixas: exprimir em IR, não transformar a projeção (task-70 fase 1) |
 
 ### o que as fases 2 e 3 precisam desta
 
@@ -425,3 +425,16 @@ desenhado, nenhuma GPU aberta; os 169 de antes iguais, um novo.
 - o estado novo do regress depende do `claude` no PATH de quem abençoa,
   como os dois de antes (o seletor do proponente).
 - o ADR está como proposto; o índice é do orquestrador.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0067: adaptive transformations are small verified operations that preserve identity](../../adr/Synthesis/0067-adaptive-transforms-preserve-identity/0067-adaptive-transforms-preserve-identity.md)
+- [task-68: plev IR and verifier](../task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-69: ephemeral and generated surfaces](../task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-70: adaptive transformations](task-70-adaptive-transformations.md)
+- [task-70: task closure, by the orchestrator](closing.md)
+- [task-70: phase 2, the transformation proposer](phase-2-proposer.md)
+- [task-70: phase 3, composite capabilities](phase-3-composite-capabilities.md)
+- [task-70: phase 4, accessibility as a transformation](phase-4-accessibility.md)
+<!-- /related -->

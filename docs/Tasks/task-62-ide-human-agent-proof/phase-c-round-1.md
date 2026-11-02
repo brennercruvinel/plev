@@ -506,3 +506,17 @@ task-67 regressão estrutural) levando as três correções pequenas que os
 agentes apontaram (nó inteiro no `node_added`, `files` no nó do commit,
 ator na recusa), e a corrida do `Refresh` no ide como task própria. o que
 não entra ainda: IR, superfícies geradas, adaptativo, como pedido.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](task-62-ide-human-agent-proof.md)
+- [task-64: session inspector, bug report and session for testing](../task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-65: pixel to code and development inspector](../task-65-pixel-to-source/task-65-pixel-to-source.md)
+- [task-67: structural regression before pixels](../task-67-structural-regression/task-67-structural-regression.md)
+- [task-85: the commit that the receipt announces is already in the projection, with the files](../task-85-the-commit-a-receipt-announces-is-projected/task-85-the-commit-a-receipt-announces-is-projected.md)
+- [task-88: the lab measures what the agent rested on](../task-88-the-lab-measures-what-the-agent-rested-on/task-88-the-lab-measures-what-the-agent-rested-on.md)
+- [task-89: an act relies only on what was shown to the agent](../task-89-an-act-rests-only-on-what-was-shown/task-89-an-act-rests-only-on-what-was-shown.md)
+- [task-93: the person in the lab answers](../task-93-the-lab-person-answers/task-93-the-lab-person-answers.md)
+- [LLM agents commit through the IDE contract: stale refusal and handoff, five rounds](../../Research/Exploring/agent-proof-checkpoint-a.md)
+<!-- /related -->

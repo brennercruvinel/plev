@@ -79,3 +79,12 @@ a short window and does not read as a system.
 ## learnings
 
 - [showcase pages session: what worked and what bit us](showcase-pages.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [showcase pages session: what worked and what bit us](showcase-pages.md)
+- [task-104: the 35 empty or borrowed gallery tabs become kit components](../../../Tasks/task-104-gallery-components-from-the-kit/task-104-gallery-components-from-the-kit.md)
+- [task-55: showcase, one page per component](../../../Tasks/task-55-showcase-one-page-per-component/task-55-showcase-one-page-per-component.md)
+- [ui component catalog](../../../Research/Structure/component-catalog.md)
+<!-- /related -->

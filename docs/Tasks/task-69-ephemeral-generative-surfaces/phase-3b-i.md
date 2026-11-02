@@ -455,7 +455,7 @@ chamada: `cargo run -p intent -- --app todo
 
 ### seção de ADR
 
-[`0052-proposers-propose-the-runtime-verifies.md`](../../adr/Generative/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md), seção nova no fim,
+[`0052-proposers-propose-the-runtime-verifies.md`](../../adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md), seção nova no fim,
 "addendum, 2026-09-24: the Claude as the model (task-69 phase 3b-i,
 proposed)": contexto (a decisão 13), decisão (o crate, o processo, cada
 flag com o motivo, o filho fora da sessão, o prazo, os erros, o prompt
@@ -464,7 +464,7 @@ corridas), consequências (o que ele lê que as regras não leem, valores
 de agora em vez de listas, os ids tomados do app, o teto de orçamento, o
 que o `claude` escreve, o que a 3b-ii decide) e o que evitar.
 
-para o orquestrador (o [`adr/`](../../adr/README.md) é proibido aqui): no fim da
+para o orquestrador (o [`adr/`](../../adr/adr.md) é proibido aqui): no fim da
 linha do índice desse ADR, algo como "; addendum 3b-i (proposed): crate
 claude-model, `ClaudeCli` implementa `Model` pelo `claude -p` como
 processo (json, sem ferramentas, sem sessão salva, sem MCP, sem
@@ -555,3 +555,10 @@ configurações, system prompt próprio, fora da sessão do Claude Code,
 - custo e limites: cada proposta custa uma a três chamadas do plano do
   brenner; o cache do prompt (uma hora) barateia a segunda proposta
   sobre o mesmo app.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0052: proposers propose, the runtime verifies](../../adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md)
+- [task-69: ephemeral and generated surfaces](task-69-ephemeral-generative-surfaces.md)
+<!-- /related -->

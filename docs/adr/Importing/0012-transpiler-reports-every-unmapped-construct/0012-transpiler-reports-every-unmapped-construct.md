@@ -64,3 +64,12 @@ user of the engine's rules, not a bypass of them.
 - never let the mapped/dropped counts drift without a conscious test
   update; they are an api contract.
 - never emit code that bypasses the engine manual to fake coverage.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0069: importers target plev IR, with a report in four categories](../0069-importers-target-plev-ir/0069-importers-target-plev-ir.md)
+- [task-45: parser, transpiler poc (react/gpui to builder)](../../../Tasks/task-45-parser-transpiler/task-45-parser-transpiler.md)
+- [task-71: plev as compiler target (importers to IR)](../../../Tasks/task-71-compiler-target/task-71-compiler-target.md)
+- [mon experiment](../../../Research/Importing/mon-experiment-notes.md)
+<!-- /related -->

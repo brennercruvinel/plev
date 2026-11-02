@@ -22,7 +22,7 @@ Decides the official app pattern, with state in structs, retained widgets and ex
 ## addendum (2026-09-24, task-69): the second pattern, a surface materialized from verified IR
 
 a screen can also be a surface materialized from verified plev IR
-([docs/adr/Generative/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md](../../Generative/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)): the `surface` crate
+([docs/adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md](../../Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)): the `surface` crate
 lays a `uir::VerifiedIr` out by the engine, draws it by the comps widgets
 with the theme's tokens, projects it from the IR and turns every event
 into a request through the app's dispatcher. it is the second supported
@@ -86,3 +86,15 @@ and report `EventResult`, and every visible mutation invalidates
 - do not start an app on signals/narrate because the demo reads shorter;
   the demos never show invalidation, focus routing or ime, which the
   retained path already solved
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0008: render on demand makes invalidation a correctness contract](../../Rendering/0008-render-on-demand-requires-explicit-invalidation/0008-render-on-demand-requires-explicit-invalidation.md)
+- [ADR 0051: a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](../../Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)
+- [task-68: plev IR and verifier](../../../Tasks/task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-69: ephemeral and generated surfaces](../../../Tasks/task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+- [ui component catalog](../../../Research/Structure/component-catalog.md)
+- [how to code against the plev engine](../../../Research/Workflows/code-against-the-plev-engine.md)
+<!-- /related -->

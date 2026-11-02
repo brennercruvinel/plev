@@ -59,3 +59,9 @@ Describes the architecture of task-08's composition effects: a separable blur in
 - textureview::clone() é safe em wgpu 28 (reference-counted)
 - blur uniform buffer é compartilhado entre h e v pass via write_buffer entre passes
 - texturas do pool precisam de `RENDER_ATTACHMENT | TEXTURE_BINDING`
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-08: compositing effects (blur, shadow, opacity)](../../Tasks/task-08-compositing-effects/task-08-compositing-effects.md)
+<!-- /related -->

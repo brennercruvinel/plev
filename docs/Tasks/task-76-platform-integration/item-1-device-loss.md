@@ -206,7 +206,7 @@ iguais, 0 mudaram, sem frame desenhado. contagem de linhas:
 [`0054-gpu-device-loss-recovers-in-place.md`](../../adr/Rendering/0054-gpu-device-loss-recovers-in-place/0054-gpu-device-loss-recovers-in-place.md) (proposed): o sinal, a
 ordem de recriação, o que sobrevive e o que não, o que o app faz (nada; a
 exceção é recurso próprio no device). linha pro índice, que é do
-orquestrador ([`adr/`](../../adr/README.md) é proibido aqui):
+orquestrador ([`adr/`](../../adr/adr.md) é proibido aqui):
 
 | 2026-09-24 | [gpu-device-loss-recovers-in-place](../../adr/Rendering/0054-gpu-device-loss-recovers-in-place/0054-gpu-device-loss-recovers-in-place.md) | proposed | `GpuContext` instala o callback de device lost em todo device e guarda o flag; `recover` refaz adapter, device, surface config, pipelines e atlas pelo mesmo `from_device`; o frame recupera antes do acquire ou pula com um erro por perda; o store de imagens vira log de uploads com os pixels; provado headless com `Device::destroy` e pixels iguais antes e depois (task-76 fase 1) |
 
@@ -265,3 +265,10 @@ mudança.
   provado pelo segundo teste. se o driver entregar a perda como
   `SurfaceError::Lost` sem callback, o caminho do `Lost` já pede o frame
   que recupera.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0054: a lost GPU device is recovered in place, and the next frame draws the same](../../adr/Rendering/0054-gpu-device-loss-recovers-in-place/0054-gpu-device-loss-recovers-in-place.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+<!-- /related -->

@@ -249,3 +249,19 @@ listens. no target was set.
 - building the tree, or projecting for it, while no assistive client
   listens.
 - a second accessibility path next to the bridge.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0032: semantic contract as a pure projection of app state](../../Semantics/0032-semantic-contract-as-pure-projection/0032-semantic-contract-as-pure-projection.md)
+- [ADR 0033: actions carry the state their actor observed](../../Semantics/0033-actions-carry-observed-state/0033-actions-carry-observed-state.md)
+- [ADR 0035: semantic binding beside the scene, and the click as a request](../../Semantics/0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md)
+- [ADR 0039: agents act through the semantic contract](../../Semantics/0039-agents-act-through-the-semantic-contract/0039-agents-act-through-the-semantic-contract.md)
+- [ADR 0068: accessibility is production-ready per platform](../0068-accessibility-is-production-ready-per-platform/0068-accessibility-is-production-ready-per-platform.md)
+- [task-59: semantic binding with the render and one operational path](../../../Tasks/task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-60: accessibility as a projection of the contract](../../../Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-61: agent surface (local socket, observe, act)](../../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-75: production-ready platform accessibility](../../../Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md)
+- [how to code against the plev engine](../../../Research/Workflows/code-against-the-plev-engine.md)
+<!-- /related -->

@@ -8,10 +8,10 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [recording, process, semantics]
-relations: [adr-0037, adr-0046, task-63, task-64, generative-runtime-thesis]
+relations: [adr-0037, adr-0046, task-63, task-64, generative-runtime-thesis, learning-cycle-0050]
 source: docs/adr/recording/0050-sessions-become-regression-tests.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -230,3 +230,22 @@ test is made with it.
 - comparing the whole state, a time, a revision or a sha by default.
 - a fixture that reaches past its temp dir, or the network.
 - replaying the app's answers instead of producing them.
+
+## learnings
+
+- [what the autonomous cycle taught: sessions become regression tests](learned-sessions-become-regression-tests.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0037: session recording: replay, not re-execution](../0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md)
+- [ADR 0046: the inspector reads a session, it never runs it](../0046-the-inspector-reads-a-session-never-runs-it/0046-the-inspector-reads-a-session-never-runs-it.md)
+- [what the autonomous cycle taught: sessions become regression tests](learned-sessions-become-regression-tests.md)
+- [task-63: session flight recorder](../../../Tasks/task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-64: session inspector, bug report and session for testing](../../../Tasks/task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-80: proof of qualitatively different software](../../../Tasks/task-80-proof-qualitatively-different-software/task-80-proof-qualitatively-different-software.md)
+- [task-64 phase c: session to test, and export](../../../Tasks/task-64-session-inspector-and-tests/phase-c-session-to-test.md)
+- [task-80, phase 1: probe, five-demo method, demos 3 and 4 and handoff](../../../Tasks/task-80-proof-qualitatively-different-software/phase-1-probe-and-demos.md)
+- [plev: thesis of the generative interaction runtime](../../../Research/Synthesis/generative-runtime-thesis.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+<!-- /related -->

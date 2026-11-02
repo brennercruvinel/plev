@@ -49,3 +49,9 @@ server even when a neighboring port was free.
 
 - [`aa51e7d3`](https://github.com/brennercruvinel/plev/commit/aa51e7d33788a679259251c4803eec0d2c9194c3)
 - [`5de80aad`](https://github.com/brennercruvinel/plev/commit/5de80aad9378495c53dd053a17fefbe6a0d0c72e)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-102: reusable builds and web commands](../../../Tasks/task-102-builds-and-web-commands/task-102-builds-and-web-commands.md)
+<!-- /related -->

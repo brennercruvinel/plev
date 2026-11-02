@@ -34,7 +34,7 @@ guidelines win and this file gets fixed.
    docs/Tasks/ while the task is open.
 2. the orchestrator checks that the task's dependencies are merged into
    `main` and that its code surface is free (ownership table in
-   [the generative runtime program](../Generative/generative-runtime-program.md), section 8).
+   [the generative runtime program](../Synthesis/generative-runtime-program.md), section 8).
 3. the orchestrator diagnoses first: reads the code the task touches and
    writes the mechanism into the briefing with file:line. prompts that
    carry the mechanism produce root fixes; prompts that carry symptoms
@@ -65,7 +65,7 @@ guidelines win and this file gets fixed.
    section 5). rejected: back to the agent with file, line, what is wrong
    and what is expected.
 10. the next briefing is revised with what this task taught, and
-    [`general.md`](../../Learnings/general.md) gets what the task taught about the
+    [`general.md`](autonomous-cycle-learnings.md) gets what the task taught about the
     product and about the process ([`autonomy.md`](autonomy.md)).
 
 ## parallel work
@@ -82,7 +82,7 @@ guidelines win and this file gets fixed.
 - a file two tasks of the same wave must touch is sequenced or split into
   named blocks by the orchestrator before the briefings go out.
 - shared surfaces (`Cargo.toml`, `docs/ATLAS.toml`, `README.md`,
-  [`adr/`](../../adr/README.md), `docs/CHANGELOG.md` and `docs/Tasks/`) belong to the
+  [`adr/`](../../adr/adr.md), `docs/CHANGELOG.md` and `docs/Tasks/`) belong to the
   orchestrator; an agent that creates a crate adds only its own entry,
   because `tool/tests/test_repoaudit.rs` fails the build without
   it.
@@ -185,3 +185,19 @@ worked before this program existed:
 6. the rules to enforce
 7. mandatory validation commands and required tests
 8. commit on the task branch; hand off with changes, tests, numbers
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0085: integration into main is a pull request merged by merge commit](../../adr/Workflows/0085-integration-by-merge-commit/0085-integration-by-merge-commit.md)
+- [what the autonomous cycle taught about the way of working](autonomous-cycle-learnings.md)
+- [task-57: semantic contract (crate `sem`)](../../Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
+- [task-60: accessibility as a projection of the contract](../../Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-66: headless as a first-class citizen](../../Tasks/task-66-headless-first-class/task-66-headless-first-class.md)
+- [task-84: an old refresh does not undo what the ide has already accepted](../../Tasks/task-84-ide-refresh-never-goes-back/task-84-ide-refresh-never-goes-back.md)
+- [program: from GPU UI engine to generative interaction runtime](../Synthesis/generative-runtime-program.md)
+- [operating mode: autonomous orchestrator](autonomy.md)
+- [orchestrator and agent guidelines](generative-runtime-guidelines.md)
+- [how to validate visuals by pixel](validate-visuals-by-pixel.md)
+<!-- /related -->

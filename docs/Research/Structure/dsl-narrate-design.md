@@ -78,3 +78,9 @@ builder stubs em `plev_narrate::builder` usam generics (`<V>`) para aceitar qual
 
 - `plev_narrate_macro`, proc-macro crate (syn/quote/proc-macro2)
 - `plev_narrate`, re-export + stubs (sem dependência em plev por enquanto)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-05: declarative API + builder pattern](../../Tasks/task-05-declarative-api-builder-pattern/task-05-declarative-api-builder-pattern.md)
+<!-- /related -->

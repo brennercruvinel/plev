@@ -414,3 +414,11 @@ o alvo rodar.
 ### linha para o índice de ADRs
 
 | 2026-09-25 | [accessibility-is-production-ready-per-platform](../../adr/Interface/0068-accessibility-is-production-ready-per-platform/0068-accessibility-is-production-ready-per-platform.md) | proposed | a matriz do que o AccessKit do lock entrega por plataforma (macOS roda; windows e linux esperam o alvo; iOS e web sem adapter; android fora do lock); a árvore de toda página testada; status polida e alerta assertivo sem mover o foco, o toast na árvore do leitor; 301 pares de contraste medidos, 102 falhando listados sem mudar token; reduced motion no ponto único de animação, lido do macOS pela ponte; o web em aberto entre espelho DOM gerado do snapshot e nada por enquanto (task-75 fase 1) |
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0068: accessibility is production-ready per platform](../../adr/Interface/0068-accessibility-is-production-ready-per-platform/0068-accessibility-is-production-ready-per-platform.md)
+- [task-60: accessibility as a projection of the contract](../task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-75: production-ready platform accessibility](task-75-platform-accessibility.md)
+<!-- /related -->

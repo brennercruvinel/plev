@@ -96,4 +96,13 @@ O texto não registra alternativas pesadas. Ele recusa dois caminhos: aceitar um
 
 ## learnings
 
-- [Generative runtime session: what worked and what bit us](../../Generative/0070-generative-runtime-results/generative-runtime.md)
+- [Generative runtime session: what worked and what bit us](../../Synthesis/0070-generative-runtime-results/generative-runtime.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0072: local llm inference in process: candle or burn](../../Ecosystem/0072-ai-native-single-process/0072-ai-native-single-process.md)
+- [Generative runtime session: what worked and what bit us](../../Synthesis/0070-generative-runtime-results/generative-runtime.md)
+- [task-78: AI-native applications](../../../Tasks/task-78-ai-native-apps/task-78-ai-native-apps.md)
+- [how to validate visuals by pixel](../../../Research/Workflows/validate-visuals-by-pixel.md)
+<!-- /related -->

@@ -355,3 +355,20 @@ fearless_simd e usado por vello CPU para rasterizacao. o pattern e: profiling pr
 - [egui parley migration pr #5784](https://github.com/emilk/egui/pull/5784)
 - [bevy parley discussion #21765](https://github.com/bevyengine/bevy/issues/21765)
 - [slint fontique migration pr #9564](https://github.com/slint-ui/slint/pull/9564)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-05: declarative API + builder pattern](../../Tasks/task-05-declarative-api-builder-pattern/task-05-declarative-api-builder-pattern.md)
+- [task-25: benchmarks](../../Tasks/task-25-benchmarks/task-25-benchmarks.md)
+- [task-27: animation system](../../Tasks/task-27-animation-system/task-27-animation-system.md)
+- [task-28: editable text](../../Tasks/task-28-editable-text/task-28-editable-text.md)
+- [task-29: app demo real (proof of life)](../../Tasks/task-29-app-demo-real/task-29-app-demo-real.md)
+- [task-30: accessibility (accesskit)](../../Tasks/task-30-accessibility/task-30-accessibility.md)
+- [task-31: vector path rendering (lyon integration)](../../Tasks/task-31-vector-paths/task-31-vector-paths.md)
+- [task-32: text system upgrade assessment](../../Tasks/task-32-text-upgrade-assessment/task-32-text-upgrade-assessment.md)
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [competitive positioning, plev](competitive-positioning.md)
+- [integration candidates, ranking](integration-candidates.md)
+- [technology radar, plev](technology-radar.md)
+<!-- /related -->

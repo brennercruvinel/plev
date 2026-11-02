@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [animation, rendering, performance]
-relations: [task-62, task-73, task-82]
+relations: [task-62, task-73, task-82, learning-cycle-0042]
 source: docs/adr/rendering/0042-a-tick-asks-for-a-deadline.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -123,3 +123,19 @@ does not change.
   still asks for a frame with nothing visible changed; a toast's springs
   take ~1.7 s each to reach the engine spring's rest threshold, most of
   it below a pixel.
+
+## learnings
+
+- [what the autonomous cycle taught: a tick asks for a deadline, not for every frame](learned-a-tick-asks-for-a-deadline.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0060: a covered window does not draw, and wakes with a new frame](../0060-a-covered-window-does-not-draw-and-wakes-new/0060-a-covered-window-does-not-draw-and-wakes-new.md)
+- [what the autonomous cycle taught: a tick asks for a deadline, not for every frame](learned-a-tick-asks-for-a-deadline.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-73: incremental dependency system](../../../Tasks/task-73-incremental-dependency-system/task-73-incremental-dependency-system.md)
+- [task-82: the caret cannot request 60 frames per second](../../../Tasks/task-82-caret-blink-render-on-demand/task-82-caret-blink-render-on-demand.md)
+- [task-82 phase a: the caret blink becomes a deadline](../../../Tasks/task-82-caret-blink-render-on-demand/phase-a.md)
+- [caret blink as a deadline: frames drawn with a focused, idle field](../../../Research/Exploring/caret-render-on-demand.md)
+<!-- /related -->

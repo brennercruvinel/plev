@@ -25,7 +25,7 @@ in this repository, shipped a visible defect, and was root-caused; treat a
 violation as a defect even when the screen looks right.
 
 plev is moving from a GPU UI engine to a generative interaction runtime
-([the generative runtime program](../Generative/generative-runtime-program.md)). the direction
+([the generative runtime program](../Synthesis/generative-runtime-program.md)). the direction
 adds one layer on top of everything below: every control keeps a
 persistent identity and meaning while its pixels are born, disappear or
 transform. the section "the semantic contract" says which parts of that
@@ -392,3 +392,41 @@ design-for-ranges-not-screens-and-devices).
    change touched. the two sampled widths are the floor: the screen was
    also checked over a continuous range of sizes, with longer content,
    font scaling and the input modalities the platform has
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0001: async GPU initialization and one wasm entry point per module](../../adr/Rendering/0001-async-gpu-init-and-single-wasm-entry/0001-async-gpu-init-and-single-wasm-entry.md)
+- [ADR 0006: one TextStyle per text run, shared by measurement and drawing](../../adr/Rendering/0006-one-text-style-for-measurement-and-drawing/0006-one-text-style-for-measurement-and-drawing.md)
+- [ADR 0023: official app pattern: state in structs, retained widgets, explicit invalidation](../../adr/Structure/0023-official-app-pattern/0023-official-app-pattern.md)
+- [ADR 0026: background results wake the event loop; child pipes drain from the start](../../adr/Rendering/0026-worker-results-wake-the-event-loop/0026-worker-results-wake-the-event-loop.md)
+- [ADR 0032: semantic contract as a pure projection of app state](../../adr/Semantics/0032-semantic-contract-as-pure-projection/0032-semantic-contract-as-pure-projection.md)
+- [ADR 0033: actions carry the state their actor observed](../../adr/Semantics/0033-actions-carry-observed-state/0033-actions-carry-observed-state.md)
+- [ADR 0034: headless render shares the frame path](../../adr/Rendering/0034-headless-render-shares-the-frame-path/0034-headless-render-shares-the-frame-path.md)
+- [ADR 0035: semantic binding beside the scene, and the click as a request](../../adr/Semantics/0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md)
+- [ADR 0038: accessibility projects the semantic snapshot](../../adr/Interface/0038-accessibility-projects-the-semantic-snapshot/0038-accessibility-projects-the-semantic-snapshot.md)
+- [ADR 0039: agents act through the semantic contract](../../adr/Semantics/0039-agents-act-through-the-semantic-contract/0039-agents-act-through-the-semantic-contract.md)
+- [ADR 0046: the inspector reads a session, it never runs it](../../adr/Recording/0046-the-inspector-reads-a-session-never-runs-it/0046-the-inspector-reads-a-session-never-runs-it.md)
+- [ADR 0073: design for ranges, not screens and devices](../../adr/Rendering/0073-design-for-ranges-not-screens-and-devices/0073-design-for-ranges-not-screens-and-devices.md)
+- [task-57: semantic contract (crate `sem`)](../../Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
+- [task-57b: lean JSON wire form and a single redaction](../../Tasks/task-57b-lean-wire-form-and-one-redaction/task-57b-lean-wire-form-and-one-redaction.md)
+- [task-58: action with precondition, dispatch and receipts](../../Tasks/task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-59: semantic binding with the render and one operational path](../../Tasks/task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-60: accessibility as a projection of the contract](../../Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-61: agent surface (local socket, observe, act)](../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-63: session flight recorder](../../Tasks/task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-66: headless as a first-class citizen](../../Tasks/task-66-headless-first-class/task-66-headless-first-class.md)
+- [task-66b: SVG export and `--semantics` in headless mode](../../Tasks/task-66b-svg-export/task-66b-svg-export.md)
+- [task-69: ephemeral and generated surfaces](../../Tasks/task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-73: incremental dependency system](../../Tasks/task-73-incremental-dependency-system/task-73-incremental-dependency-system.md)
+- [task-74: text and editing](../../Tasks/task-74-text-and-editing/task-74-text-and-editing.md)
+- [task-82: the caret cannot request 60 frames per second](../../Tasks/task-82-caret-blink-render-on-demand/task-82-caret-blink-render-on-demand.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](../../Tasks/task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)
+- [task-90: a refusal names who acted since the agent looked](../../Tasks/task-90-a-refusal-names-who-acted-since-the-look/task-90-a-refusal-names-who-acted-since-the-look.md)
+- [task-91: the dispatcher knows when the agent looked](../../Tasks/task-91-the-dispatcher-knows-when-the-agent-looked/task-91-the-dispatcher-knows-when-the-agent-looked.md)
+- [program: from GPU UI engine to generative interaction runtime](../Synthesis/generative-runtime-program.md)
+- [ui component catalog](../Structure/component-catalog.md)
+- [orchestrator and agent guidelines](generative-runtime-guidelines.md)
+- [how to validate visuals by pixel](validate-visuals-by-pixel.md)
+<!-- /related -->

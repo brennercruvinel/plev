@@ -461,3 +461,13 @@ mais no meio deu `silent 1 px`, código 1.
 - a correção do blur, se aprovada, com o teste ignorado como critério.
 - o job de CI no mac com `regress capture` exigindo `equal` em todo frame,
   quando o CI voltar.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0034: headless render shares the frame path](../../adr/Rendering/0034-headless-render-shares-the-frame-path/0034-headless-render-shares-the-frame-path.md)
+- [ADR 0064: what identical means](../../adr/Workflows/0064-what-identical-means/0064-what-identical-means.md)
+- [task-77: visual determinism](task-77-visual-determinism.md)
+- [desktop gallery pages: same pixels across scales, themes and runs](../../Research/Exploring/visual-determinism-captures.md)
+- [how to validate visuals by pixel](../../Research/Workflows/validate-visuals-by-pixel.md)
+<!-- /related -->

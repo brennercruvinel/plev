@@ -512,3 +512,13 @@ observado a partir do snapshot inteiro. isso revelou que um `act
 conexão: virou a task-89 (invariante quebrada). fases b (UI) e c (export,
 sessão para teste) continuam na fila; o que a b precisa do `rec` está no
 handoff acima.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0046: the inspector reads a session, it never runs it](../../adr/Recording/0046-the-inspector-reads-a-session-never-runs-it/0046-the-inspector-reads-a-session-never-runs-it.md)
+- [task-64: session inspector, bug report and session for testing](task-64-session-inspector-and-tests.md)
+- [task-67: structural regression before pixels](../task-67-structural-regression/task-67-structural-regression.md)
+- [task-87: a terminal stage carries the revision the app was left in](../task-87-a-terminal-stage-carries-the-revision/task-87-a-terminal-stage-carries-the-revision.md)
+- [task-89: an act relies only on what was shown to the agent](../task-89-an-act-rests-only-on-what-was-shown/task-89-an-act-rests-only-on-what-was-shown.md)
+<!-- /related -->

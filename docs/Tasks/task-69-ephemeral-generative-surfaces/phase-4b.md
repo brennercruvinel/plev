@@ -500,20 +500,20 @@ visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
 
 ### seções de ADR
 
-- [`0051-materialized-surfaces-from-verified-ir.md`](../../adr/Generative/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md), adendo datado
+- [`0051-materialized-surfaces-from-verified-ir.md`](../../adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md), adendo datado
   "an image draws the frame the app holds (task-69 phase 4b, proposed)":
   o frame ref como forma do app, o trait `Frames`, `sources`, a imagem
   ajustada, a página, as consequências (as fixtures, as chaves na lista,
   o tamanho do frame falso, a largura da metade) e o que evitar;
-- [`0052-proposers-propose-the-runtime-verifies.md`](../../adr/Generative/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md), adendo datado
+- [`0052-proposers-propose-the-runtime-verifies.md`](../../adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md), adendo datado
   "the rules show the media by structure (task-69 phase 4b, proposed)":
   a quinta parte, as vistas e o `compare`, o frame de item como imagem,
   os números de item fora das contagens, a mídia no topo, o prompt, o
   exemplo, e as consequências (o que cada frase dá, `cut` em duas
   partes, as contagens dos sliders);
-- [`0049-plev-ir-typed-and-verified.md`](../../adr/Generative/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md) e o schema não mudaram (forma (i)).
+- [`0049-plev-ir-typed-and-verified.md`](../../adr/Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md) e o schema não mudaram (forma (i)).
 - para o orquestrador (fora do que esta fase pode editar): no índice
-  [`adr/`](../../adr/README.md) os dois adendos; em
+  [`adr/`](../../adr/adr.md) os dois adendos; em
   [`0053-the-silences-app-is-the-fixed-screen.md`](../../adr/Structure/0053-the-silences-app-is-the-fixed-screen/0053-the-silences-app-is-the-fixed-screen.md) a projeção diz "the
   ids in order" onde agora é "the keys in order", e os estados
   `original`, `result`, `range` e `frame` entram na lista da seção "the
@@ -603,3 +603,13 @@ visual mudou, e pela linha de intenção em 191aa93e, com a imagem).
   mostrado dentro do trecho que o contém), ids próprios no template do
   Claude, e a linha de intenção sem o botão de fechar quando nada está
   aberto.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0049: the plev IR is typed, references only declared capabilities, and runs only once verified](../../adr/Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md)
+- [ADR 0051: a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](../../adr/Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)
+- [ADR 0052: proposers propose, the runtime verifies](../../adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md)
+- [ADR 0053: the silences app is the fixed screen the generated one is compared against](../../adr/Structure/0053-the-silences-app-is-the-fixed-screen/0053-the-silences-app-is-the-fixed-screen.md)
+- [task-69: ephemeral and generated surfaces](task-69-ephemeral-generative-surfaces.md)
+<!-- /related -->

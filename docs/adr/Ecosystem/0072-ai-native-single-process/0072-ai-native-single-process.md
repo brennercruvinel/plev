@@ -23,7 +23,7 @@ Chooses the local inference library for the native AI app of task-78 and measure
 
 task-78 wants an app that answers from a local model in streaming, in the
 same rust process as the ui and the renderer, with no browser, no ipc and
-no backend ([`task-78-ai-native-apps.md`](../../../Tasks/task-78-ai-native-apps/README.md)). the
+no backend ([`task-78-ai-native-apps.md`](../../../Tasks/task-78-ai-native-apps/task-78-ai-native-apps.md)). the
 first step is the inference library. brenner picked the two candidates on
 2026-09-25: candle (with tokio for the streaming) and burn. the choice is
 his (decision 15 of the program); this adr measures and recommends.
@@ -217,4 +217,15 @@ what it does not show:
 
 ## learnings
 
-- [Generative runtime session: what worked and what bit us](../../Generative/0070-generative-runtime-results/generative-runtime.md)
+- [Generative runtime session: what worked and what bit us](../../Synthesis/0070-generative-runtime-results/generative-runtime.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0074: a renderer upgrade is proven by a full capture](../../Rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md)
+- [Generative runtime session: what worked and what bit us](../../Synthesis/0070-generative-runtime-results/generative-runtime.md)
+- [task-41: license + preparation for public release](../../../Tasks/task-41-license-and-public-release/task-41-license-and-public-release.md)
+- [task-78: AI-native applications](../../../Tasks/task-78-ai-native-apps/task-78-ai-native-apps.md)
+- [candle against burn for local LLM inference in process, TinyLlama 1.1B](../../../Research/Exploring/local-inference-candle-vs-burn.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+<!-- /related -->

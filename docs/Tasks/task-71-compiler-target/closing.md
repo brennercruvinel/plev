@@ -48,3 +48,9 @@ desenha por cima da linha de baixo ("Terms of Service" sobre o subtítulo
 no IR do Figma); a medida é do `surface`.
 
 o agente gastou uns 440 mil tokens.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-71: plev as compiler target (importers to IR)](task-71-compiler-target.md)
+<!-- /related -->

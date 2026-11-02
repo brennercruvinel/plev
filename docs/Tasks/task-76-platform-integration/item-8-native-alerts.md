@@ -308,7 +308,7 @@ linhas de produção (regra do guard): engine `platform/alerts.rs` 449,
 trait com o real, o falso e o nenhum; a confirmação nativa como opção do
 app sobre o mesmo `confirm`/`decline`; o alerta só de pessoa com o texto
 projetado; o que o wasm e o mobile fazem; o que o item 5 e o
-`AsyncMessageDialog` levam daqui. linha pro índice ([`adr/`](../../adr/README.md)
+`AsyncMessageDialog` levam daqui. linha pro índice ([`adr/`](../../adr/adr.md)
 está fora da lista, fica para a integração):
 
 ```text
@@ -407,3 +407,12 @@ UIR_BLESS=1 cargo test --offline -p uigallery --lib files::tests::the_page_proje
 cargo run --offline -p regress -- bless --page Files --theme core --png   (e --theme hoff)
 PLEV_NATIVE_CONFIRM=1 PLEV_AGENT=1 PLEV_RECORD=1 cargo run --offline -p idestudio <repo>   (o sheet; do orquestrador)
 ```
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0058: a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](../../adr/Interface/0058-native-dialogs-answer-the-same-contract/0058-native-dialogs-answer-the-same-contract.md)
+- [task-58: action with precondition, dispatch and receipts](../task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+- [task-92: the agent asks the person](../task-92-the-agent-asks-the-person/task-92-the-agent-asks-the-person.md)
+<!-- /related -->

@@ -66,3 +66,10 @@ that desktop code never exercises:
   transitively through helper constructors
 - never ship an unconditional `#[wasm_bindgen(start)]` from a library
 - never set `with_inner_size` under `target_arch = "wasm32"`
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [how to build and serve the web target](../../../Research/Workflows/build-and-serve-the-web-target.md)
+- [how to code against the plev engine](../../../Research/Workflows/code-against-the-plev-engine.md)
+<!-- /related -->

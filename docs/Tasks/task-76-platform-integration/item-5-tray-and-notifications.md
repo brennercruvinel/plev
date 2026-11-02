@@ -363,7 +363,7 @@ totais (era 580; a exceção `cfg(test)` desconta), `app/tray.rs` 145,
 [`0059-tray-and-notifications-are-capabilities-out-of-the-window.md`](../../adr/Interface/0059-tray-and-notifications-are-capabilities-out-of-the-window/0059-tray-and-notifications-are-capabilities-out-of-the-window.md)
 (proposed): os dois modelos, o clique de volta como o request do botão,
 a fila com dois donos, quem notifica, o que exige bundle no macOS e o que
-fica para o bring-up, o showcase. linha pro índice ([`adr/`](../../adr/README.md)
+fica para o bring-up, o showcase. linha pro índice ([`adr/`](../../adr/adr.md)
 está fora da lista, fica para a integração):
 
 ```text
@@ -491,3 +491,10 @@ UIR_BLESS=1 cargo test --offline -p uigallery --lib files::tests::the_page_proje
 cargo run --offline -p regress -- bless --page Files --theme core   (e --theme hoff; sem --png)
 RUST_LOG=showcase=info cargo run --offline -p uigallery -- Files   (o anel na barra, o menu, o show; do orquestrador)
 ```
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0059: the tray and the notifications are capabilities out of the window](../../adr/Interface/0059-tray-and-notifications-are-capabilities-out-of-the-window/0059-tray-and-notifications-are-capabilities-out-of-the-window.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+<!-- /related -->

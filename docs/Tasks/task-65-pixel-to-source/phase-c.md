@@ -240,3 +240,12 @@ Commits:
 - 6910ad37 task-65: the title edited on a copy in a git repository, git diff is that one string
 - (este) task-65: ADR phase c and the handoff of round 2
 ```
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0048: view source for pixels: a control leads to its projection, a text to its literal](../../adr/Workflows/0048-view-source-for-pixels/0048-view-source-for-pixels.md)
+- [task-65: pixel to code and development inspector](task-65-pixel-to-source.md)
+- [task-65 closing: acceptance criterion of the task](closing.md)
+- [task-65 phases a and b: from pixel to code](phase-a-b.md)
+<!-- /related -->

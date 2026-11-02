@@ -85,3 +85,13 @@ O texto não registra alternativas pesadas. O que a decisão recusa está em `av
 - a breakpoint added to adjust a few pixels
 - a rule written for one device
 - a screen checked only at device presets
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0002: container geometry derives from available space, never from constants](../0002-content-driven-layout-not-fixed-constants/0002-content-driven-layout-not-fixed-constants.md)
+- [ADR 0027: comps: one design system crate, every value a token](../../Structure/0027-comps-one-design-system-crate/0027-comps-one-design-system-crate.md)
+- [ADR 0086: the adaptive foundation reads preferences once into the theme](../../Interface/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme.md)
+- [task-104: the 35 empty or borrowed gallery tabs become kit components](../../../Tasks/task-104-gallery-components-from-the-kit/task-104-gallery-components-from-the-kit.md)
+- [how to code against the plev engine](../../../Research/Workflows/code-against-the-plev-engine.md)
+<!-- /related -->

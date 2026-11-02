@@ -65,3 +65,9 @@ ADR measured-design-tokens-over-eyeballed-values for the protocol.
 whether to keep #303030 (faithful to the reference) or adopt a darker
 page (#1A1A1A) for higher contrast remains a product owner decision,
 tracked in docs/status.md.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0005: design tokens come from measurement of the live reference, not from eyes or static CSS](../../adr/Rendering/0005-measured-design-tokens-over-eyeballed-values/0005-measured-design-tokens-over-eyeballed-values.md)
+<!-- /related -->

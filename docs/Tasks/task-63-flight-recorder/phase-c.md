@@ -40,3 +40,13 @@ upload (sem cópia dupla; o perfil de memória não muda quando não se
 grava). isso e a ligação no shell do showcase (atalho de debug e panic
 hook) são a fase d, que entra depois da task-61 porque as duas mexem no
 shell.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0037: session recording: replay, not re-execution](../../adr/Recording/0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md)
+- [task-61: agent surface (local socket, observe, act)](../task-61-agent-surface/task-61-agent-surface.md)
+- [task-63: session flight recorder](task-63-flight-recorder.md)
+- [task-65: pixel to code and development inspector](../task-65-pixel-to-source/task-65-pixel-to-source.md)
+- [task-66b: SVG export and `--semantics` in headless mode](../task-66b-svg-export/task-66b-svg-export.md)
+<!-- /related -->

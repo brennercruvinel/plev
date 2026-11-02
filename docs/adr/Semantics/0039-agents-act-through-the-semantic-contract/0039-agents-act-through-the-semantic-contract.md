@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [agents, semantics, formats]
-relations: [adr-0026, adr-0032, adr-0033, adr-0035, adr-0038, adr-0040, adr-0043, adr-0044, adr-0047, task-57b, task-62, task-64, task-79, task-83, task-86, task-87, task-89, task-92]
+relations: [adr-0026, adr-0032, adr-0033, adr-0035, adr-0038, adr-0040, adr-0043, adr-0044, adr-0047, task-57b, task-62, task-64, task-79, task-83, task-86, task-87, task-89, task-92, learning-cycle-0039]
 source: docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -292,7 +292,7 @@ one toggle still 624 B; the new numbers are in
   stages go out, and draws only when an act ran. the visible part of a
   binding is `Binding::visible_rect` in the engine, read by both hosts.
   proved in a real window with a person's clicks and an agent at once
-  ([`task-86-the-ide-opens-the-agent-port.md`](../../../Tasks/task-86-the-ide-opens-the-agent-port/README.md)).
+  ([`task-86-the-ide-opens-the-agent-port.md`](../../../Tasks/task-86-the-ide-opens-the-agent-port/task-86-the-ide-opens-the-agent-port.md)).
   updated on 2026-09-24 (task-92): a stage of an agent's request that
   ends outside a drain (a person's answer to a confirmation, the second
   check refusing, a worker's answer) wakes the port through its sink, so
@@ -370,3 +370,33 @@ one toggle still 624 B; the new numbers are in
   change what is drawn.
 - a revision used to decide stale: the ring serves the observed values,
   the dispatcher compares the reads.
+
+## learnings
+
+- [what the autonomous cycle taught: agents act through the semantic contract](learned-agents-act-through-the-semantic-contract.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0026: background results wake the event loop; child pipes drain from the start](../../Rendering/0026-worker-results-wake-the-event-loop/0026-worker-results-wake-the-event-loop.md)
+- [ADR 0032: semantic contract as a pure projection of app state](../0032-semantic-contract-as-pure-projection/0032-semantic-contract-as-pure-projection.md)
+- [ADR 0033: actions carry the state their actor observed](../0033-actions-carry-observed-state/0033-actions-carry-observed-state.md)
+- [ADR 0035: semantic binding beside the scene, and the click as a request](../0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md)
+- [ADR 0038: accessibility projects the semantic snapshot](../../Interface/0038-accessibility-projects-the-semantic-snapshot/0038-accessibility-projects-the-semantic-snapshot.md)
+- [ADR 0040: the semantic form is lean, and one rule redacts a secret](../0040-lean-semantic-form-and-one-redaction/0040-lean-semantic-form-and-one-redaction.md)
+- [ADR 0043: a delta carries the node it adds, and a stale refusal names who acted](../0043-a-delta-carries-the-node-a-refusal-names-who-acted/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md)
+- [ADR 0044: a terminal stage carries the revision the app is at](../0044-a-terminal-stage-carries-the-revision/0044-a-terminal-stage-carries-the-revision.md)
+- [ADR 0047: an act rests on what its actor was shown](../0047-an-act-rests-on-what-its-actor-was-shown/0047-an-act-rests-on-what-its-actor-was-shown.md)
+- [what the autonomous cycle taught: agents act through the semantic contract](learned-agents-act-through-the-semantic-contract.md)
+- [task-57b: lean JSON wire form and a single redaction](../../../Tasks/task-57b-lean-wire-form-and-one-redaction/task-57b-lean-wire-form-and-one-redaction.md)
+- [task-61: agent surface (local socket, observe, act)](../../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-64: session inspector, bug report and session for testing](../../../Tasks/task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-79: scene over socket](../../../Tasks/task-79-scene-over-socket/task-79-scene-over-socket.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](../../../Tasks/task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)
+- [task-86: the ide people use opens the agent port](../../../Tasks/task-86-the-ide-opens-the-agent-port/task-86-the-ide-opens-the-agent-port.md)
+- [task-87: a terminal stage carries the revision the app was left in](../../../Tasks/task-87-a-terminal-stage-carries-the-revision/task-87-a-terminal-stage-carries-the-revision.md)
+- [task-89: an act relies only on what was shown to the agent](../../../Tasks/task-89-an-act-rests-only-on-what-was-shown/task-89-an-act-rests-only-on-what-was-shown.md)
+- [task-92: the agent asks the person](../../../Tasks/task-92-the-agent-asks-the-person/task-92-the-agent-asks-the-person.md)
+- [how to code against the plev engine](../../../Research/Workflows/code-against-the-plev-engine.md)
+<!-- /related -->

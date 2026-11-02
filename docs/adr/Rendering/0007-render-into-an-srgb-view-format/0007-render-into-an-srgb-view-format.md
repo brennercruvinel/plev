@@ -63,3 +63,12 @@ target a view created with the sRGB format.
 ## learnings
 
 - [the two gamma bugs: one assumption, two opposite failures](../0004-linearize-colors-before-the-gpu/the-two-gamma-bugs.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0004: linearize colors before they reach the GPU](../0004-linearize-colors-before-the-gpu/0004-linearize-colors-before-the-gpu.md)
+- [ADR 0031: hot reload on by default: shaders and literals in place, code by rebuild](../../Workflows/0031-hot-reload-on-by-default-in-gpu-context/0031-hot-reload-on-by-default-in-gpu-context.md)
+- [the two gamma bugs: one assumption, two opposite failures](../0004-linearize-colors-before-the-gpu/the-two-gamma-bugs.md)
+- [mon experiment](../../../Research/Importing/mon-experiment-notes.md)
+<!-- /related -->

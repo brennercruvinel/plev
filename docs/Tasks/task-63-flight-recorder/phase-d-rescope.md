@@ -45,3 +45,12 @@ a fase d passa a ser o ide gravando a sessão que o inspector lê (branch
 o teste que só o brenner pode fazer (ele usando o ide enquanto um agente
 age) precisa deixar uma sessão que o `plev-inspect` lê; é isso que esta
 fase entrega.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0037: session recording: replay, not re-execution](../../adr/Recording/0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md)
+- [task-63: session flight recorder](task-63-flight-recorder.md)
+- [task-64: session inspector, bug report and session for testing](../task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-88: the lab measures what the agent rested on](../task-88-the-lab-measures-what-the-agent-rested-on/task-88-the-lab-measures-what-the-agent-rested-on.md)
+<!-- /related -->

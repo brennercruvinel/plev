@@ -8,10 +8,10 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [rendering, gpu, platform]
-relations: [adr-0024, task-76]
+relations: [adr-0024, task-76, learning-cycle-0054]
 source: docs/adr/rendering/0054-gpu-device-loss-recovers-in-place.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -157,3 +157,18 @@ O texto registra três caminhos recusados. `mark_all_dirty` não basta para recu
   the log at the redraw rate.
 - treating `destroy` as the only loss: a driver loss fires the callback
   with `Unknown` from whatever thread hit it, with no poll.
+
+## learnings
+
+- [what the autonomous cycle taught: a lost GPU device is recovered in place, and the next frame draws the same](learned-gpu-device-loss-recovers-in-place.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0024: glyph raster identity and atlas isolation](../0024-glyph-raster-identity-and-atlas-isolation/0024-glyph-raster-identity-and-atlas-isolation.md)
+- [ADR 0060: a covered window does not draw, and wakes with a new frame](../0060-a-covered-window-does-not-draw-and-wakes-new/0060-a-covered-window-does-not-draw-and-wakes-new.md)
+- [what the autonomous cycle taught: a lost GPU device is recovered in place, and the next frame draws the same](learned-gpu-device-loss-recovers-in-place.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-76, closing: what went in and what remains](../../../Tasks/task-76-platform-integration/closing.md)
+- [task-76, item 1: GPU device loss](../../../Tasks/task-76-platform-integration/item-1-device-loss.md)
+<!-- /related -->

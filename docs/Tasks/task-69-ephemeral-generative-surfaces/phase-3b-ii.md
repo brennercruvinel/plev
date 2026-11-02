@@ -398,13 +398,13 @@ Surface não tem baseline; nenhuma outra página mudou).
 
 ### seção de ADR
 
-[`0052-proposers-propose-the-runtime-verifies.md`](../../adr/Generative/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md), seção nova no fim,
+[`0052-proposers-propose-the-runtime-verifies.md`](../../adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md), seção nova no fim,
 "addendum, 2026-09-24: the page asks the Claude off the app's thread
 (task-69 phase 3b-ii, proposed)": contexto, decisão (o proponente como
 capacidade, a descoberta do programa, o trabalhador pelo contrato do
 dispatcher, um pedido por vez, a espera como estado, o cancel no laço do
 `run`, o prompt que não muda), custo (as três chamadas), consequências e
-o que evitar. para o orquestrador (o [`adr/`](../../adr/README.md) é proibido
+o que evitar. para o orquestrador (o [`adr/`](../../adr/adr.md) é proibido
 aqui): no fim da linha do índice, algo como "; addendum 3b-ii
 (proposed): a página Surface escolhe o proponente (`select` rules |
 claude, claude só onde `ClaudeCli::exists`), pede ao Claude numa thread
@@ -504,3 +504,11 @@ mata o filho".
   que a capacidade `detect_silence` rode antes da superfície (o ffmpeg
   em subprocesso, como o urnaui): outro trabalho fora da thread, pelo
   mesmo `Started`/`complete`; o padrão desta fase serve.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0052: proposers propose, the runtime verifies](../../adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md)
+- [task-69: ephemeral and generated surfaces](task-69-ephemeral-generative-surfaces.md)
+- [task-95: the todo projects its items as a list](../task-95-the-todo-projects-its-items-as-a-list/task-95-the-todo-projects-its-items-as-a-list.md)
+<!-- /related -->

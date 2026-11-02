@@ -91,3 +91,9 @@ quatro agentes de clippy operando no mesmo working tree simultaneamente
 geraram conflitos. correcoes de um agente foram sobrescritas pelo outro.
 
 **regra:** um unico agente para correcoes que tocam arquivos sobrepostos.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-52: modularization by single responsibility principle](../../Tasks/task-52-srp-modularization/task-52-srp-modularization.md)
+<!-- /related -->

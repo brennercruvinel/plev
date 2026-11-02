@@ -356,3 +356,14 @@ e um leitor de CSS; Figma pede um export salvo da API REST como fixture,
 nunca rede no teste. os dois passam pelo mesmo resolve e pelos dois
 emissores. SwiftUI e Flutter ficam registrados; controles do gpui
 (`on_click`) e listas do react (`items.map` como `repeat`) também.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0064: what identical means](../../adr/Workflows/0064-what-identical-means/0064-what-identical-means.md)
+- [ADR 0069: importers target plev IR, with a report in four categories](../../adr/Importing/0069-importers-target-plev-ir/0069-importers-target-plev-ir.md)
+- [task-66: headless as a first-class citizen](../task-66-headless-first-class/task-66-headless-first-class.md)
+- [task-68: plev IR and verifier](../task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-69: ephemeral and generated surfaces](../task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-71: plev as compiler target (importers to IR)](task-71-compiler-target.md)
+<!-- /related -->

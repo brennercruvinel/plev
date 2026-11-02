@@ -307,3 +307,12 @@ com o ambiente do briefing em todo comando cargo (`CARGO_TARGET_DIR` em
   região (junto do P3 dos três diffs de uma vez).
 - seguem com o orquestrador e o brenner: a prova com o Claude de verdade
   e a demo 5 com janela.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-80: proof of qualitatively different software](../task-80-proof-qualitatively-different-software/task-80-proof-qualitatively-different-software.md)
+- [task-96: a generated surface in the ide](task-96-ide-generated-surface.md)
+- [task-97: code and diff in the IR vocabulary](../task-97-code-and-diff-in-the-ir/task-97-code-and-diff-in-the-ir.md)
+- [five demos of qualitatively different software, each with its method written before it ran](../../Research/Exploring/five-demos.md)
+<!-- /related -->

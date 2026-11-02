@@ -558,7 +558,7 @@ contexto (o cenário da tese e o checkpoint b), o modelo puro, a semente,
 o ffmpeg só depois de um pedido de um ator (e por que não ao abrir), o
 `Started`/`complete` no `wake`, o dispatcher da galeria, a projeção, a
 tela, as consequências (a medição, o golden e as baselines), o que a 4b
-precisa e o que evitar. para o orquestrador (o [`adr/`](../../adr/README.md) é
+precisa e o que evitar. para o orquestrador (o [`adr/`](../../adr/adr.md) é
 proibido aqui): uma linha no índice, algo como "the silences app is the
 fixed screen (proposed): a página Silences do showcase é o app do editor
 de vídeo da tese e a tela fixa do checkpoint b; o modelo puro com o
@@ -667,3 +667,11 @@ filho só depois de `detect_silence`/`preview_segment`, `Started` ->
 - cortar de verdade (um `export` com o ffmpeg tirando os trechos
   aplicados) não existe; se o checkpoint pedir, é uma capacidade nova
   com o mesmo trabalhador.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0053: the silences app is the fixed screen the generated one is compared against](../../adr/Structure/0053-the-silences-app-is-the-fixed-screen/0053-the-silences-app-is-the-fixed-screen.md)
+- [task-69: ephemeral and generated surfaces](task-69-ephemeral-generative-surfaces.md)
+- [task-93: the person in the lab answers](../task-93-the-lab-person-answers/task-93-the-lab-person-answers.md)
+<!-- /related -->

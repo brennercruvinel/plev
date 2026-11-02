@@ -85,3 +85,11 @@ at 71ee6291). issue #137 asked to fetch them instead.
   works offline.
 - the woff2 versions of the subsets: smaller on the wire, but fontdb reads
   sfnt only, and the server can compress the files as it serves them.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0071: embed Noto Sans subsets for the non-Latin scripts](../0071-embedded-fonts-by-script/0071-embedded-fonts-by-script.md)
+- [ADR 0079: a desktop draws the scripts with the embedded faces, not the system's](../0079-a-desktop-draws-the-scripts-with-the-embedded-faces/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md)
+- [task-101: on-demand fonts and deterministic fallback](../../../Tasks/task-101-fonts-by-script/task-101-fonts-by-script.md)
+<!-- /related -->

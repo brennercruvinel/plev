@@ -229,3 +229,13 @@ padrao que ja tinha notado no GPUI.
 
 referencia de fundo: areweguiyet.com (o estado das GUIs em rust, citado de
 proposito, com ironia: a meta nao e fazer mais uma).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0007: render into an sRGB view when the surface format cannot be sRGB](../../adr/Rendering/0007-render-into-an-srgb-view-format/0007-render-into-an-srgb-view-format.md)
+- [ADR 0010: the monster animation format: keyframes plus discovered deltas](../../adr/Importing/0010-binary-animation-format-with-discovered-deltas/0010-binary-animation-format-with-discovered-deltas.md)
+- [ADR 0011: import foreign formats by conversion, never by embedding a foreign runtime](../../adr/Importing/0011-import-foreign-formats-by-conversion-not-embedding/0011-import-foreign-formats-by-conversion-not-embedding.md)
+- [ADR 0012: the transpiler reports every unmapped construct, never drops silently](../../adr/Importing/0012-transpiler-reports-every-unmapped-construct/0012-transpiler-reports-every-unmapped-construct.md)
+- [ADR 0022: one knowledge tree, and a minimal root](../../adr/Structure/0022-one-knowledge-tree-and-a-minimal-root/0022-one-knowledge-tree-and-a-minimal-root.md)
+<!-- /related -->

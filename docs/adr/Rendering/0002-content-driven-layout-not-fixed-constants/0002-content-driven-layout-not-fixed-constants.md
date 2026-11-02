@@ -76,3 +76,14 @@ restored the user's layout.
 ## learnings
 
 - [why the apps bypassed the engine, and what that costs](apps-bypass-the-engine.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0006: one TextStyle per text run, shared by measurement and drawing](../0006-one-text-style-for-measurement-and-drawing/0006-one-text-style-for-measurement-and-drawing.md)
+- [ADR 0009: touch input synthesizes pointer events into the existing mouse path](../../Interface/0009-touch-as-synthesized-pointer-events/0009-touch-as-synthesized-pointer-events.md)
+- [ADR 0073: design for ranges, not screens and devices](../0073-design-for-ranges-not-screens-and-devices/0073-design-for-ranges-not-screens-and-devices.md)
+- [ADR 0086: the adaptive foundation reads preferences once into the theme](../../Interface/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme.md)
+- [why the apps bypassed the engine, and what that costs](apps-bypass-the-engine.md)
+- [task-48: ide, native git client in plev](../../../Tasks/task-48-ide-git-client/task-48-ide-git-client.md)
+<!-- /related -->

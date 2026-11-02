@@ -82,3 +82,11 @@ to it without decoding what came before.
 - do not read the frame index from anything but the 0x16 overlay span:
   `byte_start..byte_end == n..n+1` is the contract the forge writes and
   the only shape `BlobSpan::frame` accepts.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0026: background results wake the event loop; child pipes drain from the start](../../Rendering/0026-worker-results-wake-the-event-loop/0026-worker-results-wake-the-event-loop.md)
+- [ADR 0053: the silences app is the fixed screen the generated one is compared against](../../Structure/0053-the-silences-app-is-the-fixed-screen/0053-the-silences-app-is-the-fixed-screen.md)
+- [task-78: AI-native applications](../../../Tasks/task-78-ai-native-apps/task-78-ai-native-apps.md)
+<!-- /related -->

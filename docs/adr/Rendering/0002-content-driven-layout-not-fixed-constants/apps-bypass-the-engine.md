@@ -71,3 +71,12 @@ not consume is not infrastructure, it is unverified inventory. either
 wire it into the product path with tests that depend on it, or expect the
 product layer to grow a divergent local copy whose defects will be
 attributed to the platform.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0002: container geometry derives from available space, never from constants](0002-content-driven-layout-not-fixed-constants.md)
+- [ADR 0006: one TextStyle per text run, shared by measurement and drawing](../0006-one-text-style-for-measurement-and-drawing/0006-one-text-style-for-measurement-and-drawing.md)
+- [ADR 0009: touch input synthesizes pointer events into the existing mouse path](../../Interface/0009-touch-as-synthesized-pointer-events/0009-touch-as-synthesized-pointer-events.md)
+- [task-48: ide, native git client in plev](../../../Tasks/task-48-ide-git-client/task-48-ide-git-client.md)
+<!-- /related -->

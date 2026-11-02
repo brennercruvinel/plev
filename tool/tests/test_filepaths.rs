@@ -3,7 +3,7 @@
 //! The repository's file-hygiene rule caps production code at 639 lines
 //! per source file, with test code out of the count. The rule lived only in prose, and three
 //! deliveries in one cycle went past it before anyone counted
-//! (docs/Learnings/general.md, process). This test counts, so the
+//! (docs/Research/Workflows/autonomous-cycle-learnings.md, process). This test counts, so the
 //! gate says it first.
 //!
 //! What counts as test code, and is left out: files under a `tests` or

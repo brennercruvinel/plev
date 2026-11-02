@@ -183,3 +183,16 @@ teste ignorado desta fase como critério.
   porque a plataforma não tem o que o desktop tem (o Claude, o git) ou
   porque o cursor pisca (o Editor no iOS). as causas estão no arquivo da
   task-77.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0069: importers target plev IR, with a report in four categories](../../Importing/0069-importers-target-plev-ir/0069-importers-target-plev-ir.md)
+- [task-71: plev as compiler target (importers to IR)](../../../Tasks/task-71-compiler-target/task-71-compiler-target.md)
+- [task-77: visual determinism](../../../Tasks/task-77-visual-determinism/task-77-visual-determinism.md)
+- [task-71 phase 1: probe and handoff of the plev IR emitter](../../../Tasks/task-71-compiler-target/phase-1-ir-emitter.md)
+- [wrap-up (orchestrator, 2026-09-25)](../../../Tasks/task-77-visual-determinism/closing.md)
+- [phase 1 (task-77a): the probe](../../../Tasks/task-77-visual-determinism/phase-1a-probe.md)
+- [phase 1b handoff (task-77b): blur follows the scale](../../../Tasks/task-77-visual-determinism/phase-1b-blur.md)
+- [desktop gallery pages: same pixels across scales, themes and runs](../../../Research/Exploring/visual-determinism-captures.md)
+<!-- /related -->

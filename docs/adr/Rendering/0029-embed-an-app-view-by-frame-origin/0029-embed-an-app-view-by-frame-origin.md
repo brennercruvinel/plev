@@ -56,3 +56,11 @@ rail (`comps::nav::Sidebar`) only existed at the window's top-left.
 ## learnings
 
 - [core buttons session: what worked and what bit us](../0028-core-theme-tailwind-classes-as-recipes/core-buttons.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0026: background results wake the event loop; child pipes drain from the start](../0026-worker-results-wake-the-event-loop/0026-worker-results-wake-the-event-loop.md)
+- [core buttons session: what worked and what bit us](../0028-core-theme-tailwind-classes-as-recipes/core-buttons.md)
+- [task-53: editor and git in the showcase](../../../Tasks/task-53-editor-and-git-in-the-showcase/task-53-editor-and-git-in-the-showcase.md)
+<!-- /related -->

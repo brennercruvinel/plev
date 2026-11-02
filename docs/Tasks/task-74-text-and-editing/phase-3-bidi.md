@@ -273,3 +273,9 @@ agente.
 
 pendência: o formulário de commit do ide não anda com as setas (o
 keymap dele liga só escape, enter e backspace).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-74: text and editing](task-74-text-and-editing.md)
+<!-- /related -->

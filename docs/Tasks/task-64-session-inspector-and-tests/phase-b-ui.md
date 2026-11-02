@@ -355,3 +355,12 @@ o ADR já está no índice; a linha dele ganha a fase b:
   escrever `.marks` pela UI, exportar trecho pela UI, o link para o
   código (task-65), a revisão servida no estágio terminal, web e mobile
   para a UI.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0046: the inspector reads a session, it never runs it](../../adr/Recording/0046-the-inspector-reads-a-session-never-runs-it/0046-the-inspector-reads-a-session-never-runs-it.md)
+- [task-64: session inspector, bug report and session for testing](task-64-session-inspector-and-tests.md)
+- [task-65: pixel to code and development inspector](../task-65-pixel-to-source/task-65-pixel-to-source.md)
+- [task-64 closing: acceptance criterion checked](closing.md)
+<!-- /related -->

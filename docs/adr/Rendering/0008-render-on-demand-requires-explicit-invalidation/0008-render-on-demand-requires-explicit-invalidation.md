@@ -48,3 +48,9 @@ was initially misread as "scroll not implemented".
   that lied about not changing state
 - never copy an event handler skeleton without carrying its invalidation
   discipline along
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0023: official app pattern: state in structs, retained widgets, explicit invalidation](../../Structure/0023-official-app-pattern/0023-official-app-pattern.md)
+<!-- /related -->

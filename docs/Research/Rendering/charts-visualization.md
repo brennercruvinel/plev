@@ -150,3 +150,10 @@ nenhuma dessas libs se integra diretamente com plev. todas dependem de seus prop
 - nao embutir echarts JS via charming, contradiz a filosofia GPU-first de plev.
 - nao tentar replicar a galeria completa de 30+ chart types de uma vez, comeca com line, bar, pie, scatter.
 - nao acoplar chart specs ao rendering, manter separacao spec/render como plotters faz.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [technology radar, plev](../Ecosystem/technology-radar.md)
+<!-- /related -->

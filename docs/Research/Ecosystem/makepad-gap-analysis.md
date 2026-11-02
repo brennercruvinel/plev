@@ -197,3 +197,9 @@ date: 2022-11-19
 | video | no | out of scope |
 | chart | partial | path tessellation for lines |
 | markdown | no | complex parser needed |
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [competitors by tier](competitors-by-tier.md)
+<!-- /related -->

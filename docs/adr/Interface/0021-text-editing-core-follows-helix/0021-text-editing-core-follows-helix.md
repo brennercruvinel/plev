@@ -66,3 +66,11 @@ a standalone crate (`rope`) with no UI or GPU dependency, modeled on Helix:
   pre-transaction offsets, sorted and non-overlapping.
 - do not leak UI or GPU types into this crate. its value is being
   headless-testable.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-46: rope, text editing core](../../../Tasks/task-46-rope-editing-core/task-46-rope-editing-core.md)
+- [task-48: ide, native git client in plev](../../../Tasks/task-48-ide-git-client/task-48-ide-git-client.md)
+- [task-74: text and editing](../../../Tasks/task-74-text-and-editing/task-74-text-and-editing.md)
+<!-- /related -->

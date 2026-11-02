@@ -60,3 +60,14 @@ pendências:
   diferença ali.
 - as capturas foram em um tema e uma escala por alvo; os outros temas e
   escalas não foram varridos página a página.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0064: what identical means](../../adr/Workflows/0064-what-identical-means/0064-what-identical-means.md)
+- [task-18: android build & device test](../task-18-android-device-test/task-18-android-device-test.md)
+- [task-19: ios simulator test](../task-19-ios-simulator-test/task-19-ios-simulator-test.md)
+- [task-20: WASM visual validation](../task-20-wasm-visual-validation/task-20-wasm-visual-validation.md)
+- [task-77: visual determinism](task-77-visual-determinism.md)
+- [desktop gallery pages: same pixels across scales, themes and runs](../../Research/Exploring/visual-determinism-captures.md)
+<!-- /related -->

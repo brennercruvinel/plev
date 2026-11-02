@@ -29,7 +29,7 @@ projection already has, and that a click on either come back through the
 app's one dispatcher as `Actor::Human`, as the bar's items do since item 4.
 
 the probe (the handoff of item 5 in
-[task-76](../../../Tasks/task-76-platform-integration/README.md)) measured:
+[task-76](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)) measured:
 
 - `tray-icon` 0.25.1 with its default features off resolves offline into
   the root lock as itself alone: every dependency (`muda`, `objc2` and the
@@ -174,3 +174,14 @@ the probe (the handoff of item 5 in
 - a test that constructs `NativeTray`, a `tray-icon` type or a `muda`
   type.
 - a second click queue for the tray: the two owners share the one handler.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0057: a native menu is another view of the app's capabilities](../0057-native-menus-are-another-view-of-capabilities/0057-native-menus-are-another-view-of-capabilities.md)
+- [ADR 0058: a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](../0058-native-dialogs-answer-the-same-contract/0058-native-dialogs-answer-the-same-contract.md)
+- [ADR 0063: a link is not a person](../0063-a-link-is-not-a-person/0063-a-link-is-not-a-person.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-76, closing: what went in and what remains](../../../Tasks/task-76-platform-integration/closing.md)
+- [task-76, item 5: system notifications and tray](../../../Tasks/task-76-platform-integration/item-5-tray-and-notifications.md)
+<!-- /related -->

@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [agents, semantics]
-relations: [adr-0039, adr-0043, adr-0044, task-64, task-83, task-87, task-91]
+relations: [adr-0039, adr-0043, adr-0044, task-64, task-83, task-87, task-91, learning-cycle-0047]
 source: docs/adr/semantics/0047-an-act-rests-on-what-its-actor-was-shown.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -153,3 +153,23 @@ posture).
 - admitting what was forgotten: past the caps, an act is refused.
 - a value in `not_observed`: it names refs.
 - deciding stale by the revision; it still only traces.
+
+## learnings
+
+- [what the autonomous cycle taught: an act rests on what its actor was shown](learned-an-act-rests-on-what-its-actor-was-shown.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0039: agents act through the semantic contract](../0039-agents-act-through-the-semantic-contract/0039-agents-act-through-the-semantic-contract.md)
+- [ADR 0043: a delta carries the node it adds, and a stale refusal names who acted](../0043-a-delta-carries-the-node-a-refusal-names-who-acted/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md)
+- [ADR 0044: a terminal stage carries the revision the app is at](../0044-a-terminal-stage-carries-the-revision/0044-a-terminal-stage-carries-the-revision.md)
+- [ADR 0051: a surface materializes only from verified IR, projects from the IR and asks through the app's dispatcher](../../Synthesis/0051-materialized-surfaces-from-verified-ir/0051-materialized-surfaces-from-verified-ir.md)
+- [what the autonomous cycle taught: an act rests on what its actor was shown](learned-an-act-rests-on-what-its-actor-was-shown.md)
+- [task-64: session inspector, bug report and session for testing](../../../Tasks/task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](../../../Tasks/task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)
+- [task-87: a terminal stage carries the revision the app was left in](../../../Tasks/task-87-a-terminal-stage-carries-the-revision/task-87-a-terminal-stage-carries-the-revision.md)
+- [task-89: an act relies only on what was shown to the agent](../../../Tasks/task-89-an-act-rests-only-on-what-was-shown/task-89-an-act-rests-only-on-what-was-shown.md)
+- [task-91: the dispatcher knows when the agent looked](../../../Tasks/task-91-the-dispatcher-knows-when-the-agent-looked/task-91-the-dispatcher-knows-when-the-agent-looked.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+<!-- /related -->

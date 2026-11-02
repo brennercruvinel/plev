@@ -812,3 +812,11 @@ passes, for scale):
 | idle | 810.8 | 979.9 | 495.6 | 573.6 | 0 | 0 | 0 | 495.6 | 573.6 | 17.8 |
 | caret | 937.5 | 1707.1 | 572.6 | 1351.5 | 0 | 0 | 0 | 572.2 | 730.5 | 18.3 |
 | floor | 481.3 | 750.9 | 219.1 | 392.4 | 0 | 0 | 0 | 219.1 | 392.4 | 16.6 |
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-73: incremental dependency system](task-73-incremental-dependency-system.md)
+- [caret blink as a deadline: frames drawn with a focused, idle field](../../Research/Exploring/caret-render-on-demand.md)
+- [what each stage of a frame costs in nine scenarios](../../Research/Exploring/frame-cost-by-stage.md)
+<!-- /related -->

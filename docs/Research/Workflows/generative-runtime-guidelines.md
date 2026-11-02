@@ -17,7 +17,7 @@ review: reviewed
 
 # orchestrator and agent guidelines
 
-obrigatórias para o programa em [`generative-runtime-program.md`](../Generative/generative-runtime-program.md). servem
+obrigatórias para o programa em [`generative-runtime-program.md`](../Synthesis/generative-runtime-program.md). servem
 para não desviar e não gerar AI slop. a parte 1 e a parte 2 são as
 diretrizes do CTO, completas. a parte 3 adapta essas regras a este
 repositório (regras do engine, gate, worktrees, formato dos arquivos de task). a
@@ -476,7 +476,7 @@ close-out.
 - ao integrar, a página da task recebe o estado final escrito (o que foi
   feito, o que ficou de fora, links para ADR e commits).
 - decisão técnica relevante vira ADR em `docs/adr/<tema>/` (índice em
-  [`adr/`](../../adr/README.md)) no mesmo change set da integração.
+  [`adr/`](../../adr/adr.md)) no mesmo change set da integração.
 - estrutura, crate ou contrato novo atualiza `docs/ATLAS.toml` e o
   `README.md`; o `tool/tests/test_repoaudit.rs` falha o build se um
   crate do workspace não estiver nos dois.
@@ -596,3 +596,17 @@ economia (vale para toda rodada):
 - testes de comportamento, com caso de erro e de borda, e contagem que não
   caiu.
 - commits progressivos, cada um compilando.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-57: semantic contract (crate `sem`)](../../Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
+- [plev: thesis of the generative interaction runtime](../Synthesis/generative-runtime-thesis.md)
+- [program: from GPU UI engine to generative interaction runtime](../Synthesis/generative-runtime-program.md)
+- [operating mode: autonomous orchestrator](autonomy.md)
+- [how to build and serve the web target](build-and-serve-the-web-target.md)
+- [how to code against the plev engine](code-against-the-plev-engine.md)
+- [how to orchestrate coding agents on this repo](orchestrate-coding-agents-on-this-repo.md)
+- [how to validate visuals by pixel](validate-visuals-by-pixel.md)
+- [autonomous cycle journal](autonomous-cycle-journal.md)
+<!-- /related -->

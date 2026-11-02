@@ -8,10 +8,10 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [platform, semantics, agents]
-relations: [adr-0055, adr-0059, task-58, task-76, task-92]
+relations: [adr-0055, adr-0059, task-58, task-76, task-92, learning-cycle-0058]
 source: docs/adr/interface/0058-native-dialogs-answer-the-same-contract.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -36,7 +36,7 @@ confirmation of task-58 to be offerable in the system's dialog, as an
 option of the app, without touching the contract.
 
 the probe (the handoff of item 8 in
-[task-76](../../../Tasks/task-76-platform-integration/README.md)) measured:
+[task-76](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)) measured:
 
 - `rfd::MessageDialog::show` is synchronous and modal: on macOS it runs
   `NSAlert::runModal()` on the main thread, a nested modal loop, so the
@@ -170,3 +170,21 @@ the probe (the handoff of item 8 in
 - a test that constructs `NativeAlerts` and shows anything.
 - the alert as a second truth: what the panel said is projected state,
   and the toast or the status keeps saying it.
+
+## learnings
+
+- [what the autonomous cycle taught: a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](learned-native-dialogs-answer-the-same-contract.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0055: file dialogs and file drops are capabilities of the engine, and a native dialog opens only for a person](../0055-file-dialogs-and-drops-are-capabilities/0055-file-dialogs-and-drops-are-capabilities.md)
+- [ADR 0057: a native menu is another view of the app's capabilities](../0057-native-menus-are-another-view-of-capabilities/0057-native-menus-are-another-view-of-capabilities.md)
+- [ADR 0059: the tray and the notifications are capabilities out of the window](../0059-tray-and-notifications-are-capabilities-out-of-the-window/0059-tray-and-notifications-are-capabilities-out-of-the-window.md)
+- [what the autonomous cycle taught: a native dialog answers the same contract: the alert is a person's capability, the confirmation is the same confirm or decline](learned-native-dialogs-answer-the-same-contract.md)
+- [task-58: action with precondition, dispatch and receipts](../../../Tasks/task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-92: the agent asks the person](../../../Tasks/task-92-the-agent-asks-the-person/task-92-the-agent-asks-the-person.md)
+- [task-76, closing: what went in and what remains](../../../Tasks/task-76-platform-integration/closing.md)
+- [task-76, item 8: native alert and confirmation dialogs](../../../Tasks/task-76-platform-integration/item-8-native-alerts.md)
+<!-- /related -->

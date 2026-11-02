@@ -326,3 +326,10 @@ pede o brenner. pendência: a rolagem do engine em f32 anda em passos de
 2 px perto do fim de um milhão de linhas (mudar é API pública).
 
 o agente gastou uns 190 mil tokens.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-74: text and editing](task-74-text-and-editing.md)
+- [text coverage per writing system, and the cost of large documents in the editor](../../Research/Exploring/text-coverage-and-large-documents.md)
+<!-- /related -->

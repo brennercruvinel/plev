@@ -69,3 +69,10 @@ crate with no UI dependency.
 - do not replace the CLI mutations with hand-assembled gix plumbing until
   there is a stable porcelain API; that hand-built version is exactly the
   fragile surface this split avoids.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-47: git, backend for plev apps](../../../Tasks/task-47-git-backend/task-47-git-backend.md)
+- [task-48: ide, native git client in plev](../../../Tasks/task-48-ide-git-client/task-48-ide-git-client.md)
+<!-- /related -->

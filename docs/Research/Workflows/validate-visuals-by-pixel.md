@@ -176,3 +176,21 @@ launching apps for capture steals focus; if the user is typing, keystrokes
 leak into the app under test and corrupt the capture. restore the user's
 frontmost app right after each capture and re-verify the app state before
 measuring. prefer headless whenever the user is at the machine.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0024: glyph raster identity and atlas isolation](../../adr/Rendering/0024-glyph-raster-identity-and-atlas-isolation/0024-glyph-raster-identity-and-atlas-isolation.md)
+- [ADR 0045: regression by meaning before pixels](../../adr/Workflows/0045-regression-by-meaning-before-pixels/0045-regression-by-meaning-before-pixels.md)
+- [ADR 0074: a renderer upgrade is proven by a full capture](../../adr/Rendering/0074-a-renderer-upgrade-is-proven-by-a-full-capture/0074-a-renderer-upgrade-is-proven-by-a-full-capture.md)
+- [comps session: what worked and what bit us](../../adr/Structure/0027-comps-one-design-system-crate/comps.md)
+- [task-57: semantic contract (crate `sem`)](../../Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
+- [task-66: headless as a first-class citizen](../../Tasks/task-66-headless-first-class/task-66-headless-first-class.md)
+- [task-67: structural regression before pixels](../../Tasks/task-67-structural-regression/task-67-structural-regression.md)
+- [task-77: visual determinism](../../Tasks/task-77-visual-determinism/task-77-visual-determinism.md)
+- [phase 1 (task-77a): the probe](../../Tasks/task-77-visual-determinism/phase-1a-probe.md)
+- [how to build and serve the web target](build-and-serve-the-web-target.md)
+- [how to code against the plev engine](code-against-the-plev-engine.md)
+- [orchestrator and agent guidelines](generative-runtime-guidelines.md)
+- [how to orchestrate coding agents on this repo](orchestrate-coding-agents-on-this-repo.md)
+<!-- /related -->

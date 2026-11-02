@@ -415,3 +415,11 @@ built-in `accesskit` feature flag with:
 | accesskit text bridge | migrate to parley (saves ~200 LOC of manual bridging) |
 | rich text (mixed styles in one paragraph) | both support it; cosmic-text via set_rich_text, parley via rangedbuilder |
 | production stability on WASM | stay with cosmic-text |
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-30: accessibility (accesskit)](../../Tasks/task-30-accessibility/task-30-accessibility.md)
+- [task-32: text system upgrade assessment](../../Tasks/task-32-text-upgrade-assessment/task-32-text-upgrade-assessment.md)
+- [task-74: text and editing](../../Tasks/task-74-text-and-editing/task-74-text-and-editing.md)
+<!-- /related -->

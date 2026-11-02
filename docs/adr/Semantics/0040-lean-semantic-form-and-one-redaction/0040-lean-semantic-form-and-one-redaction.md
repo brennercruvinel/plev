@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [semantics, agents, formats]
-relations: [adr-0039, task-61, task-65, task-83]
+relations: [adr-0039, task-61, task-65, task-83, learning-cycle-0040]
 source: docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -96,3 +96,21 @@ every case the tests reach, and fails closed with no snapshot.
 - the proto's `SnapshotReply.focused` is still written as `null` when
   there is no focus (15 bytes, outside the sem form); a v2 of the
   protocol may drop it.
+
+## learnings
+
+- [what the autonomous cycle taught: the semantic form is lean, and one rule redacts a secret](learned-lean-semantic-form-and-one-redaction.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0039: agents act through the semantic contract](../0039-agents-act-through-the-semantic-contract/0039-agents-act-through-the-semantic-contract.md)
+- [ADR 0041: the svg export reads the scene, not the pixels](../../Rendering/0041-svg-export-reads-the-scene/0041-svg-export-reads-the-scene.md)
+- [ADR 0043: a delta carries the node it adds, and a stale refusal names who acted](../0043-a-delta-carries-the-node-a-refusal-names-who-acted/0043-a-delta-carries-the-node-a-refusal-names-who-acted.md)
+- [what the autonomous cycle taught: the semantic form is lean, and one rule redacts a secret](learned-lean-semantic-form-and-one-redaction.md)
+- [task-57b: lean JSON wire form and a single redaction](../../../Tasks/task-57b-lean-wire-form-and-one-redaction/task-57b-lean-wire-form-and-one-redaction.md)
+- [task-61: agent surface (local socket, observe, act)](../../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-65: pixel to code and development inspector](../../../Tasks/task-65-pixel-to-source/task-65-pixel-to-source.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](../../../Tasks/task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+<!-- /related -->

@@ -329,7 +329,7 @@ showcase `app.rs` 567 (era 633; o movimento levou a 561), `app/entry.rs`
 [`0061-printing-is-the-frame-on-paper.md`](../../adr/Rendering/0061-printing-is-the-frame-on-paper/0061-printing-is-the-frame-on-paper.md) (proposed): o documento como
 render do mesmo frame numa escala de papel, o CUPS como filho, o que é só
 pessoa e trabalho de fundo, o svg como caminho pro PDF, o que fica pro
-bring-up. linha pro índice ([`adr/`](../../adr/README.md) está fora da lista, fica
+bring-up. linha pro índice ([`adr/`](../../adr/adr.md) está fora da lista, fica
 para a integração):
 
 ```text
@@ -467,3 +467,11 @@ lpstat -p -d                                                          (esta máq
   variável.
 - fica para depois: o poll do status da fila depois do spool (a
   projeção fica em "queued"), paginação, PDF vetorial, painel nativo.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0061: printing is the frame on paper](../../adr/Rendering/0061-printing-is-the-frame-on-paper/0061-printing-is-the-frame-on-paper.md)
+- [task-66: headless as a first-class citizen](../task-66-headless-first-class/task-66-headless-first-class.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+<!-- /related -->

@@ -331,7 +331,7 @@ linhas de produção (regra do guard): engine `window/host.rs` 551,
 é da janela e o que é do app, o host por etapas, o `Windows` e o
 roteamento, render on demand por janela, o fechar, o destacar do
 showcase, o que a projeção diz, os limites. linha pro índice, que é do
-orquestrador ([`adr/`](../../adr/README.md) é proibido aqui):
+orquestrador ([`adr/`](../../adr/adr.md) é proibido aqui):
 
 | 2026-09-24 | [windows-are-hosts-the-app-owns-the-state](../../adr/Structure/0056-windows-are-hosts-the-app-owns-the-state/0056-windows-are-hosts-the-app-owns-the-state.md) | proposed | `engine::window::WindowHost` agrupa o que morre com a janela (a janela, o `GpuContext` com a surface e a perda de device, compositor, `InputState`, touch, IME, escala, área segura, relógio, perf, eventos bufferizados) e `Windows` guarda vários por `WindowId`: `open`, `route` (o dono toma input e resize; close e redraw voltam ao chamador), `close` de uma sem o app, `should_exit` na última (configurável), redraw por janela (parada não desenha enquanto outra anima), deadline mais cedo; o `App` do engine com uma janela sem mudança, o `layers` com duas; o showcase destaca a página atual numa segunda janela sobre o mesmo estado e o mesmo dispatcher, a projeção ganha um nó `window` só enquanto ela existe; provado headless com hosts sob `WindowId::dummy()` (task-76 item 2) |
 
@@ -442,3 +442,11 @@ cargo run --offline -p regress -- check
 cargo run --offline -p layers          (duas janelas; do orquestrador)
 cargo run --offline -p uigallery -- Todo                  (D destaca a página; do orquestrador)
 ```
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0056: a window is a host of what dies with it; the app owns the state](../../adr/Structure/0056-windows-are-hosts-the-app-owns-the-state/0056-windows-are-hosts-the-app-owns-the-state.md)
+- [task-58: action with precondition, dispatch and receipts](../task-58-actions-preconditions-receipts/task-58-actions-preconditions-receipts.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+<!-- /related -->

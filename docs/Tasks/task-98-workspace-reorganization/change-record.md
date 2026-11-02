@@ -243,3 +243,11 @@ lychee --config .devops/check/lychee.toml --offline .
 | `6ee6d4c5` | engine: o doctest do `actions!` chama o macro pelo nome |
 | `e35e2ce6` | testes: o guarda de ADR ignora arquivos do sistema (`.DS_Store`) |
 | `4039b6af` | docs: este relatório |
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0006: one TextStyle per text run, shared by measurement and drawing](../../adr/Rendering/0006-one-text-style-for-measurement-and-drawing/0006-one-text-style-for-measurement-and-drawing.md)
+- [task-98: workspace reorganization](task-98-workspace-reorganization.md)
+- [ui component catalog](../../Research/Structure/component-catalog.md)
+<!-- /related -->

@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [determinism, semantics, rendering]
-relations: [task-57, task-59, task-66, task-77]
+relations: [task-57, task-59, task-66, task-77, learning-cycle-0045]
 source: docs/adr/workflows/0045-regression-by-meaning-before-pixels.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -180,3 +180,20 @@ the compositor it hashed: nothing ticks between the hash and the pixels.
 - a verdict that depends on having a GPU.
 - comparing whole frames when a layer's region says where to look.
 - a bless whose accept report was not read.
+
+## learnings
+
+- [what the autonomous cycle taught: regression by meaning before pixels](learned-regression-by-meaning-before-pixels.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [what the autonomous cycle taught: regression by meaning before pixels](learned-regression-by-meaning-before-pixels.md)
+- [task-57: semantic contract (crate `sem`)](../../../Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
+- [task-59: semantic binding with the render and one operational path](../../../Tasks/task-59-semantic-binding-and-one-path/task-59-semantic-binding-and-one-path.md)
+- [task-66: headless as a first-class citizen](../../../Tasks/task-66-headless-first-class/task-66-headless-first-class.md)
+- [task-67: structural regression before pixels](../../../Tasks/task-67-structural-regression/task-67-structural-regression.md)
+- [task-77: visual determinism](../../../Tasks/task-77-visual-determinism/task-77-visual-determinism.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+- [how to validate visuals by pixel](../../../Research/Workflows/validate-visuals-by-pixel.md)
+<!-- /related -->

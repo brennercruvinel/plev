@@ -288,3 +288,9 @@ orquestrador revisa antes de aceitar. o split da Resizable pede um papel
 de splitter no contrato do `sem` e fica como pendência.
 
 o agente gastou uns 350 mil tokens.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-75: production-ready platform accessibility](task-75-platform-accessibility.md)
+<!-- /related -->

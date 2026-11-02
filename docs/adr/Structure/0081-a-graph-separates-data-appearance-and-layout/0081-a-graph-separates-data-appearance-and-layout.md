@@ -57,3 +57,10 @@ Converting the structure keeps plev's drawing contract.
 ## learnings
 
 - [Separate data, appearance and algorithm in Rust](data-appearance-and-algorithm.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [Separate data, appearance and algorithm in Rust](data-appearance-and-algorithm.md)
+- [task-100: interactive graphs and corpus import](../../../Tasks/task-100-interactive-graphs/task-100-interactive-graphs.md)
+<!-- /related -->

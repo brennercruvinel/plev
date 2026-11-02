@@ -74,3 +74,10 @@ the frozen format never chases the internal enum; the player lowers ir to
   render time so the frozen format stays stable.
 - do not claim a size win on morph-heavy clips without the measured bytes
   on the table.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-43: monster, binary animation codec v0](../../../Tasks/task-43-monster-codec/task-43-monster-codec.md)
+- [mon experiment](../../../Research/Importing/mon-experiment-notes.md)
+<!-- /related -->

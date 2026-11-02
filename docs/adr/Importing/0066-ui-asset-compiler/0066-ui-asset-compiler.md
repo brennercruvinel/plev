@@ -139,3 +139,12 @@ custam 0,17 ms na abertura contra uns 105 KB de tabela. o WGSL passou a
 ser validado no gate. o maior custo medido do primeiro frame que é de
 asset é a varredura das 805 fontes do sistema, feita duas vezes: fica
 para a task-74, junto com a decisão de fontes do brenner.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0011: import foreign formats by conversion, never by embedding a foreign runtime](../0011-import-foreign-formats-by-conversion-not-embedding/0011-import-foreign-formats-by-conversion-not-embedding.md)
+- [task-63: session flight recorder](../../../Tasks/task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-72: UI asset compiler](../../../Tasks/task-72-ui-asset-compiler/task-72-ui-asset-compiler.md)
+- [task-74: text and editing](../../../Tasks/task-74-text-and-editing/task-74-text-and-editing.md)
+<!-- /related -->

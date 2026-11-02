@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-09-23
 topics: [agents, semantics]
-relations: [adr-0033, task-62, task-87]
+relations: [adr-0033, task-62, task-87, learning-cycle-0044]
 source: docs/adr/semantics/0044-a-terminal-stage-carries-the-revision.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -83,7 +83,7 @@ that path when it ended.
   instead of 54.5 KB; with the person of the script, 17 instead of 24 and
   45.9 KB instead of 91.5 KB; the stale refusal, the recovery and the
   commit are the same. the table is in
-  [`task-87-a-terminal-stage-carries-the-revision.md`](../../../Tasks/task-87-a-terminal-stage-carries-the-revision/README.md).
+  [`task-87-a-terminal-stage-carries-the-revision.md`](../../../Tasks/task-87-a-terminal-stage-carries-the-revision/task-87-a-terminal-stage-carries-the-revision.md).
 - the ring is shared by every connection of a port and bounded (16 by
   default). a revision served in a stage takes a place in it as an
   observation does, so a run of acts now pushes out old revisions that
@@ -114,3 +114,19 @@ that path when it ended.
 - one projection per stage when several end together.
 - deciding stale by this revision, or anything else by it.
 - counting it as an observation, or reporting it to `Host::observed`.
+
+## learnings
+
+- [what the autonomous cycle taught: a terminal stage carries the revision the app is at](learned-a-terminal-stage-carries-the-revision.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0033: actions carry the state their actor observed](../0033-actions-carry-observed-state/0033-actions-carry-observed-state.md)
+- [ADR 0039: agents act through the semantic contract](../0039-agents-act-through-the-semantic-contract/0039-agents-act-through-the-semantic-contract.md)
+- [ADR 0047: an act rests on what its actor was shown](../0047-an-act-rests-on-what-its-actor-was-shown/0047-an-act-rests-on-what-its-actor-was-shown.md)
+- [what the autonomous cycle taught: a terminal stage carries the revision the app is at](learned-a-terminal-stage-carries-the-revision.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-87: a terminal stage carries the revision the app was left in](../../../Tasks/task-87-a-terminal-stage-carries-the-revision/task-87-a-terminal-stage-carries-the-revision.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+<!-- /related -->

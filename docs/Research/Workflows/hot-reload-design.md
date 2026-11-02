@@ -142,3 +142,11 @@ USER CODE (reloadable) --> Vec<SceneNode> --> ENGINE (fixed)
 - `bunker/repos/rust-ecosystem/leptos/leptos_hot_reload/src/lib.rs` - viewmacros + AST parse via syn
 - `bunker/repos/rust-ecosystem/leptos/leptos_hot_reload/src/diff.rs` - 25kb nested tree diff
 - `bunker/repos/rust-ecosystem/dioxus/packages/rsx-hotreload/` - rsx diff + hotreloadliteral pool
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0019: adotamos shader hot reload via notify file watcher sobre dylib reloading](../../adr/Workflows/0019-shader-hot-reload/0019-shader-hot-reload.md)
+- [ADR 0031: hot reload on by default: shaders and literals in place, code by rebuild](../../adr/Workflows/0031-hot-reload-on-by-default-in-gpu-context/0031-hot-reload-on-by-default-in-gpu-context.md)
+- [task-56: hot reload](../../Tasks/task-56-hot-reload/task-56-hot-reload.md)
+<!-- /related -->

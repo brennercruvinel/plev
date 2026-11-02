@@ -90,3 +90,13 @@ cache keys, entry dimensions) and multi-frame headless rendering.
 - padding a slot is not clearing it: upload the border explicitly.
 - do not validate this path with single-frame or single-size probes; use
   the multi-frame probe and compare pixels against measured advances.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0054: a lost GPU device is recovered in place, and the next frame draws the same](../0054-gpu-device-loss-recovers-in-place/0054-gpu-device-loss-recovers-in-place.md)
+- [task-74: text and editing](../../../Tasks/task-74-text-and-editing/task-74-text-and-editing.md)
+- [task-77: visual determinism](../../../Tasks/task-77-visual-determinism/task-77-visual-determinism.md)
+- [program: from GPU UI engine to generative interaction runtime](../../../Research/Synthesis/generative-runtime-program.md)
+- [how to validate visuals by pixel](../../../Research/Workflows/validate-visuals-by-pixel.md)
+<!-- /related -->

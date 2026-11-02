@@ -8,10 +8,10 @@ date: 2026-09-25
 date_basis: header
 recorded: 2026-09-25
 topics: [fonts, text, web-wasm, mobile, determinism]
-relations: [adr-0079, task-74]
+relations: [adr-0079, task-74, learning-cycle-0071]
 source: docs/adr/rendering/0071-embedded-fonts-by-script.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -21,7 +21,7 @@ Embeds in the engine the Noto Sans faces, as subsets, for six non-Latin scripts 
 
 ## context
 
-the audit of task-74 phase 1 ([`task-74-text-and-editing.md`](../../../Tasks/task-74-text-and-editing/README.md),
+the audit of task-74 phase 1 ([`task-74-text-and-editing.md`](../../../Tasks/task-74-text-and-editing/task-74-text-and-editing.md),
 "relatório da fase 1") measured that the embedded path, what wasm,
 android and ios ship, shaped every non-Latin script as tofu: 24 of 27
 glyphs in the Arabic line, 5 of 5 in the Chinese one. the desktop hid it
@@ -228,3 +228,18 @@ none. on the desktop the same color path draws the system's emoji face
 - whole fonts: SC alone is 8.3 MB per weight, JP and KR 4.5 MB.
 - Regular only: cosmic-text does not synthesize bold, so 600 and 700 text
   in these scripts would have drawn Regular next to a bold Latin face.
+
+## learnings
+
+- [what the autonomous cycle taught: embed Noto Sans subsets for the non-Latin scripts](learned-embedded-fonts-by-script.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0078: the web build fetches the Noto faces when a text first needs them](../0078-the-web-fetches-the-noto-faces-on-demand/0078-the-web-fetches-the-noto-faces-on-demand.md)
+- [ADR 0079: a desktop draws the scripts with the embedded faces, not the system's](../0079-a-desktop-draws-the-scripts-with-the-embedded-faces/0079-a-desktop-draws-the-scripts-with-the-embedded-faces.md)
+- [ADR 0086: the adaptive foundation reads preferences once into the theme](../../Interface/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme/0086-the-adaptive-foundation-reads-preferences-once-into-the-theme.md)
+- [what the autonomous cycle taught: embed Noto Sans subsets for the non-Latin scripts](learned-embedded-fonts-by-script.md)
+- [task-74: text and editing](../../../Tasks/task-74-text-and-editing/task-74-text-and-editing.md)
+- [phase 2: embedded Noto Sans](../../../Tasks/task-74-text-and-editing/phase-2-noto-sans.md)
+<!-- /related -->

@@ -61,3 +61,10 @@ perdemos: on/when/each/bind blocks (rust code) nao sao interpretados. expressoes
 ## learnings
 
 - [hot reload session: what worked and what bit us](../0031-hot-reload-on-by-default-in-gpu-context/hot-reload.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0031: hot reload on by default: shaders and literals in place, code by rebuild](../0031-hot-reload-on-by-default-in-gpu-context/0031-hot-reload-on-by-default-in-gpu-context.md)
+- [hot reload session: what worked and what bit us](../0031-hot-reload-on-by-default-in-gpu-context/hot-reload.md)
+<!-- /related -->

@@ -251,3 +251,9 @@ espaço). com ele, todos os itens do critério batem e a task fecha.
 
 o agente gastou uns 390 mil tokens nas três partes (o IME uns 290 mil,
 a área de transferência uns 65 mil, o menu uns 30 mil).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-74: text and editing](task-74-text-and-editing.md)
+<!-- /related -->

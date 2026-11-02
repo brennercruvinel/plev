@@ -61,3 +61,11 @@ janela de 1200x800. imagens em `checkpoint-b/`.
   vai para transformação sobre telas fixas), os três defeitos são
   corrigidos como bug do núcleo e o checkpoint roda de novo do mesmo
   jeito, com as mesmas imagens. a regra do programa não muda.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-69: ephemeral and generated surfaces](task-69-ephemeral-generative-surfaces.md)
+- [task-70: adaptive transformations](../task-70-adaptive-transformations/task-70-adaptive-transformations.md)
+- [generated silences screen against the fixed screen, checkpoint b of task-69](../../Research/Exploring/generated-surface-checkpoint-b.md)
+<!-- /related -->

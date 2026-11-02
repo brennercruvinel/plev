@@ -89,3 +89,17 @@ nao e um framework de aplicacao (dioxus/leptos/slint), nao e um game engine (bev
 ## conclusao
 
 plev resolve um problema real que ninguem resolveu: compositing unificado GPU-first com dirty tracking, text de producao, e shaders identicos em 6 targets. o risco nao e tecnico, e de execucao: acessibilidade, documentacao, e demo app sao os 3 gates para relevancia.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-21: documentation of the narrate DSL](../../Tasks/task-21-narrate-dsl-documentation/task-21-narrate-dsl-documentation.md)
+- [task-28: editable text](../../Tasks/task-28-editable-text/task-28-editable-text.md)
+- [task-29: app demo real (proof of life)](../../Tasks/task-29-app-demo-real/task-29-app-demo-real.md)
+- [task-30: accessibility (accesskit)](../../Tasks/task-30-accessibility/task-30-accessibility.md)
+- [task-32: text system upgrade assessment](../../Tasks/task-32-text-upgrade-assessment/task-32-text-upgrade-assessment.md)
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [competitor analysis, gui/rendering frameworks](competitors.md)
+- [linebender ecosystem, analysis for plev](linebender-ecosystem.md)
+- [technology radar, plev](technology-radar.md)
+<!-- /related -->

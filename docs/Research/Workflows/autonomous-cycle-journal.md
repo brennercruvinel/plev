@@ -1236,7 +1236,7 @@ task; aqui fica o que aconteceu e onde ler.
   resposta decidiu (A4c1 commitou com `allow`, A4c2 parou com
   `decline`). a leitura: falta de descoberta, não de vontade. P2, vira
   a task-94; a quinta rodada fica registrada antes de rodar. detalhe em
-  [`task-62-ide-human-agent-proof.md`](../../Tasks/task-62-ide-human-agent-proof/README.md).
+  [`task-62-ide-human-agent-proof.md`](../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md).
 - **parada parcial, serviço pago:** o github não inicia os jobs do CI
   (pagamento da conta ou limite de gasto). o PR #68 (task-69 fase 2)
   fica aberto, sem merge. a integração local continua com o gate; a
@@ -1359,7 +1359,7 @@ task; aqui fica o que aconteceu e onde ler.
 - **experimento (P1, critério da onda 5):** quatro corridas com LLM sob a
   regra da task-89. segurança sustentada nas quatro; tarefa feita em
   três; o A2''b parou para não desfazer a ação da pessoa. resultado em
-  [`task-62-ide-human-agent-proof.md`](../../Tasks/task-62-ide-human-agent-proof/README.md), "resultado da terceira rodada".
+  [`task-62-ide-human-agent-proof.md`](../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md), "resultado da terceira rodada".
 - **decisão autônoma importante (para o brenner revisar):** o critério
   escrito antes ("uma corrida que falhe a tarefa") disparou ao pé da
   letra no A2''b. li como não sendo falha da hipótese central: o
@@ -1729,3 +1729,53 @@ task; aqui fica o que aconteceu e onde ler.
   os checkpoints param quando caem nessas condições.
 - estado da `main` nesse momento: `c5fdf36` (57b, 62c, 66b, 82a
   integradas), 26 commits à frente do GitHub.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0046: the inspector reads a session, it never runs it](../../adr/Recording/0046-the-inspector-reads-a-session-never-runs-it/0046-the-inspector-reads-a-session-never-runs-it.md)
+- [ADR 0048: view source for pixels: a control leads to its projection, a text to its literal](../../adr/Workflows/0048-view-source-for-pixels/0048-view-source-for-pixels.md)
+- [ADR 0052: proposers propose, the runtime verifies](../../adr/Synthesis/0052-proposers-propose-the-runtime-verifies/0052-proposers-propose-the-runtime-verifies.md)
+- [what the autonomous cycle taught about the way of working](autonomous-cycle-learnings.md)
+- [task-18: android build & device test](../../Tasks/task-18-android-device-test/task-18-android-device-test.md)
+- [task-19: ios simulator test](../../Tasks/task-19-ios-simulator-test/task-19-ios-simulator-test.md)
+- [task-20: WASM visual validation](../../Tasks/task-20-wasm-visual-validation/task-20-wasm-visual-validation.md)
+- [task-61: agent surface (local socket, observe, act)](../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-63: session flight recorder](../../Tasks/task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-64: session inspector, bug report and session for testing](../../Tasks/task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-65: pixel to code and development inspector](../../Tasks/task-65-pixel-to-source/task-65-pixel-to-source.md)
+- [task-67: structural regression before pixels](../../Tasks/task-67-structural-regression/task-67-structural-regression.md)
+- [task-68: plev IR and verifier](../../Tasks/task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-69: ephemeral and generated surfaces](../../Tasks/task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-70: adaptive transformations](../../Tasks/task-70-adaptive-transformations/task-70-adaptive-transformations.md)
+- [task-71: plev as compiler target (importers to IR)](../../Tasks/task-71-compiler-target/task-71-compiler-target.md)
+- [task-72: UI asset compiler](../../Tasks/task-72-ui-asset-compiler/task-72-ui-asset-compiler.md)
+- [task-74: text and editing](../../Tasks/task-74-text-and-editing/task-74-text-and-editing.md)
+- [task-75: production-ready platform accessibility](../../Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md)
+- [task-76: platform integration](../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-77: visual determinism](../../Tasks/task-77-visual-determinism/task-77-visual-determinism.md)
+- [task-78: AI-native applications](../../Tasks/task-78-ai-native-apps/task-78-ai-native-apps.md)
+- [task-79: scene over socket](../../Tasks/task-79-scene-over-socket/task-79-scene-over-socket.md)
+- [task-80: proof of qualitatively different software](../../Tasks/task-80-proof-qualitatively-different-software/task-80-proof-qualitatively-different-software.md)
+- [task-82: the caret cannot request 60 frames per second](../../Tasks/task-82-caret-blink-render-on-demand/task-82-caret-blink-render-on-demand.md)
+- [task-83: the delta carries the node that was just added, and the refusal names who acted](../../Tasks/task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)
+- [task-84: an old refresh does not undo what the ide has already accepted](../../Tasks/task-84-ide-refresh-never-goes-back/task-84-ide-refresh-never-goes-back.md)
+- [task-85: the commit that the receipt announces is already in the projection, with the files](../../Tasks/task-85-the-commit-a-receipt-announces-is-projected/task-85-the-commit-a-receipt-announces-is-projected.md)
+- [task-86: the ide people use opens the agent port](../../Tasks/task-86-the-ide-opens-the-agent-port/task-86-the-ide-opens-the-agent-port.md)
+- [task-87: a terminal stage carries the revision the app was left in](../../Tasks/task-87-a-terminal-stage-carries-the-revision/task-87-a-terminal-stage-carries-the-revision.md)
+- [task-88: the lab measures what the agent rested on](../../Tasks/task-88-the-lab-measures-what-the-agent-rested-on/task-88-the-lab-measures-what-the-agent-rested-on.md)
+- [task-89: an act relies only on what was shown to the agent](../../Tasks/task-89-an-act-rests-only-on-what-was-shown/task-89-an-act-rests-only-on-what-was-shown.md)
+- [task-90: a refusal names who acted since the agent looked](../../Tasks/task-90-a-refusal-names-who-acted-since-the-look/task-90-a-refusal-names-who-acted-since-the-look.md)
+- [task-91: the dispatcher knows when the agent looked](../../Tasks/task-91-the-dispatcher-knows-when-the-agent-looked/task-91-the-dispatcher-knows-when-the-agent-looked.md)
+- [task-92: the agent asks the person](../../Tasks/task-92-the-agent-asks-the-person/task-92-the-agent-asks-the-person.md)
+- [task-93: the person in the lab answers](../../Tasks/task-93-the-lab-person-answers/task-93-the-lab-person-answers.md)
+- [task-94: the refusal that names a person points to the question](../../Tasks/task-94-the-refusal-points-at-the-question/task-94-the-refusal-points-at-the-question.md)
+- [task-95: the todo projects its items as a list](../../Tasks/task-95-the-todo-projects-its-items-as-a-list/task-95-the-todo-projects-its-items-as-a-list.md)
+- [task-96: a generated surface in the ide](../../Tasks/task-96-ide-generated-surface/task-96-ide-generated-surface.md)
+- [task-97: code and diff in the IR vocabulary](../../Tasks/task-97-code-and-diff-in-the-ir/task-97-code-and-diff-in-the-ir.md)
+- [plev: thesis of the generative interaction runtime](../Synthesis/generative-runtime-thesis.md)
+- [program: from GPU UI engine to generative interaction runtime](../Synthesis/generative-runtime-program.md)
+- [operating mode: autonomous orchestrator](autonomy.md)
+- [orchestrator and agent guidelines](generative-runtime-guidelines.md)
+<!-- /related -->

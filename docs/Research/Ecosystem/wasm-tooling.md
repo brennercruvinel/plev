@@ -171,3 +171,10 @@ macro `#[event(fetch)]` define o handler principal. request/response seguem a AP
 
 ### nao relevante
 - **spin** e **workers-rs**, voltados para backend serverless. so se tornam relevantes se plev tiver servicos de infraestrutura (asset server, collaboration, render-as-a-service).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-ref: research briefing (50+ repos)](../../Tasks/task-ref-research-briefing/task-ref-research-briefing.md)
+- [technology radar, plev](technology-radar.md)
+<!-- /related -->

@@ -470,7 +470,7 @@ lista aberta, a recusa vista, as fontes, o caminho por plataforma hoje, o
 shell, a gravação, e o bring-up (o `CFBundleURLTypes` no `.app` e o
 handler `GURL` pelo `NSNotificationCenter` com as três dependências, a
 chave do registro do windows, o `.desktop` do linux, a segunda
-instância, iOS e android). linha para o índice ([`adr/`](../../adr/README.md) está
+instância, iOS e android). linha para o índice ([`adr/`](../../adr/adr.md) está
 fora da lista, fica para a integração):
 
 ```text
@@ -585,3 +585,10 @@ cargo test --offline -p engine -p uigallery
 cargo run --offline -p regress -- check   (163 iguais)
 git diff bcf6be8e -- Cargo.lock apps/urnadbapp/Cargo.lock rust/engine/Cargo.toml Cargo.toml   (vazio)
 ```
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0063: a link is not a person](../../adr/Interface/0063-a-link-is-not-a-person/0063-a-link-is-not-a-person.md)
+- [task-76: platform integration](task-76-platform-integration.md)
+<!-- /related -->

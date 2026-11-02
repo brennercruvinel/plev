@@ -381,8 +381,8 @@ versão nova:
 - `rust/offers/src/review/mod.rs` e `rust/offers/src/review/tests.rs`
   (novos), `rust/offers/src/{rules,lib,error,words,list,parts}.rs`.
 - `rust/screen/src/draw.rs` (o recorte da tabela limitada, com teste).
-- [`task-96-ide-generated-surface.md`](README.md) (este),
-  a seção da demo 5 em [`task-80-proof-qualitatively-different-software.md`](../task-80-proof-qualitatively-different-software/README.md).
+- [`task-96-ide-generated-surface.md`](task-96-ide-generated-surface.md) (este),
+  a seção da demo 5 em [`task-80-proof-qualitatively-different-software.md`](../task-80-proof-qualitatively-different-software/task-80-proof-qualitatively-different-software.md).
 
 nenhum arquivo de `rust/accord`, `wire`, `engine`, `comps`, `claude-model`,
 `showcase`, `uir`, nem das vistas fixas do ide; nenhum baseline.
@@ -477,3 +477,14 @@ rastro ao fechar, e a demo 5 medida contra o painel fixo (misto: melhor
 nos arquivos, pior no diff). fica com o orquestrador e o brenner: a
 prova com o Claude de verdade e a demo 5 com janela. o que faltou para o
 diff (um componente de diff no vocabulário do IR) vira task nova.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-69: ephemeral and generated surfaces](../task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-80: proof of qualitatively different software](../task-80-proof-qualitatively-different-software/task-80-proof-qualitatively-different-software.md)
+- [task-85: the commit that the receipt announces is already in the projection, with the files](../task-85-the-commit-a-receipt-announces-is-projected/task-85-the-commit-a-receipt-announces-is-projected.md)
+- [task-93: the person in the lab answers](../task-93-the-lab-person-answers/task-93-the-lab-person-answers.md)
+- [task-96: a generated surface in the ide](task-96-ide-generated-surface.md)
+- [five demos of qualitatively different software, each with its method written before it ran](../../Research/Exploring/five-demos.md)
+<!-- /related -->

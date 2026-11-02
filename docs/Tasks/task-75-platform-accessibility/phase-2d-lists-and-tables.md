@@ -162,3 +162,9 @@ roda), as cores que falham no contraste (decisão do brenner) e as
 pendências de contrato acima.
 
 o agente gastou uns 500 mil tokens (a entrega e a correção).
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-75: production-ready platform accessibility](task-75-platform-accessibility.md)
+<!-- /related -->

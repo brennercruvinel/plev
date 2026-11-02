@@ -97,7 +97,7 @@ nenhuma janela: nada para o orquestrador rodar com `PLEV_BACKGROUND=1`.
 
 ### (c) a demo 3: qual bug, como reproduzir, o inspector e o teste
 
-as perguntas da tese ([`generative-runtime-thesis.md:885-901`](../../Research/Generative/generative-runtime-thesis.md), seção 12):
+as perguntas da tese ([`generative-runtime-thesis.md:885-901`](../../Research/Synthesis/generative-runtime-thesis.md), seção 12):
 qual controle era esse, qual era seu estado, qual foi a sequência
 anterior, qual ação ocorreu, quem iniciou, qual era a precondição, o que
 mudou, qual foi o resultado. e a seção "sessão vira teste" (`:903`).
@@ -565,7 +565,7 @@ request 6 (origin 0): submit on commit.submit by agent:scripted, at +0.096s
   result        nothing ran: the point of truth refused it before the effect
 ```
 
-as oito perguntas da tese ([`generative-runtime-thesis.md:893-900`](../../Research/Generative/generative-runtime-thesis.md)),
+as oito perguntas da tese ([`generative-runtime-thesis.md:893-900`](../../Research/Synthesis/generative-runtime-thesis.md)),
 respondidas só pelo arquivo:
 
 | pergunta | resposta do inspector |
@@ -940,9 +940,9 @@ apagada depois da validação.
 
 ### arquivos
 
-- [`task-80-proof-qualitatively-different-software.md`](README.md):
+- [`task-80-proof-qualitatively-different-software.md`](task-80-proof-qualitatively-different-software.md):
   sonda, método, provado, demos 3 e 4, handoff.
-- [`0070-generative-runtime-results.md`](../../adr/Generative/0070-generative-runtime-results/0070-generative-runtime-results.md) (novo, proposed).
+- [`0070-generative-runtime-results.md`](../../adr/Synthesis/0070-generative-runtime-results/0070-generative-runtime-results.md) (novo, proposed).
 - `apps/idestudio/tests/rerun/inflight.rs` (novo): a fixture `InFlight` e o
   teste do trecho.
 - `apps/idestudio/tests/rerun/eval.rs`: `answer_while` e `take` (o `drain` usa
@@ -1028,3 +1028,28 @@ com o ambiente do briefing (o `PLEV_CLAUDE` no stub) e
 - P3, para o orquestrador decidir: a opção de assentar só as execuções no
   harness (se ele virar crate); marcar um veredito esperado; a lista de
   durações na Silences; se um campo de intenção deve ser secreto.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0050: sessions become regression tests](../../adr/Recording/0050-sessions-become-regression-tests/0050-sessions-become-regression-tests.md)
+- [ADR 0070: generative runtime results](../../adr/Synthesis/0070-generative-runtime-results/0070-generative-runtime-results.md)
+- [task-60: accessibility as a projection of the contract](../task-60-accessibility-projection/task-60-accessibility-projection.md)
+- [task-62: proof in the ide: stale-state rejection and human-agent handoff](../task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)
+- [task-63: session flight recorder](../task-63-flight-recorder/task-63-flight-recorder.md)
+- [task-64: session inspector, bug report and session for testing](../task-64-session-inspector-and-tests/task-64-session-inspector-and-tests.md)
+- [task-68: plev IR and verifier](../task-68-plev-ir-and-verifier/task-68-plev-ir-and-verifier.md)
+- [task-69: ephemeral and generated surfaces](../task-69-ephemeral-generative-surfaces/task-69-ephemeral-generative-surfaces.md)
+- [task-70: adaptive transformations](../task-70-adaptive-transformations/task-70-adaptive-transformations.md)
+- [task-80: proof of qualitatively different software](task-80-proof-qualitatively-different-software.md)
+- [task-84: an old refresh does not undo what the ide has already accepted](../task-84-ide-refresh-never-goes-back/task-84-ide-refresh-never-goes-back.md)
+- [task-86: the ide people use opens the agent port](../task-86-the-ide-opens-the-agent-port/task-86-the-ide-opens-the-agent-port.md)
+- [task-87: a terminal stage carries the revision the app was left in](../task-87-a-terminal-stage-carries-the-revision/task-87-a-terminal-stage-carries-the-revision.md)
+- [task-89: an act relies only on what was shown to the agent](../task-89-an-act-rests-only-on-what-was-shown/task-89-an-act-rests-only-on-what-was-shown.md)
+- [task-92: the agent asks the person](../task-92-the-agent-asks-the-person/task-92-the-agent-asks-the-person.md)
+- [task-93: the person in the lab answers](../task-93-the-lab-person-answers/task-93-the-lab-person-answers.md)
+- [task-94: the refusal that names a person points to the question](../task-94-the-refusal-points-at-the-question/task-94-the-refusal-points-at-the-question.md)
+- [task-96: a generated surface in the ide](../task-96-ide-generated-surface/task-96-ide-generated-surface.md)
+- [five demos of qualitatively different software, each with its method written before it ran](../../Research/Exploring/five-demos.md)
+- [plev: thesis of the generative interaction runtime](../../Research/Synthesis/generative-runtime-thesis.md)
+<!-- /related -->

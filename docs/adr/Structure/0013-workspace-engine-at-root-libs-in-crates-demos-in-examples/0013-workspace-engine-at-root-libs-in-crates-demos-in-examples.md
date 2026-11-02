@@ -75,3 +75,10 @@ input, ime and lifecycle into platform).
   `[workspace.dependencies]`.
 - do not trust `cargo build --workspace` to prove example code compiles;
   only `cargo test` builds examples.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0022: one knowledge tree, and a minimal root](../0022-one-knowledge-tree-and-a-minimal-root/0022-one-knowledge-tree-and-a-minimal-root.md)
+- [task-51: workspace restructure and naming rebrand](../../../Tasks/task-51-workspace-restructure/task-51-workspace-restructure.md)
+<!-- /related -->

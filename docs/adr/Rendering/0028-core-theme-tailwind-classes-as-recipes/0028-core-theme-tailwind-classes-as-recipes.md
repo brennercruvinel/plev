@@ -87,3 +87,11 @@ widget, so that list had to become tokens.
 ## learnings
 
 - [core buttons session: what worked and what bit us](core-buttons.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [core buttons session: what worked and what bit us](core-buttons.md)
+- [task-104: the 35 empty or borrowed gallery tabs become kit components](../../../Tasks/task-104-gallery-components-from-the-kit/task-104-gallery-components-from-the-kit.md)
+- [task-54: core theme, buttons poc](../../../Tasks/task-54-core-theme-buttons-poc/task-54-core-theme-buttons-poc.md)
+<!-- /related -->

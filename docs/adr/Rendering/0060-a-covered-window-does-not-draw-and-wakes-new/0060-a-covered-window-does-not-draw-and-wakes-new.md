@@ -8,10 +8,10 @@ date: 2026-09-24
 date_basis: header
 recorded: 2026-09-24
 topics: [rendering, platform, performance]
-relations: [adr-0042, adr-0054, task-18, task-19, task-76]
+relations: [adr-0042, adr-0054, task-18, task-19, task-76, learning-cycle-0060]
 source: docs/adr/rendering/0060-a-covered-window-does-not-draw-and-wakes-new.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -30,7 +30,7 @@ sleep had no hook, and the work that runs beside the frames (the `claude
 worker of the ide) did not know the app slept.
 
 the probe (task-76 item 7, the handoff in
-[task-76-platform-integration.md](../../../Tasks/task-76-platform-integration/README.md)) read winit
+[task-76-platform-integration.md](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)) read winit
 0.30.13 and measured the engine headless:
 
 - on macOS the window delegate's `windowDidChangeOcclusionState:` sends
@@ -180,3 +180,22 @@ As alternativas recusadas estão no próprio texto. Pausar os relógios enquanto
   says asleep: the answer belongs to the wake's frame.
 - a process-global flag: tests share the process, and each test's app
   is its thread's.
+
+## learnings
+
+- [what the autonomous cycle taught: a covered window does not draw, and wakes with a new frame](learned-a-covered-window-does-not-draw-and-wakes-new.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0042: a tick asks for a deadline, not for every frame](../0042-a-tick-asks-for-a-deadline/0042-a-tick-asks-for-a-deadline.md)
+- [ADR 0054: a lost GPU device is recovered in place, and the next frame draws the same](../0054-gpu-device-loss-recovers-in-place/0054-gpu-device-loss-recovers-in-place.md)
+- [ADR 0061: printing is the frame on paper](../0061-printing-is-the-frame-on-paper/0061-printing-is-the-frame-on-paper.md)
+- [ADR 0062: capture is a job the person turns on](../../Interface/0062-capture-is-a-job-the-person-turns-on/0062-capture-is-a-job-the-person-turns-on.md)
+- [what the autonomous cycle taught: a covered window does not draw, and wakes with a new frame](learned-a-covered-window-does-not-draw-and-wakes-new.md)
+- [task-18: android build & device test](../../../Tasks/task-18-android-device-test/task-18-android-device-test.md)
+- [task-19: ios simulator test](../../../Tasks/task-19-ios-simulator-test/task-19-ios-simulator-test.md)
+- [task-76: platform integration](../../../Tasks/task-76-platform-integration/task-76-platform-integration.md)
+- [task-76, closing: what went in and what remains](../../../Tasks/task-76-platform-integration/closing.md)
+- [task-76, item 7: sleep and wake](../../../Tasks/task-76-platform-integration/item-7-sleep-and-wake.md)
+<!-- /related -->

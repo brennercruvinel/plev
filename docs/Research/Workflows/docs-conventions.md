@@ -28,11 +28,14 @@ top-level folders and the shape of `adr/` and `Research/`.
 | Folder | What it holds | Identity |
 |---|---|---|
 | `adr/<Theme>/NNNN-<slug>/` | one folder per architecture decision record: `NNNN-<slug>.md` is the record, numbered in one sequence across the themes; the learnings that led to it or came out of it sit beside it | `adr-NNNN`, a learning `learning-<name>` |
-| `Research/<Theme>/` | what is known about a subject: references studied, comparisons, the thesis and the program of the generative runtime, how each subsystem was designed, the manuals of the repository and of this archive | `research-<name>`, `architecture-…`, `operations-…`, `platform-…`, and the names of the thesis, program and plan |
-| `Tasks/task-NN-<slug>/` | one folder per task: `README.md` with the plan, execution, delivery and what stayed open; the phases of a long task as pages beside it | `task-NN`, a phase `task-NN/<page>` |
-| `Experiments/<slug>/` | one folder per experiment: question, setup, results, limits, and the task pages that hold the full record | `experiment-<slug>` |
-| `Learnings/` | what a problem taught that belongs to no single decision | `learning-<name>` |
+| `Research/<Theme>/` | what is known about a subject: references studied, comparisons, the thesis and the program of the generative runtime, how each subsystem was designed, the manuals of the repository and of this archive, and what taught the way of working | `research-<name>`, `architecture-…`, `operations-…`, `platform-…`, and the names of the thesis, program and plan |
+| `Research/Exploring/` | one page per experiment: question, setup, results, limits, and the task pages that hold the full record | `experiment-<slug>` |
+| `Tasks/task-NN-<slug>/` | one folder per task: `task-NN-<slug>.md`, its note, with the plan, execution, delivery and what stayed open; the phases of a long task as pages beside it | `task-NN`, a phase `task-NN/<page>` |
 | `img/` | images the pages show | the path |
+
+A folder that is one thing (an ADR, a task, an index) has its page named like the folder,
+so every tool shows a page by its own name: `Tasks/Tasks.md`, `Research/Research.md`,
+`adr/adr.md`; only `docs/README.md` keeps the name a repository opens on.
 
 `CHANGELOG.md`, beside this tree, is the history in time: newest first, one section per
 date, each with the entries written when the change landed and the records of that
@@ -40,32 +43,32 @@ day linked. A new task, ADR, experiment, research note or learning gets its line
 its date, and the check fails when one is missing.
 
 `adr/` and `Research/` share their themes, so a decision and what is known about its
-subject carry the same name in both trees:
+subject carry the same name in both trees; `Research/` has one more, `Exploring`, the
+experiments. Each theme is one English word of nine letters:
 
 | Theme | What it covers |
 |---|---|
 | `Ecosystem` | what plev compares with, takes from and depends on: competitors, reference repositories, libraries chosen |
-| `Generative` | the generative runtime: plev IR, verification, proposers, generated and adapted surfaces |
 | `Importing` | other formats into plev: lottie, svg, figma, react, html, gpui, the .monster codec |
 | `Interface` | the person at the interface: input, touch, text, keyboard, accessibility, platform capabilities |
 | `Recording` | recording sessions and reading them back |
 | `Rendering` | the GPU, color, text raster, layout, effects, motion, frames, devices |
 | `Semantics` | the semantic contract: identity, actions, receipts, agents |
 | `Structure` | the shape of the repository, its crates, its components and its apps |
+| `Synthesis` | the generative runtime, interfaces synthesized from a verified specification: plev IR, verification, proposers, generated and adapted surfaces |
 | `Workflows` | how the work is done: dev loop, builds, gates, regression, agents, this archive |
 
 A new ADR copies [`adr/TEMPLATE.md`](../../adr/TEMPLATE.md) into its own folder and is
-listed in [`adr/README.md`](../../adr/README.md). Task and ADR numbers are identity, not
+listed in [`adr/adr.md`](../../adr/adr.md). Task and ADR numbers are identity, not
 chronology: the order in time comes from the `date` field.
 
 A page in an ADR's folder other than the record is a learning (`type: learning`) whose
 `relations` name that ADR; the ADR lists it under `## learnings`, and the other ADRs it
 speaks to name it in their `relations` and link it the same way.
 
-A page inside a task or experiment folder other than its `README.md` is a section:
-`type: section` and `parent:` the id of that folder's `README.md`. Its file name says
-what it records (`phase-2-proposer.md`, `item-6-deep-links.md`, `closing.md`), and
-the task's `README.md` lists the sections in order.
+A page inside a task folder other than its note is a section: `type: section` and
+`parent:` the id of the task. Its file name says what it records (`phase-2-proposer.md`,
+`item-6-deep-links.md`, `closing.md`), and the task's note lists the sections in order.
 
 ## The header
 
@@ -119,7 +122,14 @@ changes when another record contradicts it, and then `date_basis` says why.
 
 ## Indexes
 
-The `README.md` of `Tasks/`, `Experiments/`, `Research/` and `Learnings/`, and
-`CATALOG.json`, are generated by `tool/tasks/docbase.py index`; they are not edited by
-hand. `adr/README.md` is the ADR index kept by hand, and the check fails when an ADR is
-missing from it.
+`Tasks/Tasks.md`, `Research/Research.md` and `CATALOG.json` are generated by
+`tool/tasks/docbase.py index`; they are not edited by hand. `adr/adr.md` is the ADR index
+kept by hand, and the check fails when an ADR is missing from it.
+
+## Related lists
+
+Every page except an index and the changelog ends with a `## Related` list between two
+comments, written by `tool/tasks/docbase.py index` from the `relations` and `parent` of
+every header: the pages a page names and the pages that name it, as relative links. The
+header is the source; the list is how Quartz, Obsidian, Zola or a reader on GitHub follow
+the same graph, and the check fails when the list and the headers disagree.

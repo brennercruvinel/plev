@@ -145,3 +145,15 @@ release build, is.
 ## learnings
 
 - [hot reload session: what worked and what bit us](hot-reload.md)
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0007: render into an sRGB view when the surface format cannot be sRGB](../../Rendering/0007-render-into-an-srgb-view-format/0007-render-into-an-srgb-view-format.md)
+- [ADR 0018: adotamos runtime parser + override map para hot reload de plev_narrate! DSL](../0018-narrate-hot-reload/0018-narrate-hot-reload.md)
+- [ADR 0019: adotamos shader hot reload via notify file watcher sobre dylib reloading](../0019-shader-hot-reload/0019-shader-hot-reload.md)
+- [ADR 0048: view source for pixels: a control leads to its projection, a text to its literal](../0048-view-source-for-pixels/0048-view-source-for-pixels.md)
+- [hot reload session: what worked and what bit us](hot-reload.md)
+- [task-56: hot reload](../../../Tasks/task-56-hot-reload/task-56-hot-reload.md)
+- [hot reload design - plev](../../../Research/Workflows/hot-reload-design.md)
+<!-- /related -->
