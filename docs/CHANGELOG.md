@@ -12,7 +12,7 @@ relations: []
 evidence: [176dd691, 704412f1, b1e820ba]
 source: [docs/log/changelog.md, docs/log/README.md, docs/log/responsiveness-multiplatform-and-fidelity.md, reconstruction]
 source_revision: ec0a224c
-revised: 2026-10-31
+revised: 2026-11-02
 review: reviewed
 ---
 
@@ -69,6 +69,19 @@ the whole earlier history no longer exists.
 ### Recovered material
 
 The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the first technical plan, were deleted from the tree at some point and recovered from git history. Their recovered versions are historical sources; the exact paths and revisions are in their `source` field.
+
+## 2026-11-02
+
+- the archive reads as one graph in any tool (2026-11-02, PR #178): two
+  trees share nine themes, `adr/<Theme>/` for what was decided and
+  `Research/<Theme>/` for what is known, with the experiments in
+  `Research/Exploring`. Every ADR has its own folder, its learnings beside
+  it; a task, an ADR and an index each have a note named like their folder;
+  and `tool/tasks/docbase.py index` ends every page with a Related list of
+  plain links, written from the relations of the headers in both directions.
+  Obsidian, Quartz, Zola and GitHub draw the same graph from it, and
+  [TERMS.toml](TERMS.toml) says where every former path of the archive lives
+  now.
 
 ## 2026-10-31
 

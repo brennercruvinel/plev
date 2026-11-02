@@ -261,11 +261,12 @@ construindo uma raw key em vez de passar pelo caminho único do TextStyle.
 ## Docs
 
 - [docs/ATLAS.toml](docs/ATLAS.toml): a arquitetura num arquivo só. Tabelas para as máquinas, prosa para as pessoas, o diagrama do frame flow no fim.
-- [docs/](docs/README.md): o acervo, com o [changelog](docs/CHANGELOG.md) por data, as tasks, os ADRs em [docs/adr/](docs/adr/adr.md), as pesquisas e os aprendizados.
+- [docs/](docs/README.md): o acervo, com o [changelog](docs/CHANGELOG.md) por data, as [tasks](docs/Tasks/Tasks.md) (uma pasta por task), as decisões em [docs/adr/](docs/adr/adr.md) (uma pasta por ADR, com os aprendizados ao lado) e o que sabemos em [docs/Research/](docs/Research/Research.md), pelos mesmos temas dos ADRs, com os experimentos em `Research/Exploring`. Toda página termina com uma lista Related de links comuns, então Obsidian, Quartz, Zola e o GitHub desenham o mesmo grafo.
+- Ler o acervo como site: [apps/zolaviews](apps/zolaviews/README.md) (`node plev/book.mjs --serve`, Zola) ou [apps/quartzweb](apps/quartzweb/README.md) (`npx quartz build --serve`, em `localhost:8080`); ou abrir `docs/` como vault no Obsidian.
 - [docs/Research/Workflows/code-against-the-plev-engine.md](docs/Research/Workflows/code-against-the-plev-engine.md): o manual de operação, para ler antes de tocar em código de UI ou de rendering. Seus vizinhos em [docs/Research/Workflows/](docs/Research/Workflows/): validação de pixels, o target web, orquestração de agentes.
 - [docs/Research/Synthesis/generative-runtime-program.md](docs/Research/Synthesis/generative-runtime-program.md): para onde o plev vai, de engine de UI na GPU a generative interaction runtime, com o grafo de tarefas e o estado de cada uma. A tese está em [docs/Research/Synthesis/generative-runtime-thesis.md](docs/Research/Synthesis/generative-runtime-thesis.md) e as regras que todo agente segue em [docs/Research/Workflows/generative-runtime-guidelines.md](docs/Research/Workflows/generative-runtime-guidelines.md).
 - [docs/CHANGELOG.md](docs/CHANGELOG.md): o que mudou, do mais novo para o mais antigo, uma seção por data.
-- [docs/TERMS.toml](docs/TERMS.toml): os nomes da árvore, antigos e novos, crate por crate e módulo por módulo.
+- [docs/TERMS.toml](docs/TERMS.toml): os nomes da árvore, antigos e novos, crate por crate e módulo por módulo, e onde mora hoje cada caminho antigo do acervo.
 - [.devops/check/](.devops/check/): os contratos das ferramentas (lychee, nextest, typos).
 
 ## Licença
