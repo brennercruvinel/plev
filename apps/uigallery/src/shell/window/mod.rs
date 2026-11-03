@@ -17,6 +17,9 @@ pub(super) mod headless;
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub mod mirror;
 pub(super) mod pace;
+/// Two buttons over any page open the frame in Puffin and Tracy, in a
+/// panel docked in the window (task-105, the `profiler` feature).
+pub(super) mod profiler;
 /// `PLEV_RECORD=1` in a debug build: the session recorded for the
 /// inspector, as the ide records its own.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]

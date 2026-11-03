@@ -45,7 +45,18 @@ impl App {
             host.begin_frame();
             // Build the scene (includes compositor.begin_frame()), then
             // the shared frame tail.
-            self.view.render(host.compositor_mut());
+            {
+                #[cfg(feature = "profiler")]
+                engine::cpu_scope!("view.render");
+                self.view.render(host.compositor_mut());
+            }
+            {
+                #[cfg(feature = "profiler")]
+                engine::cpu_scope!("profiler.draw");
+                let size = host.logical_size();
+                self.profiler
+                    .draw(host.compositor_mut(), &self.view.theme, size);
+            }
             // the frame found a focus out of view and started the glide
             // to it: the next frames carry it (`views/compositor/reveal.rs`)
             wake = wake.merge(Wake::moving(self.view.revealing()));
@@ -152,6 +163,7 @@ impl App {
     /// frame; a print thread that is out asks for a look at its channel.
     pub(crate) fn frame_wake(&mut self, since_last: f32) -> Wake {
         let mut wake = self.view.wake(since_last).merge(self.view.print_wake());
+        wake = wake.merge(self.profiler.wake());
         wake.now |= std::mem::take(&mut self.caught_up);
         wake
     }

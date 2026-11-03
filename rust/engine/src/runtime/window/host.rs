@@ -451,6 +451,8 @@ impl WindowHost {
         if draws.is_some() {
             self.frames += 1;
         }
+        #[cfg(feature = "profiler")]
+        crate::runtime::perf::profiler::end_frame();
         draws
     }
 

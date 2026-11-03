@@ -65,6 +65,11 @@
     },
     {
      "level": 2,
+     "title": "2026-11-03",
+     "anchor": "2026-11-03"
+    },
+    {
+     "level": 2,
      "title": "2026-11-02",
      "anchor": "2026-11-02"
     },
@@ -9647,6 +9652,55 @@
      "level": 2,
      "title": "Evidence",
      "anchor": "evidence"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md",
+   "id": "task-105",
+   "title": "task-105: the frame in Puffin and Tracy, from a panel over any gallery tab",
+   "project": "plev",
+   "type": "task",
+   "status": "in-progress",
+   "date": "2026-11-03",
+   "date_basis": "text",
+   "recorded": "2026-11-03",
+   "topics": [
+    "rendering",
+    "process"
+   ],
+   "relations": [
+    "adr-0008"
+   ],
+   "source": "https://github.com/brennercruvinel/plev/issues/180",
+   "source_revision": "a6d523b8",
+   "revised": "2026-11-03",
+   "review": "pending",
+   "headings": [
+    {
+     "level": 1,
+     "title": "task-105: the frame in Puffin and Tracy, from a panel over any gallery tab",
+     "anchor": "task-105-the-frame-in-puffin-and-tracy-from-a-panel-over-any-gallery-tab"
+    },
+    {
+     "level": 2,
+     "title": "The two parts",
+     "anchor": "the-two-parts"
+    },
+    {
+     "level": 2,
+     "title": "Choices made on the way",
+     "anchor": "choices-made-on-the-way"
+    },
+    {
+     "level": 2,
+     "title": "Seen working",
+     "anchor": "seen-working"
     },
     {
      "level": 2,

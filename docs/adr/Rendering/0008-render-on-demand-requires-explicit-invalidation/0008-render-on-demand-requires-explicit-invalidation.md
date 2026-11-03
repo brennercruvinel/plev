@@ -53,4 +53,5 @@ was initially misread as "scroll not implemented".
 ## Related
 
 - [ADR 0023: official app pattern: state in structs, retained widgets, explicit invalidation](../../Structure/0023-official-app-pattern/0023-official-app-pattern.md)
+- [task-105: the frame in Puffin and Tracy, from a panel over any gallery tab](../../../Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)
 <!-- /related -->

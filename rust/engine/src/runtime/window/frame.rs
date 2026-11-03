@@ -15,7 +15,7 @@ use crate::drawing::effects::EffectProcessor;
 use crate::drawing::gpu::GpuContext;
 use crate::drawing::gpu::texture_pool::TexturePool;
 use crate::drawing::text::TextSystem;
-use crate::runtime::perf::gpu_time::FrameStamps;
+use crate::runtime::perf::gpu_time::{FrameStamps, PassStamps};
 use crate::runtime::perf::stages::{self, Stage};
 
 use super::render_passes::{
@@ -50,6 +50,8 @@ pub fn present_frame(
     clear_linear: [f32; 4],
     label: &str,
 ) -> Option<u32> {
+    #[cfg(feature = "profiler")]
+    crate::cpu_scope!("present_frame");
     // A shader saved on disk since the last frame: swap its pipeline and
     // redraw every layer, clean ones still hold the old shader's output.
     #[cfg(hot_reload)]
@@ -147,6 +149,8 @@ pub fn draw_frame(
     clear_linear: [f32; 4],
     label: &str,
 ) -> u32 {
+    #[cfg(feature = "profiler")]
+    crate::cpu_scope!("draw_frame");
     let draw = stages::span(Stage::Draw);
     compositor.resolve(&crate::drawing::compositor::ResolveResources {
         device: &gpu.device,
@@ -199,7 +203,16 @@ pub fn draw_frame(
     if let Some(timestamps) = &gpu.timestamps {
         timestamps.resolve_finished(&mut encoder);
     }
+    #[cfg_attr(feature = "profiler", allow(unused_mut))]
     let mut stamps = FrameStamps::begin(gpu.timestamps.as_ref());
+    // With the `profiler` feature wgpu-profiler times the passes instead
+    // (`perf::profiler`).
+    #[cfg(feature = "profiler")]
+    let mut passes = crate::runtime::perf::profiler::FramePasses::begin(gpu);
+    #[cfg(feature = "profiler")]
+    let mut timer = passes.as_mut().map(|p| p as &mut dyn PassStamps);
+    #[cfg(not(feature = "profiler"))]
+    let mut timer = stamps.as_mut().map(|s| s as &mut dyn PassStamps);
 
     let layer_draws = encode_layer_passes_timed(
         compositor,
@@ -210,7 +223,7 @@ pub fn draw_frame(
         clear_color,
         &dirty_layer_ids,
         &mut encoder,
-        stamps.as_mut(),
+        timer.as_mut().map(|t| &mut **t as &mut dyn PassStamps),
     );
     for id in &dirty_layer_ids {
         compositor.mark_layer_clean(*id);
@@ -223,12 +236,20 @@ pub fn draw_frame(
         target,
         &[],
         &mut encoder,
-        stamps.as_ref(),
+        timer,
     );
 
+    #[cfg(feature = "profiler")]
+    if let Some(passes) = passes.as_mut() {
+        passes.close(&mut encoder);
+    }
     gpu.queue.submit(std::iter::once(encoder.finish()));
     if let Some(stamps) = stamps {
         stamps.submitted(&gpu.queue);
+    }
+    #[cfg(feature = "profiler")]
+    if let Some(passes) = passes {
+        passes.submitted(&gpu.queue);
     }
     encode.end(|| u64::from(layer_draws + composite_draws));
     drop(draw);

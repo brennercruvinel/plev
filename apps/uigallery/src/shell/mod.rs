@@ -139,6 +139,8 @@ pub struct App {
         any(target_os = "macos", target_os = "linux", target_os = "windows")
     ))]
     source: window::source::ViewSource,
+    /// Puffin and Tracy over any page (`profiler`, task-105).
+    profiler: window::profiler::Profiler,
 }
 
 impl App {
@@ -180,6 +182,7 @@ impl App {
     /// `PLEV_TEXT_SCALE` where the app is given one (macOS has no system
     /// value: there it is the app's).
     fn launch_prefs() -> engine::styling::theme::Prefs {
+        #[cfg_attr(target_arch = "wasm32", allow(unused_mut))] // the override is native
         let mut prefs = engine::runtime::platform::prefs::read();
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(f) = std::env::var("PLEV_TEXT_SCALE")
@@ -224,6 +227,7 @@ impl App {
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
             ))]
             source: window::source::ViewSource::default(),
+            profiler: window::profiler::Profiler::default(),
         }
     }
 
@@ -324,6 +328,8 @@ impl App {
                 bottom: sa.bottom / sf,
                 left: sa.left / sf,
             });
+            // an open profiler panel takes its share of the window
+            let (lw, lh) = self.profiler.page_size(lw, lh);
             self.view.resize(lw, lh, sf);
         } else if self.is_page_window(id) {
             self.view.resize_detached(lw, lh, sf);
@@ -335,7 +341,9 @@ impl App {
     /// alone in its own window, to the whole view in the main one. `true`
     /// when a frame is needed.
     fn pointer(&mut self, id: WindowId, event: &WidgetEvent) -> bool {
-        if self.is_page_window(id) {
+        if let Some(changed) = self.profiler_event(id, event) {
+            changed
+        } else if self.is_page_window(id) {
             self.view.detached_event(event)
         } else {
             self.view.handle_event(event)
