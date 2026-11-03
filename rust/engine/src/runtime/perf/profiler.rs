@@ -13,6 +13,8 @@
 //! device recovered in place gets a new one.
 
 use std::cell::RefCell;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 #[doc(hidden)]
 pub use puffin as __puffin;
@@ -53,33 +55,96 @@ use wgpu_profiler::{GpuProfiler, GpuProfilerQuery, GpuProfilerSettings};
 use super::gpu_time::PassStamps;
 use crate::drawing::gpu::GpuContext;
 
+/// Profilers a frame can take, one per frame in flight: a profiler is
+/// busy from its frame's submit until the GPU has finished that frame.
+const POOL: usize = 4;
+
 thread_local! {
-    static PROFILER: RefCell<Option<(wgpu::Device, GpuProfiler)>> = const { RefCell::new(None) };
+    static PROFILERS: RefCell<Option<Pool>> = const { RefCell::new(None) };
 }
 
-/// One frame's passes timed by wgpu-profiler: taken out of the thread's
-/// slot by [`FramePasses::begin`], back in it after [`FramePasses::submitted`].
-pub(crate) struct FramePasses {
+/// The profilers of one device.
+struct Pool {
     device: wgpu::Device,
+    /// Free to time a frame.
+    idle: Vec<GpuProfiler>,
+    /// A frame submitted, its queries closed and not resolved yet: Metal
+    /// writes a pass's end only once the pass's fragments are done, and a
+    /// resolve before that (in the frame's command buffer, or the next
+    /// one) reads zero. They are resolved once the GPU says the frame is
+    /// done, as `perf::gpu_time` does with the engine's own timestamps.
+    waiting: Vec<(GpuProfiler, Arc<AtomicBool>)>,
+    made: usize,
+}
+
+impl Pool {
+    /// The frames the GPU finished are resolved and ended, and every
+    /// frame whose timings came back goes out: Tracy takes it inside
+    /// wgpu-profiler, Puffin here while its scopes are on.
+    fn pump(&mut self, queue: &wgpu::Queue) {
+        let (done, busy): (Vec<_>, Vec<_>) = std::mem::take(&mut self.waiting)
+            .into_iter()
+            .partition(|(_, done)| done.load(Ordering::Acquire));
+        self.waiting = busy;
+        for (mut profiler, _) in done {
+            let mut encoder = self
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("profiler_resolve"),
+                });
+            profiler.resolve_queries(&mut encoder);
+            queue.submit(std::iter::once(encoder.finish()));
+            if let Err(e) = profiler.end_frame() {
+                log::warn!("profiler: {e}");
+            }
+            self.idle.push(profiler);
+        }
+        let period = queue.get_timestamp_period();
+        for profiler in &mut self.idle {
+            while let Some(results) = profiler.process_finished_frame(period) {
+                if puffin::are_scopes_on() {
+                    let mut puffin = puffin::GlobalProfiler::lock();
+                    wgpu_profiler::puffin::output_frame_to_puffin(&mut puffin, &results);
+                }
+            }
+        }
+    }
+}
+
+/// One frame's passes timed by wgpu-profiler, on a profiler of the pool
+/// that [`FramePasses::submitted`] hands back to it.
+pub(crate) struct FramePasses {
     profiler: GpuProfiler,
     queries: Vec<GpuProfilerQuery>,
     layers: u32,
 }
 
 impl FramePasses {
-    /// The profiler of `gpu`'s device, made on its first frame; `None`
-    /// when wgpu-profiler refuses the settings.
+    /// A free profiler of `gpu`'s device, made while the pool has room;
+    /// `None` when every one is busy (the frame goes untimed) or
+    /// wgpu-profiler refuses the settings.
     pub(crate) fn begin(gpu: &GpuContext) -> Option<Self> {
-        let kept = PROFILER
-            .with_borrow_mut(Option::take)
-            .filter(|(device, _)| *device == gpu.device);
-        let (device, profiler) = match kept {
-            Some(kept) => kept,
-            None => (gpu.device.clone(), new_profiler(gpu)?),
+        let mut pool = PROFILERS
+            .take()
+            .filter(|pool| pool.device == gpu.device)
+            .unwrap_or_else(|| Pool {
+                device: gpu.device.clone(),
+                idle: Vec::new(),
+                waiting: Vec::new(),
+                made: 0,
+            });
+        pool.pump(&gpu.queue);
+        let profiler = match pool.idle.pop() {
+            Some(profiler) => Some(profiler),
+            None if pool.made < POOL => {
+                pool.made += 1;
+                new_profiler(gpu)
+            }
+            None => None,
         };
+        PROFILERS.set(Some(pool));
         Some(Self {
-            device,
-            profiler,
+            profiler: profiler?,
             queries: Vec::new(),
             layers: 0,
         })
@@ -95,31 +160,24 @@ impl FramePasses {
         self.queries.last()?.render_pass_timestamp_writes()
     }
 
-    /// Before the encoder finishes: every pass closed, the queries
-    /// resolved into the frame's command buffer.
+    /// Before the encoder finishes: every pass's query closed.
     pub(crate) fn close(&mut self, encoder: &mut wgpu::CommandEncoder) {
         for query in self.queries.drain(..) {
             self.profiler.end_query(encoder, query);
         }
-        self.profiler.resolve_queries(encoder);
     }
 
-    /// After the submit: the GPU's frame ends, and the oldest finished one
-    /// goes out (Tracy takes it inside wgpu-profiler; Puffin here).
-    pub(crate) fn submitted(mut self, queue: &wgpu::Queue) {
-        if let Err(e) = self.profiler.end_frame() {
-            log::warn!("profiler: {e}");
-        }
-        let finished = self
-            .profiler
-            .process_finished_frame(queue.get_timestamp_period());
-        if let Some(results) = finished.filter(|_| puffin::are_scopes_on()) {
-            wgpu_profiler::puffin::output_frame_to_puffin(
-                &mut puffin::GlobalProfiler::lock(),
-                &results,
-            );
-        }
-        PROFILER.with_borrow_mut(|slot| *slot = Some((self.device, self.profiler)));
+    /// After the frame's submit: the profiler waits in the pool until the
+    /// GPU has done the work `queue` has so far.
+    pub(crate) fn submitted(self, queue: &wgpu::Queue) {
+        let done = Arc::new(AtomicBool::new(false));
+        let flag = Arc::clone(&done);
+        queue.on_submitted_work_done(move || flag.store(true, Ordering::Release));
+        PROFILERS.with_borrow_mut(|pool| {
+            if let Some(pool) = pool {
+                pool.waiting.push((self.profiler, done));
+            }
+        });
     }
 }
 
