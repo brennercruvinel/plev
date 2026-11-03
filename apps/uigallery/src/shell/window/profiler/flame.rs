@@ -39,6 +39,15 @@ fn cpu_ns(frame: &FrameData) -> i64 {
     cpu_span(frame).map_or(0, |(a, b)| b - a)
 }
 
+
+
+/// The name of a scope id, or an empty string.
+fn view_scope_name(view: &FrameView, id: &puffin::ScopeId) -> String {
+    view.scope_collection()
+        .fetch_by_id(id)
+        .map_or_else(String::new, |d| d.name().to_string())
+}
+
 pub(super) struct Recorder {
     view: GlobalFrameView,
 }
@@ -55,11 +64,15 @@ impl Recorder {
     /// "Puffin · frame 812 · 3.41 ms", the latest frame's.
     pub(super) fn title(&self) -> String {
         match self.view.lock().latest_frame() {
-            Some(f) => format!(
-                "Puffin · frame {} · CPU {:.2} ms",
-                f.frame_index(),
-                cpu_ns(&f) as f64 / 1e6
-            ),
+            Some(f) => {
+                let ms = cpu_ns(&f) as f64 / 1e6;
+                format!(
+                    "Puffin · frame {} · CPU {:.2} ms · {:.0}% of 16.6 ms",
+                    f.frame_index(),
+                    ms,
+                    ms / 16.666 * 100.0
+                )
+            }
             None => "Puffin".to_owned(),
         }
     }
@@ -99,6 +112,42 @@ impl Recorder {
                 rounded_rect(x, body.y + strip - bh, w, bh, 0.0, color),
             );
         }
+        // summary: total, budget, hottest scope, peak over the bars
+        let peak_ms = frames
+            .iter()
+            .map(|f| cpu_ns(f))
+            .max()
+            .unwrap_or(0) as f64
+            / 1e6;
+        let mut hottest: Option<(String, f64)> = None;
+        #[allow(clippy::match_result_ok)]
+        if let Some(unpacked_peek) = latest.unpacked().ok() {
+            for stream in unpacked_peek.thread_streams.values() {
+                if let Ok(top) = Reader::from_start(&stream.stream).read_top_scopes() {
+                    for sc in top {
+                        let dur = sc.record.duration_ns as f64 / 1e6;
+                        if hottest.as_ref().is_none_or(|(_, d)| dur > *d) {
+                            let name = view_scope_name(&view, &sc.id);
+                            hottest = Some((name, dur));
+                        }
+                    }
+                }
+            }
+        }
+        let mut summary_y = body.y + strip + theme.spacing.sm;
+        let mut summary = format!(
+            "CPU {:.2} ms · {:.0}% of 16.6 ms · peak {:.2} ms / {} bars",
+            cpu_ns(latest) as f64 / 1e6,
+            cpu_ns(latest) as f64 / 1e6 / 16.666 * 100.0,
+            peak_ms,
+            frames.len()
+        );
+        if let Some((name, dur)) = &hottest {
+            summary = format!("{summary} · hottest: {name} {dur:.2} ms");
+        }
+        text(c, layer, &summary, body.x, summary_y, body.w, mid, &style);
+        summary_y += line + theme.spacing.sm;
+
         // the latest frame, thread by thread
         let Some(unpacked) = latest.unpacked().ok() else {
             return;
@@ -108,7 +157,7 @@ impl Recorder {
         let (cpu_start, cpu_end) = cpu_span(latest).unwrap_or_default();
         let px_per_ns = lane.w / (cpu_end - cpu_start).max(1) as f32;
         let row = line + 4.0;
-        let mut y = body.y + strip + theme.spacing.sm;
+        let mut y = summary_y;
         for (thread, stream) in &unpacked.thread_streams {
             if y + row > body.bottom() {
                 break;
