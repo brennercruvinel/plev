@@ -8,6 +8,8 @@
 
 use engine::drawing::compositor::{Compositor, LayerId};
 use engine::styling::theme::Theme;
+use engine::runtime::perf::stages::{Stage, StageCost};
+use engine::runtime::perf::stages::StageFrame;
 use engine::widgets::prelude::{Rect, rounded_rect};
 use puffin::{FrameData, FrameView, GlobalFrameView, Reader, Scope, Stream};
 
@@ -50,6 +52,7 @@ fn view_scope_name(view: &FrameView, id: &puffin::ScopeId) -> String {
 
 pub(super) struct Recorder {
     view: GlobalFrameView,
+    stage_frame: Option<StageFrame>,
 }
 
 impl Recorder {
@@ -58,7 +61,13 @@ impl Recorder {
         puffin::set_scopes_on(true);
         Self {
             view: GlobalFrameView::default(),
+            stage_frame: None,
         }
+    }
+
+    /// Feeds the latest 22-stage frame, captured by the app's frame loop.
+    pub(super) fn set_stage_frame(&mut self, frame: StageFrame) {
+        self.stage_frame = Some(frame);
     }
 
     /// "Puffin · frame 812 · 3.41 ms", the latest frame's.
@@ -193,6 +202,33 @@ impl Recorder {
             });
             y += row * depth.max(1) as f32 + theme.spacing.xs;
         }
+        // the 22 stages of the last frame, heaviest first (stage costs come
+        // from engine::runtime::perf::stages, taken by the frame loop)
+        if let Some(stage_frame) = &self.stage_frame {
+            if !stage_frame.is_empty() {
+                let mut costs: Vec<(Stage, StageCost)> = Stage::ALL
+                    .iter()
+                    .map(|&st| (st, stage_frame.get(st)))
+                    .filter(|(_, c)| c.calls > 0)
+                    .collect();
+                costs.sort_by_key(|e| std::cmp::Reverse(e.1.nanos));
+                let stage_line = caption_style(theme).line_height;
+                for (st, cost) in costs.into_iter().take(8) {
+                    if y + stage_line > body.bottom() { break; }
+                    let ms = cost.nanos as f64 / 1e6;
+                    let line = format!(
+                        "{} {:.2} ms ({} calls, {} items)",
+                        st.name(),
+                        ms,
+                        cost.calls,
+                        cost.items
+                    );
+                    text(c, layer, &line, body.x, y, body.w, mid, &style);
+                    y += stage_line + 2.0;
+                }
+            }
+        }
+
     }
 }
 

@@ -39,6 +39,8 @@ impl App {
         );
         let clear = self.view.theme.colors.bg.to_linear_array();
         if Some(id) == self.main {
+            #[cfg(feature = "profiler")]
+            engine::runtime::perf::stages::enable(self.profiler.puffin_open());
             let Some(host) = self.windows.get_mut(id) else {
                 return;
             };
@@ -67,6 +69,8 @@ impl App {
             ))]
             self.source
                 .draw(id, host.compositor_mut(), &self.view.theme);
+            #[cfg(feature = "profiler")]
+            self.profiler.set_stage_frame(engine::runtime::perf::stages::take());
             host.present(clear, "showcase_frame");
             // The tree of this frame, placed by the bindings it just drew;
             // what a reader is shown (the page, the toasts and the overlay

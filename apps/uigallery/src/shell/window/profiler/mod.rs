@@ -239,6 +239,19 @@ impl Profiler {
         }
     }
 
+    /// The Puffin part is open.
+    pub(crate) fn puffin_open(&self) -> bool {
+        self.open[0]
+    }
+
+    /// Last frame's 22 stages, for the Puffin panel.
+    #[cfg(feature = "profiler")]
+    pub(crate) fn set_stage_frame(&mut self, frame: engine::runtime::perf::stages::StageFrame) {
+        if let Some(frames) = &mut self.frames {
+            frames.set_stage_frame(frame);
+        }
+    }
+
     /// Over the frame the view built, in the main window `w` by `h`.
     pub(crate) fn draw(&mut self, c: &mut Compositor, theme: &Theme, (w, h): (f32, f32)) {
         if !ENABLED {
