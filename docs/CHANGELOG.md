@@ -70,6 +70,15 @@ the whole earlier history no longer exists.
 
 The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the first technical plan, were deleted from the tree at some point and recovered from git history. Their recovered versions are historical sources; the exact paths and revisions are in their `source` field.
 
+## 2026-11-03
+
+- the frame in Puffin and Tracy from a panel over any gallery tab, a POC
+  behind the `profiler` and `tracy` features
+  ([task-105](Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)):
+  wgpu-profiler times each pass of the engine's frame on the GPU and
+  `engine::cpu_scope!` marks the CPU; the gallery draws Puffin's frames in
+  the panel, and Tracy reads them in its own window.
+
 ## 2026-11-02
 
 - the archive reads as one graph in any tool (2026-11-02, PR #178): two

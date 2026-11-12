@@ -245,6 +245,36 @@ impl<'a> FrameStamps<'a> {
     }
 }
 
+/// Who hands a frame's passes their timestamp writes, in the order the
+/// passes are encoded: the engine's own [`FrameStamps`], or wgpu-profiler
+/// with the `profiler` feature (`perf::profiler`).
+pub(crate) trait PassStamps {
+    fn layer(
+        &mut self,
+        encoder: &mut wgpu::CommandEncoder,
+    ) -> Option<wgpu::RenderPassTimestampWrites<'_>>;
+    fn composite(
+        &mut self,
+        encoder: &mut wgpu::CommandEncoder,
+    ) -> Option<wgpu::RenderPassTimestampWrites<'_>>;
+}
+
+impl PassStamps for FrameStamps<'_> {
+    fn layer(
+        &mut self,
+        _: &mut wgpu::CommandEncoder,
+    ) -> Option<wgpu::RenderPassTimestampWrites<'_>> {
+        self.layer_pass()
+    }
+
+    fn composite(
+        &mut self,
+        _: &mut wgpu::CommandEncoder,
+    ) -> Option<wgpu::RenderPassTimestampWrites<'_>> {
+        Some(self.composite_pass())
+    }
+}
+
 /// What one frame's timestamps say, in nanoseconds, cut along the GPU's
 /// timeline rather than per pass: a tile-based GPU runs the composite's
 /// vertex stage alongside the layer passes and holds its fragments until

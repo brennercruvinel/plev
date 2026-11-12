@@ -15,6 +15,11 @@ use crate::views::ShowcaseView;
 /// Desktop entry: build the winit event loop and run the showcase.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 pub fn run() {
+    // The inspector's Tracy (task-105): its scopes need a running client
+    // before the first frame; it collects only while the Tracy GUI is
+    // connected (`ondemand`).
+    #[cfg(feature = "tracy")]
+    tracy_client::Client::start();
     // A recording says where its files go: the gallery's own info lines
     // show by default when it records. Off unless `PLEV_RECORD=1` in a
     // debug build; nothing is created then.

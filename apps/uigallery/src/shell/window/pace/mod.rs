@@ -39,13 +39,26 @@ impl App {
         );
         let clear = self.view.theme.colors.bg.to_linear_array();
         if Some(id) == self.main {
+            #[cfg(feature = "profiler")]
+            engine::runtime::perf::stages::enable(self.profiler.puffin_open());
             let Some(host) = self.windows.get_mut(id) else {
                 return;
             };
             host.begin_frame();
             // Build the scene (includes compositor.begin_frame()), then
             // the shared frame tail.
-            self.view.render(host.compositor_mut());
+            {
+                #[cfg(feature = "profiler")]
+                engine::cpu_scope!("view.render");
+                self.view.render(host.compositor_mut());
+            }
+            {
+                #[cfg(feature = "profiler")]
+                engine::cpu_scope!("profiler.draw");
+                let size = host.logical_size();
+                self.profiler
+                    .draw(host.compositor_mut(), &self.view.theme, size);
+            }
             // the frame found a focus out of view and started the glide
             // to it: the next frames carry it (`views/compositor/reveal.rs`)
             wake = wake.merge(Wake::moving(self.view.revealing()));
@@ -56,6 +69,8 @@ impl App {
             ))]
             self.source
                 .draw(id, host.compositor_mut(), &self.view.theme);
+            #[cfg(feature = "profiler")]
+            self.profiler.set_stage_frame(engine::runtime::perf::stages::take());
             host.present(clear, "showcase_frame");
             // The tree of this frame, placed by the bindings it just drew;
             // what a reader is shown (the page, the toasts and the overlay
@@ -152,6 +167,7 @@ impl App {
     /// frame; a print thread that is out asks for a look at its channel.
     pub(crate) fn frame_wake(&mut self, since_last: f32) -> Wake {
         let mut wake = self.view.wake(since_last).merge(self.view.print_wake());
+        wake = wake.merge(self.profiler.wake());
         wake.now |= std::mem::take(&mut self.caught_up);
         wake
     }

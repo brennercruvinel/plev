@@ -15,6 +15,8 @@
 pub(crate) mod gpu_time;
 mod hud;
 mod memory;
+#[cfg(feature = "profiler")]
+pub mod profiler;
 pub mod stages;
 
 mod samples;

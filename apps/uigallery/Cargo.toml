@@ -25,6 +25,16 @@ path = "src/main.rs"
 name = "uigallery-web"
 path = "src/bin/web.rs"
 
+# task-105 POC, the inspector: two small buttons over any page open the
+# frame in a panel docked in the window. `profiler` is Puffin's part (the
+# engine's scopes and wgpu-profiler's GPU passes, drawn here, on the
+# desktop and the web); `tracy` adds Tracy's client, read in the Tracy
+# GUI (desktop only). Off by default: nothing of either enters the
+# gallery, its tests or the workspace's other members.
+[features]
+profiler = ["engine/profiler", "dep:puffin"]
+tracy = ["profiler", "engine/profiler-tracy", "dep:tracy-client"]
+
 [dependencies]
 engine.workspace = true
 editor.workspace = true
@@ -45,6 +55,10 @@ unions.workspace = true
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger.workspace = true
 pollster.workspace = true
+# `profiler`: the frames the inspector draws; `tracy`: the client the
+# Tracy GUI connects to.
+puffin = { workspace = true, optional = true }
+tracy-client = { workspace = true, optional = true }
 
 # The Git tab embeds the idestudio workspace over a real git worker: desktop only
 # (the worker needs a thread and the git CLI).
@@ -93,6 +107,8 @@ wasm-bindgen.workspace = true
 wasm-bindgen-futures.workspace = true
 console_log.workspace = true
 console_error_panic_hook.workspace = true
+# `profiler`: the frames the inspector draws, on the page's clock.
+puffin = { workspace = true, optional = true, features = ["web"] }
 
 # Android pulls the GameActivity winit backend (via the engine feature) and a
 # logcat-backed logger; the cdylib above is what gets packaged into the APK.

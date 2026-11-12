@@ -298,16 +298,22 @@ impl GpuContext {
         })
     }
 
-    /// No feature, unless `config` asks for GPU timestamps and the adapter
-    /// has them.
+    /// No feature, unless `config` asks for GPU timestamps (or the
+    /// `profiler` feature is on, for wgpu-profiler) and the adapter has
+    /// them.
     pub(super) fn device_descriptor(
         adapter: &wgpu::Adapter,
         config: &RenderConfig,
     ) -> wgpu::DeviceDescriptor<'static> {
         let timestamps = crate::runtime::perf::gpu_time::device_features(
             adapter.features(),
-            config.gpu_timestamps,
+            config.gpu_timestamps || cfg!(feature = "profiler"),
         );
+        // Tracy's GPU context syncs its clock with a timestamp written on
+        // the encoder, outside a pass (`perf::profiler`).
+        #[cfg(feature = "profiler")]
+        let timestamps =
+            timestamps | (adapter.features() & wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS);
         let (required_features, required_limits) = match config.compute {
             None => (timestamps, wgpu::Limits::default()),
             Some(asked) => {
