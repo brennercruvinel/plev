@@ -431,6 +431,11 @@ pub(super) fn grow_atlas(
         new_size,
         new_size
     );
+    crate::message!(
+        "glyph atlas grew from {0}x{0} to {1}x{1}",
+        sys.atlas_size,
+        new_size
+    );
 
     let (new_texture, new_view) = create_atlas_texture(device, new_size);
 

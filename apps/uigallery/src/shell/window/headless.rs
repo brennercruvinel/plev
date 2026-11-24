@@ -9,6 +9,9 @@ use crate::views::ShowcaseView;
 use accord::Snapshot;
 use engine::drawing::compositor::Compositor;
 use engine::drawing::headless::{Frame, HeadlessError, Renderer, SvgExport, Viewport};
+use engine::runtime::dev::{DevMode, Dock, Follow, Tab};
+use engine::runtime::perf::Recorder;
+use engine::runtime::perf::stages::{self, Stage};
 use engine::styling::theme::Prefs;
 
 /// Animation steps a headless frame may take before it is drawn: the
@@ -19,6 +22,9 @@ const SETTLE_STEPS: usize = 120;
 
 /// One animation step of a headless frame: a 60 Hz display.
 const SETTLE_DT: f32 = 1.0 / 60.0;
+
+/// Frames a headless dev mode draws and records before the one it reads.
+const DEV_FRAMES: u64 = 48;
 
 /// Why a page could not be staged, drawn, exported or projected.
 #[derive(Debug)]
@@ -177,6 +183,73 @@ impl StagedPage {
     pub fn render(&mut self, renderer: &mut Renderer) -> Result<Frame, RenderError> {
         let clear = self.view.theme.colors.bg.to_linear_array();
         Ok(renderer.render(&mut self.compositor, clear)?)
+    }
+
+    /// The frame with the dev mode's panel open on `tab`, as the window
+    /// shows it (`engine::runtime::dev`): the page laid out in its share
+    /// of the viewport, [`DEV_FRAMES`] frames drawn and recorded so the
+    /// panel has a history and the GPU's timestamps of the first ones are
+    /// read back, the last one read. The panel shows the slowest frame
+    /// recorded, which here is the first: the whole scene drawn from
+    /// nothing. The Inspect view shows the first control the page binds.
+    /// `renderer` wants `RenderConfig::gpu_timestamps` for the GPU's own
+    /// times.
+    pub fn render_dev(
+        &mut self,
+        renderer: &mut Renderer,
+        tab: Tab,
+        dock: Dock,
+    ) -> Result<Frame, RenderError> {
+        let viewport = renderer.viewport();
+        let window = (viewport.width, viewport.height);
+        let mut dev = DevMode::new(true);
+        dev.set_open(true);
+        dev.set_tab(tab);
+        dev.set_dock(dock);
+        dev.set_follow(Follow::Slowest);
+        let (page_w, page_h) = dev.page_size(window.0, window.1);
+        self.view.resize(page_w, page_h, viewport.scale);
+        let clear = self.view.theme.colors.bg.to_linear_array();
+        let mut recorder = Recorder::new();
+        recorder.set_on(true);
+        engine::message!("{} staged at {page_w}x{page_h}", self.title());
+        for index in 0..DEV_FRAMES {
+            let frame = stages::span(Stage::Frame);
+            {
+                engine::zone!("tick");
+                let _tick = stages::span(Stage::Tick);
+                let _ = self.view.tick(SETTLE_DT);
+            }
+            {
+                engine::zone!("scene build");
+                let build = stages::span(Stage::SceneBuild);
+                self.view.render(&mut self.compositor);
+                let layers = self.compositor.layers();
+                build.end(|| layers.iter().map(|l| l.nodes().len() as u64).sum());
+            }
+            engine::plot!("controls bound", self.compositor.bindings().count());
+            if index == 0 && tab == Tab::Inspect {
+                let first = self.compositor.bindings().next();
+                dev.pick(first.map(|(id, _)| id.clone()));
+            }
+            let snapshot = self.view.semantics();
+            {
+                engine::zone!("dev mode");
+                dev.draw(
+                    &mut self.compositor,
+                    &self.view.theme,
+                    window,
+                    &recorder,
+                    snapshot.as_ref(),
+                );
+            }
+            self.compositor.set_frame_index(index);
+            renderer.draw(&mut self.compositor, clear);
+            drop(frame);
+            renderer.record(&mut recorder, &self.compositor, index);
+        }
+        recorder.set_on(false);
+        Ok(renderer.read()?)
     }
 
     /// The frame as SVG, every approximation on the report. The glyphs

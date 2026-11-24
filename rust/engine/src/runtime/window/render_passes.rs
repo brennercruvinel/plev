@@ -1,7 +1,7 @@
 use crate::drawing::compositor::{
     ClipRect, DrawCommand, DrawKind, LayerEffect, clip_to_scissor, intersect_scissors,
 };
-use crate::runtime::perf::gpu_time::PassStamps;
+use crate::runtime::perf::gpu_time::FrameStamps;
 
 /// Scissor for one draw command: the command's clip (intersection of the
 /// PushClip stack, in scene coordinates scaled to physical pixels by
@@ -306,13 +306,15 @@ pub fn encode_layer_passes(
         dirty_layer_ids,
         encoder,
         None,
+        None,
     )
 }
 
 /// [`encode_layer_passes`] with the frame's timestamps: every layer pass
 /// (a pass resumed after a backdrop is one more) writes a timestamp at
-/// its start and end while `stamps` has room.
-#[allow(clippy::too_many_arguments)] // the public one's, plus the stamps
+/// its start and end while `stamps` has room. `drawn` gets each layer
+/// encoded, in order, with the draw calls its passes issued.
+#[allow(clippy::too_many_arguments)] // the public one's, plus the records
 pub(crate) fn encode_layer_passes_timed(
     compositor: &crate::drawing::compositor::Compositor,
     gpu: &crate::drawing::gpu::GpuContext,
@@ -322,7 +324,8 @@ pub(crate) fn encode_layer_passes_timed(
     background: wgpu::Color,
     dirty_layer_ids: &[crate::drawing::compositor::LayerId],
     encoder: &mut wgpu::CommandEncoder,
-    mut stamps: Option<&mut dyn PassStamps>,
+    mut stamps: Option<&mut FrameStamps<'_>>,
+    mut drawn: Option<&mut Vec<(crate::drawing::compositor::LayerId, u32)>>,
 ) -> u32 {
     let vw = gpu.surface_config.width;
     let vh = gpu.surface_config.height;
@@ -341,8 +344,8 @@ pub(crate) fn encode_layer_passes_timed(
         let Some((view, resolve_target)) = layer.render_attachment() else {
             continue;
         };
+        let draws_before = draw_calls;
 
-        let writes = stamps.as_deref_mut().and_then(|s| s.layer(encoder));
         let mut pass = begin_layer_pass(
             encoder,
             view,
@@ -353,7 +356,7 @@ pub(crate) fn encode_layer_passes_timed(
                 b: 0.0,
                 a: 0.0,
             }),
-            writes,
+            stamps.as_deref_mut().and_then(|s| s.layer_pass(*layer_id)),
         );
 
         let base_scissor = layer
@@ -423,9 +426,13 @@ pub(crate) fn encode_layer_passes_timed(
 
                     // Resume on top of the existing content and draw the
                     // frosted rounded rect.
-                    let writes = stamps.as_deref_mut().and_then(|s| s.layer(encoder));
-                    pass =
-                        begin_layer_pass(encoder, view, resolve_target, wgpu::LoadOp::Load, writes);
+                    pass = begin_layer_pass(
+                        encoder,
+                        view,
+                        resolve_target,
+                        wgpu::LoadOp::Load,
+                        stamps.as_deref_mut().and_then(|s| s.layer_pass(*layer_id)),
+                    );
                     pass.set_pipeline(&gpu.backdrop_pipeline);
                     pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
                     pass.set_bind_group(1, &backdrop_bg, &[]);
@@ -437,6 +444,9 @@ pub(crate) fn encode_layer_passes_timed(
                     bound = None;
                 }
             }
+        }
+        if let Some(drawn) = drawn.as_deref_mut() {
+            drawn.push((*layer_id, draw_calls - draws_before));
         }
     }
     draw_calls
@@ -578,9 +588,8 @@ pub(crate) fn encode_composite_pass_timed(
     surface_view: &wgpu::TextureView,
     effect_results: &[(crate::drawing::compositor::LayerId, wgpu::BindGroup)],
     encoder: &mut wgpu::CommandEncoder,
-    stamps: Option<&mut dyn PassStamps>,
+    stamps: Option<&FrameStamps<'_>>,
 ) -> u32 {
-    let writes = stamps.and_then(|s| s.composite(encoder));
     let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
         label: Some("composite_pass"),
         color_attachments: &[Some(wgpu::RenderPassColorAttachment {
@@ -593,7 +602,7 @@ pub(crate) fn encode_composite_pass_timed(
             depth_slice: None,
         })],
         depth_stencil_attachment: None,
-        timestamp_writes: writes,
+        timestamp_writes: stamps.map(FrameStamps::composite_pass),
         occlusion_query_set: None,
         multiview_mask: None,
     });

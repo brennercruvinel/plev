@@ -132,6 +132,9 @@ pub struct App {
     /// Where the app's links come from (`links`; `None` before the main
     /// window is up).
     links: Option<Box<dyn engine::runtime::platform::links::LinkSource>>,
+    /// The dev mode over any page (`engine::runtime::dev`): there when
+    /// the launch has `PLEV_DEV=1`.
+    dev: engine::runtime::dev::DevMode,
     /// View source (`source`): a cmd+click taking the button until it is
     /// released, a literal edited in place.
     #[cfg(all(
@@ -139,8 +142,6 @@ pub struct App {
         any(target_os = "macos", target_os = "linux", target_os = "windows")
     ))]
     source: window::source::ViewSource,
-    /// Puffin and Tracy over any page (`profiler`, task-105).
-    profiler: window::profiler::Profiler,
 }
 
 impl App {
@@ -222,12 +223,12 @@ impl App {
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             focus: None,
             links: None,
+            dev: engine::runtime::dev::DevMode::from_env(),
             #[cfg(all(
                 debug_assertions,
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
             ))]
             source: window::source::ViewSource::default(),
-            profiler: window::profiler::Profiler::default(),
         }
     }
 
@@ -328,8 +329,8 @@ impl App {
                 bottom: sa.bottom / sf,
                 left: sa.left / sf,
             });
-            // an open profiler panel takes its share of the window
-            let (lw, lh) = self.profiler.page_size(lw, lh);
+            // the open dev mode takes its share of the window
+            let (lw, lh) = self.dev.page_size(lw, lh);
             self.view.resize(lw, lh, sf);
         } else if self.is_page_window(id) {
             self.view.resize_detached(lw, lh, sf);
@@ -341,13 +342,34 @@ impl App {
     /// alone in its own window, to the whole view in the main one. `true`
     /// when a frame is needed.
     fn pointer(&mut self, id: WindowId, event: &WidgetEvent) -> bool {
-        if let Some(changed) = self.profiler_event(id, event) {
+        if let Some(changed) = self.dev_event(id, event) {
             changed
         } else if self.is_page_window(id) {
             self.view.detached_event(event)
         } else {
             self.view.handle_event(event)
         }
+    }
+
+    /// A pointer event in the main window for the dev mode first; `Some`
+    /// with whether a frame is needed when it kept the event from the
+    /// page. A panel that opened, closed or moved resizes the page.
+    fn dev_event(&mut self, id: WindowId, event: &WidgetEvent) -> Option<bool> {
+        if !self.dev.is_available() || Some(id) != self.main {
+            return None;
+        }
+        let host = self.windows.get(id)?;
+        let (w, h) = host.logical_size();
+        let took = self
+            .dev
+            .event(event, w, h, &self.view.theme, host.compositor());
+        if took.resized {
+            self.viewport_changed(id);
+        }
+        if took.changed {
+            self.invalidate_in(id);
+        }
+        took.taken.then_some(took.changed)
     }
 
     /// What agents asked through the port, served on this thread; a frame
@@ -446,6 +468,19 @@ impl ApplicationHandler<UserEvent> for App {
 
         // Native: the window and its device (blocking, as before). Wasm:
         // the window alone, the device below.
+        // the dev mode reads the GPU's own times: its device asks for the
+        // timestamps, which no other launch does
+        #[cfg(not(target_arch = "wasm32"))]
+        let id = {
+            let config = engine::drawing::gpu::RenderConfig {
+                gpu_timestamps: self.dev.is_available(),
+                ..Default::default()
+            };
+            self.windows
+                .open_with_config(event_loop, attrs, config)
+                .unwrap()
+        };
+        #[cfg(target_arch = "wasm32")]
         let id = self.windows.open(event_loop, attrs).unwrap();
         self.main = Some(id);
         // read on the desktop and the web only; mobile just checks it opened

@@ -114,3 +114,154 @@ fn a_catch_up_that_changes_nothing_asks_for_no_frame() {
     assert!(!app.caught_up);
     assert_eq!(app.frame_wake(TURN), Wake::idle());
 }
+
+/// The dev mode in the window, without a platform window: the shell's own
+/// pointer and frame paths (`App::pointer`, `App::main_frame`) against a
+/// host that draws into a texture. Each test skips where no GPU adapter
+/// answers.
+mod dev {
+    use engine::drawing::gpu::RenderConfig;
+    use engine::runtime::dev::DevMode;
+    use engine::runtime::window::WindowHost;
+    use engine::widgets::prelude::{Button, ButtonSize, WidgetEvent};
+    use winit::window::WindowId;
+
+    use super::{App, TURN};
+    use crate::views::ShowcaseView;
+
+    const WINDOW: (u32, u32) = (1280, 800);
+
+    /// A pixel of the window's corner, where the page draws nothing and
+    /// the open panel does.
+    const CORNER: (u32, u32) = (WINDOW.0 - 4, WINDOW.1 - 4);
+
+    /// The shell around the Todo page, launched with a dev mode or
+    /// without (`dev`), in a window that draws into a texture and times
+    /// its passes on the GPU.
+    fn windowed(dev: bool) -> Option<(App, WindowId)> {
+        let config = RenderConfig {
+            gpu_timestamps: true,
+            ..RenderConfig::default()
+        };
+        let host = WindowHost::headless(WINDOW.0, WINDOW.1, 1.0, config)?;
+        let mut app = App::with_view(ShowcaseView::new(WINDOW.0 as f32, WINDOW.1 as f32));
+        app.view.jump_to_page("Todo");
+        app.dev = DevMode::new(dev);
+        let id = WindowId::dummy();
+        app.main = Some(id);
+        app.windows.insert(id, host);
+        Some((app, id))
+    }
+
+    /// One frame of the main window, as the loop draws it.
+    fn frame(app: &mut App, id: WindowId) {
+        let wake = app.frame_wake(TURN);
+        let clear = app.view.theme.colors.bg.to_linear_array();
+        app.main_frame(id, wake, clear)
+            .expect("the window is there");
+    }
+
+    /// A click on the "Dev" button where the dev mode puts it: the bottom
+    /// center of the page, a large space above its edge.
+    fn press_dev(app: &mut App, id: WindowId) {
+        let theme = &app.view.theme;
+        let button = Button::new("Dev").size(ButtonSize::Sm);
+        let x = app.view.width / 2.0;
+        let y = app.view.height - theme.spacing.lg - button.preferred_size(theme).1 / 2.0;
+        for event in [
+            WidgetEvent::MouseMove { x, y },
+            WidgetEvent::MouseDown { x, y },
+            WidgetEvent::MouseUp { x, y },
+        ] {
+            app.pointer(id, &event);
+        }
+    }
+
+    fn corner(app: &App, id: WindowId) -> Option<[u8; 4]> {
+        let host = app.windows.get(id).expect("the window is there");
+        let shot = host.read().expect("the frame reads back");
+        shot.pixel(CORNER.0, CORNER.1)
+    }
+
+    #[test]
+    fn the_dev_button_opens_the_panel_in_the_window_and_the_panel_reads_its_frames() {
+        let Some((mut app, id)) = windowed(true) else {
+            return;
+        };
+        frame(&mut app, id);
+        let page = corner(&app, id);
+        assert!(!app.dev.is_open());
+        assert!(!app.windows.get(id).unwrap().dev().is_on());
+
+        press_dev(&mut app, id);
+        assert!(app.dev.is_open(), "the press opened the panel");
+        let half = (WINDOW.0 as f32, WINDOW.1 as f32 / 2.0);
+        assert_eq!(
+            (app.view.width, app.view.height),
+            half,
+            "the page keeps half"
+        );
+
+        for _ in 0..6 {
+            frame(&mut app, id);
+        }
+        let recorder = app.windows.get(id).unwrap().dev();
+        assert!(recorder.is_on(), "an open panel records");
+        assert_eq!(recorder.len(), 6, "one report per frame drawn");
+        assert!(
+            recorder.history().any(|f| f.tool),
+            "the panel asked for a frame of its own"
+        );
+        let latest = recorder.latest().expect("a frame of the app's own");
+        assert!(latest.pipeline.cpu_nanos > 0, "the stages were recorded");
+        let zones = latest.zones.stats();
+        for name in ["scene build", "dev mode", "draw_frame"] {
+            assert!(zones.iter().any(|z| z.name == name), "no zone {name}");
+        }
+        let bound = latest.plots.iter().find(|p| p.name == "controls bound");
+        assert!(bound.is_some_and(|p| p.value > 0.0), "the page's plot");
+        if recorder.gpu_available() {
+            assert!(
+                recorder.history().any(|f| f.gpu.is_some()),
+                "no frame got its GPU time back"
+            );
+        }
+        assert_ne!(corner(&app, id), page, "the panel is drawn over the corner");
+
+        press_dev(&mut app, id);
+        assert!(!app.dev.is_open(), "the press closed the panel");
+        assert_eq!(
+            app.view.height, WINDOW.1 as f32,
+            "the page has the window again"
+        );
+        frame(&mut app, id);
+        assert!(!app.windows.get(id).unwrap().dev().is_on());
+        assert_eq!(corner(&app, id), page, "the page is back in the corner");
+    }
+
+    #[test]
+    fn a_launch_without_the_dev_mode_draws_no_button_and_takes_no_press() {
+        let (Some((mut with, with_id)), Some((mut app, id))) = (windowed(true), windowed(false))
+        else {
+            return;
+        };
+        frame(&mut with, with_id);
+        frame(&mut app, id);
+        let layers = |app: &App, id| app.windows.get(id).unwrap().compositor().layers().len();
+        assert_eq!(
+            layers(&with, with_id),
+            layers(&app, id) + 1,
+            "no layer of its own"
+        );
+
+        press_dev(&mut app, id);
+        frame(&mut app, id);
+        assert!(!app.dev.is_open());
+        assert_eq!(app.view.height, WINDOW.1 as f32);
+        let recorder = app.windows.get(id).unwrap().dev();
+        assert!(
+            !recorder.is_on() && recorder.is_empty(),
+            "nothing is recorded"
+        );
+    }
+}

@@ -42,14 +42,6 @@ hot-reload = [
     "dep:proc-macro2",
     "proc-macro2/span-locations",
 ]
-# task-105 POC: the frame in Puffin. wgpu-profiler times each pass of
-# `draw_frame` on the GPU (the device asks for TIMESTAMP_QUERY), the
-# engine's `cpu_scope!` times the CPU. Off by default. (Not the
-# `profiling` crate: it takes one backend, and this is two.)
-profiler = ["dep:wgpu-profiler", "dep:puffin", "wgpu-profiler/puffin"]
-# The same frame in Tracy as well: desktop only (the client is C++ and
-# speaks TCP), and the app must start the client before its first frame.
-profiler-tracy = ["profiler", "wgpu-profiler/tracy", "dep:tracy-client", "dep:tracy-client-sys"]
 
 [dependencies]
 wgpu.workspace = true
@@ -83,8 +75,6 @@ accord.workspace = true
 editor.workspace = true
 accesskit = { workspace = true, optional = true }
 accesskit_winit = { workspace = true, optional = true }
-wgpu-profiler = { workspace = true, optional = true }
-puffin = { workspace = true, optional = true }
 unions.workspace = true
 
 [dev-dependencies]
@@ -96,9 +86,6 @@ motion.workspace = true
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 pollster.workspace = true
 env_logger.workspace = true
-# `profiler-tracy` only; the sys crate is here to pin Tracy's protocol.
-tracy-client = { workspace = true, optional = true }
-tracy-client-sys = { workspace = true, optional = true }
 
 # arboard is a desktop clipboard backend (no android/ios platform impl); mobile
 # falls back to the in-memory clipboard, so it is desktop-only here.
@@ -155,8 +142,6 @@ web-sys = { workspace = true, features = ["Response", "MediaQueryList", "CssStyl
 js-sys.workspace = true
 console_log.workspace = true
 console_error_panic_hook.workspace = true
-# `profiler`: puffin's clock on the web is the page's.
-puffin = { workspace = true, optional = true, features = ["web"] }
 
 [package.metadata.android]
 package = "com.plev.engine"

@@ -1,8 +1,14 @@
 //! Pure tests: rolling window semantics, percentiles, fps from synthetic
 //! dts, snapshot/log formatting, memory aggregation and HUD scene output.
 
+mod heap;
+mod histogram;
+mod marks;
+mod pipeline;
+mod report;
 #[cfg(test)]
 mod stages;
+mod zones;
 
 use super::*;
 use crate::compose::animation::AnimationTick;

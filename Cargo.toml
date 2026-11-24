@@ -147,15 +147,6 @@ js-sys = "0.3"
 web-sys = { version = "0.3", features = ["Document", "Window", "Element", "HtmlCanvasElement", "Performance", "console"] }
 console_log = "1"
 console_error_panic_hook = "0.1"
-# -- profiling (task-105 POC, behind the engine's and the gallery's
-# `profiler` features). wgpu-profiler 0.27 is the last on wgpu 29 and
-# fixes the rest: puffin 0.19 and tracy-client 0.18, whose
-# tracy-client-sys 0.29 speaks Tracy v0.14.0's protocol (the GUI must be
-# that release).
-wgpu-profiler = "0.27"
-puffin = "0.19"
-tracy-client = { version = "0.18", features = ["ondemand"] }
-tracy-client-sys = "=0.29.0"
 # -- accessibility
 accesskit = "0.24"
 accesskit_winit = "0.32"

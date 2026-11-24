@@ -65,6 +65,11 @@
     },
     {
      "level": 2,
+     "title": "2026-11-12",
+     "anchor": "2026-11-12"
+    },
+    {
+     "level": 2,
      "title": "2026-11-03",
      "anchor": "2026-11-03"
     },
@@ -9663,7 +9668,7 @@
   {
    "path": "docs/Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md",
    "id": "task-105",
-   "title": "task-105: the frame in Puffin and Tracy, from a panel over any gallery tab",
+   "title": "task-105: a dev mode over any app: the frame, the GPU, the zones, the heap and the page's controls",
    "project": "plev",
    "type": "task",
    "status": "in-progress",
@@ -9679,18 +9684,28 @@
    ],
    "source": "https://github.com/brennercruvinel/plev/issues/180",
    "source_revision": "a6d523b8",
-   "revised": "2026-11-03",
+   "revised": "2026-11-12",
    "review": "pending",
    "headings": [
     {
      "level": 1,
-     "title": "task-105: the frame in Puffin and Tracy, from a panel over any gallery tab",
-     "anchor": "task-105-the-frame-in-puffin-and-tracy-from-a-panel-over-any-gallery-tab"
+     "title": "task-105: a dev mode over any app: the frame, the GPU, the zones, the heap and the page's controls",
+     "anchor": "task-105-a-dev-mode-over-any-app-the-frame-the-gpu-the-zones-the-heap-and-the-pages-controls"
     },
     {
      "level": 2,
-     "title": "The two parts",
-     "anchor": "the-two-parts"
+     "title": "The seven views",
+     "anchor": "the-seven-views"
+    },
+    {
+     "level": 2,
+     "title": "What an app writes",
+     "anchor": "what-an-app-writes"
+    },
+    {
+     "level": 2,
+     "title": "Where it lives",
+     "anchor": "where-it-lives"
     },
     {
      "level": 2,
@@ -9701,6 +9716,16 @@
      "level": 2,
      "title": "Seen working",
      "anchor": "seen-working"
+    },
+    {
+     "level": 2,
+     "title": "Not done",
+     "anchor": "not-done"
+    },
+    {
+     "level": 2,
+     "title": "What the first try taught",
+     "anchor": "what-the-first-try-taught"
     },
     {
      "level": 2,
