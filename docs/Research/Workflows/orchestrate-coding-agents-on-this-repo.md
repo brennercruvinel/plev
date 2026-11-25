@@ -202,6 +202,7 @@ worked before this program existed:
 
 - [ADR 0085: integration into main is a pull request merged by merge commit](../../adr/Workflows/0085-integration-by-merge-commit/0085-integration-by-merge-commit.md)
 - [what the autonomous cycle taught about the way of working](autonomous-cycle-learnings.md)
+- [task-106: what a build directory weighs, and a warm start for a new checkout](../../Tasks/task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md)
 - [task-57: semantic contract (crate `sem`)](../../Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
 - [task-60: accessibility as a projection of the contract](../../Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
 - [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)

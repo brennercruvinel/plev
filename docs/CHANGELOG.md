@@ -70,6 +70,17 @@ the whole earlier history no longer exists.
 
 The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the first technical plan, were deleted from the tree at some point and recovered from git history. Their recovered versions are historical sources; the exact paths and revisions are in their `source` field.
 
+## 2026-11-24
+
+- what a build directory weighs, and a warm start for a new checkout
+  ([task-106](Tasks/task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md)):
+  the engine and the apps are plain libraries (a mobile build asks for
+  its crate type), every member takes one engine, a crate's integration
+  tests are one executable (127 targets became 29, the same tests
+  passing), and `tool/tasks/builddir.sh` weighs, trims and seeds the
+  build directories. `cargo test --workspace --no-run` in an empty
+  directory went from 186 test executables and 8.1 GB to 88 and 5.0 GB.
+
 ## 2026-11-12
 
 - a dev mode over any app, the engine's own and with no dependency
