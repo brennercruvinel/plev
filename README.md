@@ -1,5 +1,6 @@
 #  plev: agents, devs and designers playing on the same canvas.
 
+O PLEV é um motor em Rust voltado a UI generativa e acessível, com um compositor GPU-first e um padrão semântico compartilhado entre pessoas e agentes.
 
 Uma engine de compositing GPU-first em Rust. Um único código desenha o
 mesmo frame no macOS (Metal), no Linux (Vulkan), no navegador (WebGPU), no
