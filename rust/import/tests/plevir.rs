@@ -373,7 +373,10 @@ fn the_tolerances_measured_on_hoff() {
     assert!(close(color(ColorRole::Surface), 1.0));
     assert!(close(color(ColorRole::BgHover), 3.5));
     assert!(close(color(ColorRole::Divider), 3.5));
-    assert!(close(color(ColorRole::TextMid), 25.5));
+    // text_mid's neighbour is text_dim, and the theme settles it to AA
+    // (task-104m, `theme::legibility`): n2(0.50) read 4.45:1 on bg_hover and
+    // is n2(0.507) now, so the gap is 49.13 levels where it was 51
+    assert!(close(color(ColorRole::TextMid), 24.565));
     assert!(close(color(ColorRole::Text), 31.875));
     let spacing = |s: SpacingToken| {
         let v = t.spacing_of(s).expect("a spacing");
