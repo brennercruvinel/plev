@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "a3748e42f514ec67",
+    "nodes": 37
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "badge_page",
       "z": 0,
-      "hash": "ced4dee0598ffe7e",
-      "nodes": 16,
+      "hash": "4c72f163522c5666",
+      "nodes": 94,
       "bounds": [
-        283.0,
-        49.0,
-        336.0,
-        117.2
+        0.0,
+        24.0,
+        1280.0,
+        728.0
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "83f17e5af2abb592",
-      "nodes": 48,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,342 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "badge_page.group[0].card[0].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        217.0,
+        309.0,
+        51.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[0].card[1].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        615.0,
+        309.0,
+        51.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[0].card[2].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        888.0,
+        309.0,
+        50.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[0].card[2].badge[1]",
+      "layer": "badge_page",
+      "rect": [
+        946.0,
+        309.0,
+        76.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[0].card[2].badge[2]",
+      "layer": "badge_page",
+      "rect": [
+        1030.0,
+        309.0,
+        73.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[0].card[2].badge[3]",
+      "layer": "badge_page",
+      "rect": [
+        1111.0,
+        309.0,
+        76.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[1].card[0].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        231.0,
+        648.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[1].card[1].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        606.0,
+        648.0,
+        27.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[1].card[1].badge[1]",
+      "layer": "badge_page",
+      "rect": [
+        641.0,
+        648.0,
+        34.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[1].card[2].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        977.0,
+        648.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[1].card[2].badge[1]",
+      "layer": "badge_page",
+      "rect": [
+        1009.0,
+        648.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[1].card[2].badge[2]",
+      "layer": "badge_page",
+      "rect": [
+        1041.0,
+        648.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[1].card[2].badge[3]",
+      "layer": "badge_page",
+      "rect": [
+        1073.0,
+        648.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[2].card[0].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        340.0,
+        996.0,
+        4.0,
+        4.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[2].card[1].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        918.0,
+        996.0,
+        4.0,
+        4.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[2].card[1].badge[1]",
+      "layer": "badge_page",
+      "rect": [
+        930.0,
+        996.0,
+        4.0,
+        4.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[2].card[1].badge[2]",
+      "layer": "badge_page",
+      "rect": [
+        942.0,
+        996.0,
+        4.0,
+        4.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[2].card[1].badge[3]",
+      "layer": "badge_page",
+      "rect": [
+        954.0,
+        996.0,
+        4.0,
+        4.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[3].card[0].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        99.0,
+        1323.0,
+        288.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[3].card[1].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        539.0,
+        1323.0,
+        203.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "badge_page.group[3].card[2].badge[0]",
+      "layer": "badge_page",
+      "rect": [
+        1019.0,
+        1324.0,
+        37.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    }
+  ]
 }

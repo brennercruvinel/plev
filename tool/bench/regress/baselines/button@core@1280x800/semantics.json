@@ -546,6 +546,19 @@
         }
       ],
       "focusable": true
+    },
+    {
+      "id": "button_page.group[14]",
+      "role": "group",
+      "label": "Tooltip",
+      "parent": "button_page"
+    },
+    {
+      "id": "button_page.group[14].card[0]",
+      "role": "label",
+      "label": "Copy prompt",
+      "description": "Text",
+      "parent": "button_page.group[14]"
     }
   ]
 }

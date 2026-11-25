@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "865dac0fa659537c",
+    "nodes": 37
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "carousel_page",
       "z": 0,
-      "hash": "b1a3a40084110ef0",
-      "nodes": 8,
+      "hash": "dbbb35e7cf749654",
+      "nodes": 117,
       "bounds": [
-        283.0,
-        49.0,
-        725.0,
-        225.20001
+        0.0,
+        24.0,
+        1280.0,
+        728.0
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "41dc04b6fa7988ef",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,550 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "carousel_page.group[0].card[0]",
+      "layer": "carousel_page",
+      "rect": [
+        56.0,
+        262.0,
+        572.0,
+        176.66666
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[0]",
+      "layer": "carousel_page",
+      "rect": [
+        56.0,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[1]",
+      "layer": "carousel_page",
+      "rect": [
+        152.66666,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[2]",
+      "layer": "carousel_page",
+      "rect": [
+        249.33333,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[3]",
+      "layer": "carousel_page",
+      "rect": [
+        346.0,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[4]",
+      "layer": "carousel_page",
+      "rect": [
+        442.66666,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[5]",
+      "layer": "carousel_page",
+      "rect": [
+        539.3333,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[0].previous",
+      "layer": "carousel_page",
+      "rect": [
+        288.5,
+        394.66666,
+        53.5,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[0].next",
+      "layer": "carousel_page",
+      "rect": [
+        342.0,
+        394.66666,
+        53.5,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[1]",
+      "layer": "carousel_page",
+      "rect": [
+        652.0,
+        262.0,
+        572.0,
+        176.66666
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[0]",
+      "layer": "carousel_page",
+      "rect": [
+        652.0,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[1]",
+      "layer": "carousel_page",
+      "rect": [
+        748.6667,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[2]",
+      "layer": "carousel_page",
+      "rect": [
+        845.3333,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[3]",
+      "layer": "carousel_page",
+      "rect": [
+        942.0,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[4]",
+      "layer": "carousel_page",
+      "rect": [
+        1038.6666,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[5]",
+      "layer": "carousel_page",
+      "rect": [
+        1135.3333,
+        290.0,
+        88.666664,
+        88.666664
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[1].previous",
+      "layer": "carousel_page",
+      "rect": [
+        884.5,
+        394.66666,
+        53.5,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[0].card[1].next",
+      "layer": "carousel_page",
+      "rect": [
+        938.0,
+        394.66666,
+        53.5,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[0]",
+      "layer": "carousel_page",
+      "rect": [
+        56.0,
+        752.0,
+        373.33334,
+        270.6667
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[0].slide[0]",
+      "layer": "carousel_page",
+      "rect": [
+        56.0,
+        780.0,
+        182.66667,
+        182.66667
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[0].slide[1]",
+      "layer": "carousel_page",
+      "rect": [
+        246.66667,
+        780.0,
+        182.66667,
+        182.66667
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[0].previous",
+      "layer": "carousel_page",
+      "rect": [
+        193.91667,
+        978.6667,
+        48.75,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[0].next",
+      "layer": "carousel_page",
+      "rect": [
+        242.66667,
+        978.6667,
+        48.75,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[1]",
+      "layer": "carousel_page",
+      "rect": [
+        453.0,
+        800.0,
+        373.33334,
+        175.33334
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[1].slide[0]",
+      "layer": "carousel_page",
+      "rect": [
+        453.0,
+        828.0,
+        87.333336,
+        87.333336
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[1].slide[1]",
+      "layer": "carousel_page",
+      "rect": [
+        548.3333,
+        828.0,
+        87.333336,
+        87.333336
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[1].slide[2]",
+      "layer": "carousel_page",
+      "rect": [
+        643.6667,
+        828.0,
+        87.333336,
+        87.333336
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[1].slide[3]",
+      "layer": "carousel_page",
+      "rect": [
+        739.0,
+        828.0,
+        87.333336,
+        87.333336
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[1].previous",
+      "layer": "carousel_page",
+      "rect": [
+        567.1667,
+        931.3333,
+        72.5,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[1].next",
+      "layer": "carousel_page",
+      "rect": [
+        639.6667,
+        931.3333,
+        72.5,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[2]",
+      "layer": "carousel_page",
+      "rect": [
+        851.0,
+        657.0,
+        373.33334,
+        461.33334
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[2].slide[0]",
+      "layer": "carousel_page",
+      "rect": [
+        851.0,
+        685.0,
+        373.33334,
+        373.33334
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[2].previous",
+      "layer": "carousel_page",
+      "rect": [
+        988.9167,
+        1074.3334,
+        48.75,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "carousel_page.group[1].card[2].next",
+      "layer": "carousel_page",
+      "rect": [
+        1037.6667,
+        1074.3334,
+        48.75,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    }
+  ]
 }

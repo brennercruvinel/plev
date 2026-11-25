@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "04df3a6ee5302e53",
+    "nodes": 8
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "aspect_ratio_page",
       "z": 0,
-      "hash": "0f1e1664c4160d6f",
-      "nodes": 8,
+      "hash": "1fde1e263dafba69",
+      "nodes": 38,
       "bounds": [
-        283.0,
-        49.0,
-        725.0,
-        225.20001
+        0.0,
+        24.0,
+        1280.0,
+        728.0
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "5b8128c5b6e8ce6e",
-      "nodes": 48,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,86 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "aspect_ratio_page.group[0].card[0]",
+      "layer": "aspect_ratio_page",
+      "rect": [
+        56.0,
+        262.0,
+        572.0,
+        572.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "aspect_ratio_page.group[0].card[1]",
+      "layer": "aspect_ratio_page",
+      "rect": [
+        652.0,
+        387.0,
+        572.0,
+        321.75
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "aspect_ratio_page.group[1].card[0]",
+      "layer": "aspect_ratio_page",
+      "rect": [
+        56.0,
+        1161.0,
+        373.33334,
+        280.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "aspect_ratio_page.group[1].card[1]",
+      "layer": "aspect_ratio_page",
+      "rect": [
+        453.0,
+        1052.0,
+        373.33334,
+        497.7778
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "aspect_ratio_page.group[1].card[2]",
+      "layer": "aspect_ratio_page",
+      "rect": [
+        851.0,
+        1221.0,
+        373.33334,
+        160.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    }
+  ]
 }

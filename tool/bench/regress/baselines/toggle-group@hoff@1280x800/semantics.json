@@ -1,215 +1,510 @@
 {
   "nodes": [
     {
-      "id": "todo",
+      "id": "toggle_group_page",
       "role": "region",
-      "label": "todo",
-      "state": {
-        "items": {
-          "kind": "list",
-          "value": [
-            "1",
-            "2",
-            "3"
-          ]
-        }
-      }
+      "label": "Toggle Group"
     },
     {
-      "id": "todo.input",
-      "role": "text_input",
-      "label": "new todo",
-      "parent": "todo",
+      "id": "toggle_group_page.group[0]",
+      "role": "group",
+      "label": "Toggle group",
+      "parent": "toggle_group_page"
+    },
+    {
+      "id": "toggle_group_page.group[0].card[0][0]",
+      "role": "radio",
+      "label": "Day",
+      "parent": "toggle_group_page.group[0].card[0]",
       "state": {
-        "text": {
-          "kind": "text",
-          "value": ""
+        "checked": {
+          "kind": "bool",
+          "value": false
         }
       },
       "actions": [
         {
-          "name": "set_value",
+          "name": "select",
           "reads": [
-            "todo.input:text"
-          ],
-          "param": {
-            "kind": "text",
-            "constrained": true
-          }
-        },
-        {
-          "name": "submit",
-          "enabled": false,
-          "reads": [
-            "todo.input:text"
+            "toggle_group_page.group[0].card[0]:selected"
           ]
         }
       ],
-      "constraints": {
-        "editable": true
-      },
       "focusable": true
     },
     {
-      "id": "todo.filter",
-      "role": "tab_list",
-      "label": "filter",
-      "parent": "todo",
+      "id": "toggle_group_page.group[0].card[0][1]",
+      "role": "radio",
+      "label": "Week",
+      "parent": "toggle_group_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[0].card[0][2]",
+      "role": "radio",
+      "label": "Month",
+      "parent": "toggle_group_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[0].card[0]",
+      "role": "group",
+      "label": "view",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "toggle_group_page.group[0]",
       "state": {
         "selected": {
           "kind": "text",
-          "value": "all"
+          "value": "1"
         }
       }
     },
     {
-      "id": "todo.filter[all]",
-      "role": "tab",
-      "label": "All",
-      "parent": "todo.filter",
-      "actions": [
-        {
-          "name": "select",
-          "reads": [
-            "todo.filter:selected"
-          ]
-        }
-      ],
-      "focusable": true
-    },
-    {
-      "id": "todo.filter[active]",
-      "role": "tab",
-      "label": "Active",
-      "parent": "todo.filter",
-      "actions": [
-        {
-          "name": "select",
-          "reads": [
-            "todo.filter:selected"
-          ]
-        }
-      ],
-      "focusable": true
-    },
-    {
-      "id": "todo.filter[completed]",
-      "role": "tab",
-      "label": "Completed",
-      "parent": "todo.filter",
-      "actions": [
-        {
-          "name": "select",
-          "reads": [
-            "todo.filter:selected"
-          ]
-        }
-      ],
-      "focusable": true
-    },
-    {
-      "id": "todo.item[1]",
-      "role": "list_item",
-      "label": "Absorb the plev demos into the showcase",
-      "parent": "todo",
+      "id": "toggle_group_page.group[0].card[1][0]",
+      "role": "radio",
+      "label": "Day",
+      "parent": "toggle_group_page.group[0].card[1]",
       "state": {
-        "completed": {
+        "checked": {
           "kind": "bool",
           "value": false
-        },
-        "text": {
-          "kind": "text",
-          "value": "Absorb the plev demos into the showcase"
         }
       },
       "actions": [
         {
-          "name": "toggle",
+          "name": "select",
           "reads": [
-            "todo.item[1]:completed"
+            "toggle_group_page.group[0].card[1]:selected"
           ]
-        },
-        {
-          "name": "remove",
-          "policy": {
-            "destructive": true
-          }
         }
-      ]
+      ],
+      "enabled": false,
+      "focusable": true
     },
     {
-      "id": "todo.item[2]",
-      "role": "list_item",
-      "label": "Measure text, never estimate it",
-      "parent": "todo",
+      "id": "toggle_group_page.group[0].card[1][1]",
+      "role": "radio",
+      "label": "Week",
+      "parent": "toggle_group_page.group[0].card[1]",
       "state": {
-        "completed": {
-          "kind": "bool",
-          "value": false
-        },
-        "text": {
-          "kind": "text",
-          "value": "Measure text, never estimate it"
-        }
-      },
-      "actions": [
-        {
-          "name": "toggle",
-          "reads": [
-            "todo.item[2]:completed"
-          ]
-        },
-        {
-          "name": "remove",
-          "policy": {
-            "destructive": true
-          }
-        }
-      ]
-    },
-    {
-      "id": "todo.item[3]",
-      "role": "list_item",
-      "label": "Port the todo domain (tested first)",
-      "parent": "todo",
-      "state": {
-        "completed": {
+        "checked": {
           "kind": "bool",
           "value": true
-        },
-        "text": {
-          "kind": "text",
-          "value": "Port the todo domain (tested first)"
         }
       },
       "actions": [
         {
-          "name": "toggle",
+          "name": "select",
           "reads": [
-            "todo.item[3]:completed"
+            "toggle_group_page.group[0].card[1]:selected"
           ]
-        },
-        {
-          "name": "remove",
-          "policy": {
-            "destructive": true
-          }
         }
-      ]
+      ],
+      "enabled": false,
+      "focusable": true
     },
     {
-      "id": "todo.counter",
-      "role": "status",
-      "label": "2 active · 1 done",
-      "parent": "todo",
+      "id": "toggle_group_page.group[0].card[1][2]",
+      "role": "radio",
+      "label": "Month",
+      "parent": "toggle_group_page.group[0].card[1]",
       "state": {
-        "active": {
-          "kind": "int",
-          "value": 2
-        },
-        "done": {
-          "kind": "int",
-          "value": 1
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[0].card[1]",
+      "role": "group",
+      "label": "view",
+      "description": "Disabled",
+      "parent": "toggle_group_page.group[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "1"
+        }
+      },
+      "enabled": false
+    },
+    {
+      "id": "toggle_group_page.group[1]",
+      "role": "group",
+      "label": "Toggle group, small",
+      "parent": "toggle_group_page"
+    },
+    {
+      "id": "toggle_group_page.group[1].card[0][0]",
+      "role": "radio",
+      "label": "Day",
+      "parent": "toggle_group_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[1].card[0][1]",
+      "role": "radio",
+      "label": "Week",
+      "parent": "toggle_group_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[1].card[0][2]",
+      "role": "radio",
+      "label": "Month",
+      "parent": "toggle_group_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[1].card[0]",
+      "role": "group",
+      "label": "view",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "toggle_group_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "1"
+        }
+      }
+    },
+    {
+      "id": "toggle_group_page.group[1].card[1][0]",
+      "role": "radio",
+      "label": "Day",
+      "parent": "toggle_group_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[1].card[1][1]",
+      "role": "radio",
+      "label": "Week",
+      "parent": "toggle_group_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[1].card[1][2]",
+      "role": "radio",
+      "label": "Month",
+      "parent": "toggle_group_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[1].card[1]",
+      "role": "group",
+      "label": "view",
+      "description": "Disabled",
+      "parent": "toggle_group_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "1"
+        }
+      },
+      "enabled": false
+    },
+    {
+      "id": "toggle_group_page.group[2]",
+      "role": "group",
+      "label": "Long content",
+      "parent": "toggle_group_page"
+    },
+    {
+      "id": "toggle_group_page.group[2].card[0][0]",
+      "role": "radio",
+      "label": "Everything",
+      "parent": "toggle_group_page.group[2].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[2].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[2].card[0][1]",
+      "role": "radio",
+      "label": "Only the active ones",
+      "parent": "toggle_group_page.group[2].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[2].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[2].card[0][2]",
+      "role": "radio",
+      "label": "Completed and archived",
+      "parent": "toggle_group_page.group[2].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[2].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[2].card[0]",
+      "role": "group",
+      "label": "show",
+      "description": "Long labels",
+      "parent": "toggle_group_page.group[2]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "toggle_group_page.group[2].card[1][0]",
+      "role": "radio",
+      "label": "Tag",
+      "parent": "toggle_group_page.group[2].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[2].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[2].card[1][1]",
+      "role": "radio",
+      "label": "Woche",
+      "parent": "toggle_group_page.group[2].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[2].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[2].card[1][2]",
+      "role": "radio",
+      "label": "Monat",
+      "parent": "toggle_group_page.group[2].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[2].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[2].card[1][3]",
+      "role": "radio",
+      "label": "Jahr",
+      "parent": "toggle_group_page.group[2].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "toggle_group_page.group[2].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_group_page.group[2].card[1]",
+      "role": "group",
+      "label": "Ansicht",
+      "description": "Translated labels",
+      "parent": "toggle_group_page.group[2]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "2"
         }
       }
     }

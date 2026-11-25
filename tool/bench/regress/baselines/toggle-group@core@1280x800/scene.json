@@ -11,20 +11,20 @@
     "settled": true
   },
   "semantics": {
-    "revision": "20b9a038f126d398",
-    "nodes": 10
+    "revision": "9061e328a50ddca3",
+    "nodes": 29
   },
   "layers": [
     {
-      "name": "todo",
+      "name": "toggle_group_page",
       "z": 0,
-      "hash": "fe8fc130799bd303",
-      "nodes": 34,
+      "hash": "9e563cf6e9ba7900",
+      "nodes": 83,
       "bounds": [
-        283.0,
-        49.0,
-        801.0,
-        711.0
+        0.0,
+        24.0,
+        1280.0,
+        728.0
       ]
     },
     {
@@ -37,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "41dc04b6fa7988ef",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -56,131 +58,403 @@
   ],
   "bindings": [
     {
-      "id": "todo",
-      "layer": "todo",
+      "id": "toggle_group_page.group[0].card[0]",
+      "layer": "toggle_group_page",
       "rect": [
-        444.0,
-        180.83,
-        640.0,
-        579.17
+        231.0,
+        302.0,
+        222.0,
+        40.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
-      "id": "todo.input",
-      "layer": "todo",
+      "id": "toggle_group_page.group[0].card[0][0]",
+      "layer": "toggle_group_page",
       "rect": [
-        468.0,
-        204.83,
-        592.0,
-        44.0
+        235.0,
+        306.0,
+        71.333336,
+        32.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
-      "id": "todo.item[1]",
-      "layer": "todo",
+      "id": "toggle_group_page.group[0].card[0][1]",
+      "layer": "toggle_group_page",
       "rect": [
-        468.0,
-        262.83002,
-        592.0,
-        44.0
+        306.33334,
+        306.0,
+        71.333336,
+        32.0
       ],
       "clip": [
-        468.0,
-        262.83002,
-        592.0,
-        437.16998
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
-      "id": "todo.item[2]",
-      "layer": "todo",
+      "id": "toggle_group_page.group[0].card[0][2]",
+      "layer": "toggle_group_page",
       "rect": [
-        468.0,
-        306.83002,
-        592.0,
-        44.0
+        377.6667,
+        306.0,
+        71.333336,
+        32.0
       ],
       "clip": [
-        468.0,
-        262.83002,
-        592.0,
-        437.16998
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
-      "id": "todo.item[3]",
-      "layer": "todo",
+      "id": "toggle_group_page.group[0].card[1]",
+      "layer": "toggle_group_page",
       "rect": [
-        468.0,
-        350.83002,
-        592.0,
-        44.0
+        827.0,
+        302.0,
+        222.0,
+        40.0
       ],
       "clip": [
-        468.0,
-        262.83002,
-        592.0,
-        437.16998
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
-      "id": "todo.filter[all]",
-      "layer": "todo",
+      "id": "toggle_group_page.group[0].card[1][0]",
+      "layer": "toggle_group_page",
       "rect": [
-        857.0,
-        721.0,
-        39.0,
-        26.0
+        831.0,
+        306.0,
+        71.333336,
+        32.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
-      "id": "todo.filter[active]",
-      "layer": "todo",
+      "id": "toggle_group_page.group[0].card[1][1]",
+      "layer": "toggle_group_page",
       "rect": [
-        904.0,
-        721.0,
-        60.0,
-        26.0
+        902.3333,
+        306.0,
+        71.333336,
+        32.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
-      "id": "todo.filter[completed]",
-      "layer": "todo",
+      "id": "toggle_group_page.group[0].card[1][2]",
+      "layer": "toggle_group_page",
       "rect": [
-        972.0,
-        721.0,
-        88.0,
-        26.0
+        973.6667,
+        306.0,
+        71.333336,
+        32.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[1].card[0]",
+      "layer": "toggle_group_page",
+      "rect": [
+        242.0,
+        642.0,
+        201.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[1].card[0][0]",
+      "layer": "toggle_group_page",
+      "rect": [
+        246.0,
+        646.0,
+        64.333336,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[1].card[0][1]",
+      "layer": "toggle_group_page",
+      "rect": [
+        310.33334,
+        646.0,
+        64.333336,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[1].card[0][2]",
+      "layer": "toggle_group_page",
+      "rect": [
+        374.6667,
+        646.0,
+        64.333336,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[1].card[1]",
+      "layer": "toggle_group_page",
+      "rect": [
+        838.0,
+        642.0,
+        201.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[1].card[1][0]",
+      "layer": "toggle_group_page",
+      "rect": [
+        842.0,
+        646.0,
+        64.333336,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[1].card[1][1]",
+      "layer": "toggle_group_page",
+      "rect": [
+        906.3333,
+        646.0,
+        64.333336,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[1].card[1][2]",
+      "layer": "toggle_group_page",
+      "rect": [
+        970.6667,
+        646.0,
+        64.333336,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[2].card[0]",
+      "layer": "toggle_group_page",
+      "rect": [
+        69.0,
+        978.0,
+        547.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[2].card[0][0]",
+      "layer": "toggle_group_page",
+      "rect": [
+        73.0,
+        982.0,
+        179.66667,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[2].card[0][1]",
+      "layer": "toggle_group_page",
+      "rect": [
+        252.66667,
+        982.0,
+        179.66667,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[2].card[0][2]",
+      "layer": "toggle_group_page",
+      "rect": [
+        432.33334,
+        982.0,
+        179.66667,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[2].card[1]",
+      "layer": "toggle_group_page",
+      "rect": [
+        785.0,
+        978.0,
+        306.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[2].card[1][0]",
+      "layer": "toggle_group_page",
+      "rect": [
+        789.0,
+        982.0,
+        74.5,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[2].card[1][1]",
+      "layer": "toggle_group_page",
+      "rect": [
+        863.5,
+        982.0,
+        74.5,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[2].card[1][2]",
+      "layer": "toggle_group_page",
+      "rect": [
+        938.0,
+        982.0,
+        74.5,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "toggle_group_page.group[2].card[1][3]",
+      "layer": "toggle_group_page",
+      "rect": [
+        1012.5,
+        982.0,
+        74.5,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     }
   ]

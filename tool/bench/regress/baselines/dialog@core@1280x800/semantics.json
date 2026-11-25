@@ -6,10 +6,17 @@
       "label": "Dialog"
     },
     {
+      "id": "dialog_page.group[0]",
+      "role": "group",
+      "label": "Live",
+      "parent": "dialog_page"
+    },
+    {
       "id": "dialog_page.open",
       "role": "button",
       "label": "Open dialog",
-      "parent": "dialog_page",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "dialog_page.group[0]",
       "actions": [
         {
           "name": "activate"
@@ -20,14 +27,59 @@
     {
       "id": "dialog_page.delete",
       "role": "button",
-      "label": "Delete repository…",
-      "parent": "dialog_page",
+      "label": "Delete file…",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "dialog_page.group[0]",
       "actions": [
         {
           "name": "activate"
         }
       ],
       "focusable": true
+    },
+    {
+      "id": "dialog_page.group[1]",
+      "role": "group",
+      "label": "Variations",
+      "parent": "dialog_page"
+    },
+    {
+      "id": "dialog_page.group[1].card[0]",
+      "role": "group",
+      "label": "Apply settings?",
+      "description": "Your workspace will reload to apply the new configuration.",
+      "parent": "dialog_page.group[1]"
+    },
+    {
+      "id": "dialog_page.group[1].card[0][0]",
+      "role": "label",
+      "label": "Apply",
+      "parent": "dialog_page.group[1].card[0]"
+    },
+    {
+      "id": "dialog_page.group[1].card[0][1]",
+      "role": "label",
+      "label": "Cancel",
+      "parent": "dialog_page.group[1].card[0]"
+    },
+    {
+      "id": "dialog_page.group[1].card[1]",
+      "role": "group",
+      "label": "Delete this file?",
+      "description": "This action cannot be undone. Blinky is a bit nervous about it too.",
+      "parent": "dialog_page.group[1]"
+    },
+    {
+      "id": "dialog_page.group[1].card[1][0]",
+      "role": "label",
+      "label": "Yes, delete it",
+      "parent": "dialog_page.group[1].card[1]"
+    },
+    {
+      "id": "dialog_page.group[1].card[1][1]",
+      "role": "label",
+      "label": "Cancel",
+      "parent": "dialog_page.group[1].card[1]"
     }
   ]
 }

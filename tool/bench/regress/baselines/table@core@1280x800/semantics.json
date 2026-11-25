@@ -1,174 +1,337 @@
 {
   "nodes": [
     {
-      "id": "table_page",
+      "id": "table_static_page",
       "role": "region",
       "label": "Table"
     },
     {
-      "id": "table_page.table[0]",
+      "id": "table_static_page.group[0]",
+      "role": "group",
+      "label": "Table",
+      "parent": "table_static_page"
+    },
+    {
+      "id": "table_static_page.group[0].card[0][0]",
       "role": "row",
-      "label": "crates/comps/src/file_0.rs, modified, 3 KB, 0000000",
-      "parent": "table_page.table",
+      "label": "h1, Inter, Regular, 48/115%, -3%",
+      "parent": "table_static_page.group[0].card[0]",
       "actions": [
         {
           "name": "select",
           "reads": [
-            "table_page.table:selected_row"
+            "table_static_page.group[0].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_static_page.group[0].card[0][1]",
+      "role": "row",
+      "label": "h2, Inter, Regular, 40/48, -3%",
+      "parent": "table_static_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_static_page.group[0].card[0]:selected_row"
           ]
         }
       ],
       "focusable": true
     },
     {
-      "id": "table_page.table[1]",
+      "id": "table_static_page.group[0].card[0][2]",
       "role": "row",
-      "label": "crates/comps/src/file_1.rs, added, 40 KB, e3779ba",
-      "parent": "table_page.table",
+      "label": "h3, Inter, Regular, 32/40, -3%",
+      "parent": "table_static_page.group[0].card[0]",
       "actions": [
         {
           "name": "select",
           "reads": [
-            "table_page.table:selected_row"
+            "table_static_page.group[0].card[0]:selected_row"
           ]
         }
       ]
     },
     {
-      "id": "table_page.table[2]",
+      "id": "table_static_page.group[0].card[0][3]",
       "role": "row",
-      "label": "crates/comps/src/file_2.rs, renamed, 77 KB, c6ef375",
-      "parent": "table_page.table",
+      "label": "h4, Inter, Regular, 28/36, -3%",
+      "parent": "table_static_page.group[0].card[0]",
       "actions": [
         {
           "name": "select",
           "reads": [
-            "table_page.table:selected_row"
+            "table_static_page.group[0].card[0]:selected_row"
           ]
         }
       ]
     },
     {
-      "id": "table_page.table[3]",
+      "id": "table_static_page.group[0].card[0][4]",
       "role": "row",
-      "label": "crates/comps/src/file_3.rs, modified, 114 KB, aa66d30",
-      "parent": "table_page.table",
+      "label": "h5, Inter, Regular, 24/32, -3%",
+      "parent": "table_static_page.group[0].card[0]",
       "actions": [
         {
           "name": "select",
           "reads": [
-            "table_page.table:selected_row"
+            "table_static_page.group[0].card[0]:selected_row"
           ]
         }
       ]
     },
     {
-      "id": "table_page.table[4]",
+      "id": "table_static_page.group[0].card[0][5]",
       "role": "row",
-      "label": "crates/comps/src/file_4.rs, added, 151 KB, 8dde6eb",
-      "parent": "table_page.table",
+      "label": "h6, Inter, Regular, 20/28, -3%",
+      "parent": "table_static_page.group[0].card[0]",
       "actions": [
         {
           "name": "select",
           "reads": [
-            "table_page.table:selected_row"
+            "table_static_page.group[0].card[0]:selected_row"
           ]
         }
       ]
     },
     {
-      "id": "table_page.table[5]",
+      "id": "table_static_page.group[0].card[0][6]",
       "role": "row",
-      "label": "crates/comps/src/file_5.rs, renamed, 188 KB, 71560a6",
-      "parent": "table_page.table",
+      "label": "Body, X Small, Inter, Regular, 10/16, -1%",
+      "parent": "table_static_page.group[0].card[0]",
       "actions": [
         {
           "name": "select",
           "reads": [
-            "table_page.table:selected_row"
+            "table_static_page.group[0].card[0]:selected_row"
           ]
         }
       ]
     },
     {
-      "id": "table_page.table[6]",
+      "id": "table_static_page.group[0].card[0][7]",
       "role": "row",
-      "label": "crates/comps/src/file_6.rs, modified, 225 KB, 54cda61",
-      "parent": "table_page.table",
+      "label": "Body, Small, Inter, Medium, 11/16, -1%",
+      "parent": "table_static_page.group[0].card[0]",
       "actions": [
         {
           "name": "select",
           "reads": [
-            "table_page.table:selected_row"
+            "table_static_page.group[0].card[0]:selected_row"
           ]
         }
       ]
     },
     {
-      "id": "table_page.table[7]",
+      "id": "table_static_page.group[0].card[0][8]",
       "role": "row",
-      "label": "crates/comps/src/file_7.rs, added, 262 KB, 384541c",
-      "parent": "table_page.table",
+      "label": "Body, Medium, Inter, Medium, 12/16, -1%",
+      "parent": "table_static_page.group[0].card[0]",
       "actions": [
         {
           "name": "select",
           "reads": [
-            "table_page.table:selected_row"
+            "table_static_page.group[0].card[0]:selected_row"
           ]
         }
       ]
     },
     {
-      "id": "table_page.table[8]",
+      "id": "table_static_page.group[0].card[0][9]",
       "role": "row",
-      "label": "crates/comps/src/file_8.rs, renamed, 299 KB, 1bbcdd7",
-      "parent": "table_page.table",
+      "label": "Body Medium, Strong, Inter, Semibold, 12/16, -1%",
+      "parent": "table_static_page.group[0].card[0]",
       "actions": [
         {
           "name": "select",
           "reads": [
-            "table_page.table:selected_row"
+            "table_static_page.group[0].card[0]:selected_row"
           ]
         }
       ]
     },
     {
-      "id": "table_page.table[9]",
-      "role": "row",
-      "label": "crates/comps/src/file_9.rs, modified, 336 KB, ff34791",
-      "parent": "table_page.table",
-      "actions": [
-        {
-          "name": "select",
-          "reads": [
-            "table_page.table:selected_row"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "table_page.table[10]",
-      "role": "row",
-      "label": "crates/comps/src/file_10.rs, added, 373 KB, e2ac14c",
-      "parent": "table_page.table",
-      "actions": [
-        {
-          "name": "select",
-          "reads": [
-            "table_page.table:selected_row"
-          ]
-        }
-      ]
-    },
-    {
-      "id": "table_page.table",
+      "id": "table_static_page.group[0].card[0]",
       "role": "table",
-      "label": "files",
-      "parent": "table_page",
+      "label": "Default, Hover, Selected, Focus: the kit's type sheet",
+      "parent": "table_static_page.group[0]",
       "state": {
         "count": {
           "kind": "int",
-          "value": 2000
+          "value": 10
+        },
+        "selected_row": {
+          "kind": "text",
+          "value": "1"
+        }
+      }
+    },
+    {
+      "id": "table_static_page.group[1]",
+      "role": "group",
+      "label": "Table, ranges",
+      "parent": "table_static_page"
+    },
+    {
+      "id": "table_static_page.group[1].card[0][0]",
+      "role": "row",
+      "label": "h1, Inter, Regular, 48/115%, -3%",
+      "parent": "table_static_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_static_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "table_static_page.group[1].card[0][1]",
+      "role": "row",
+      "label": "h2, Inter, Regular, 40/48, -3%",
+      "parent": "table_static_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_static_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_static_page.group[1].card[0][2]",
+      "role": "row",
+      "label": "h3, Inter, Regular, 32/40, -3%",
+      "parent": "table_static_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_static_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_static_page.group[1].card[0][3]",
+      "role": "row",
+      "label": "h4, Inter, Regular, 28/36, -3%",
+      "parent": "table_static_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_static_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_static_page.group[1].card[0]",
+      "role": "table",
+      "label": "Narrow: columns drop by priority",
+      "parent": "table_static_page.group[1]",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 4
+        },
+        "selected_row": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "table_static_page.group[1].card[1][0]",
+      "role": "row",
+      "label": "Paragraph, small, the body of a long comment thread, Inter Variable, optical size, Regular and Medium, 13/20 on mobile, 14/20 on desktop, -1% on every size",
+      "parent": "table_static_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_static_page.group[1].card[1]:selected_row"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "table_static_page.group[1].card[1][1]",
+      "role": "row",
+      "label": "Title, Large, the heading of a settings dialog, Inter Display, Semibold, 24/32 on desktop, -2% under 24 px",
+      "parent": "table_static_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_static_page.group[1].card[1]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_static_page.group[1].card[1]",
+      "role": "table",
+      "label": "Long content: cells cut",
+      "parent": "table_static_page.group[1]",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 2
+        },
+        "selected_row": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "table_static_page.group[1].card[2][0]",
+      "role": "row",
+      "label": "h1, Inter, Regular, 48/115%, -3%",
+      "parent": "table_static_page.group[1].card[2]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_static_page.group[1].card[2]:selected_row"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "table_static_page.group[1].card[2]",
+      "role": "table",
+      "label": "One row: the frame holds it",
+      "parent": "table_static_page.group[1]",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 1
+        },
+        "selected_row": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "table_static_page.group[1].card[3]",
+      "role": "table",
+      "label": "Empty: no rows",
+      "parent": "table_static_page.group[1]",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 0
         },
         "selected_row": {
           "kind": "text",

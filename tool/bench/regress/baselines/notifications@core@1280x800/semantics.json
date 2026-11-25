@@ -1,0 +1,541 @@
+{
+  "nodes": [
+    {
+      "id": "notifications_page",
+      "role": "region",
+      "label": "Notifications"
+    },
+    {
+      "id": "notifications_page.group[0]",
+      "role": "group",
+      "label": "Variations",
+      "parent": "notifications_page"
+    },
+    {
+      "id": "notifications_page.group[0].card[0]",
+      "role": "group",
+      "label": "Comment",
+      "parent": "notifications_page.group[0]"
+    },
+    {
+      "id": "notifications_page.group[0].card[0].alert",
+      "role": "status",
+      "label": "Randomdash, 1h ago",
+      "description": "Commented on Classic Car in Studio. These draggabale sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y. But by default I don't think we need these controllers, you could just rotate the object by clicking and dragging anywhere as expected on any 3D tool (theoretically).",
+      "parent": "notifications_page.group[0].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[0].card[0].alert:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[0].card[1]",
+      "role": "group",
+      "label": "Image generated",
+      "parent": "notifications_page.group[0]"
+    },
+    {
+      "id": "notifications_page.group[0].card[1].alert",
+      "role": "status",
+      "label": "Cute Turtle is generated, 2h ago",
+      "description": "Matte texture - Hoff Style. Prompt: Create 3D character dancing",
+      "parent": "notifications_page.group[0].card[1]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[0].card[1].alert:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[0].card[2]",
+      "role": "group",
+      "label": "Invite",
+      "parent": "notifications_page.group[0]"
+    },
+    {
+      "id": "notifications_page.group[0].card[2].alert.action[0]",
+      "role": "button",
+      "label": "Decline",
+      "parent": "notifications_page.group[0].card[2].alert",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[0].card[2].alert.action[1]",
+      "role": "button",
+      "label": "Accept",
+      "parent": "notifications_page.group[0].card[2].alert",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[0].card[2].alert",
+      "role": "status",
+      "label": "3D object is generated, 4h ago",
+      "description": "Invited you to edit Minimalist Architecture Scene",
+      "parent": "notifications_page.group[0].card[2]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[0].card[2].alert:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[0].card[3]",
+      "role": "group",
+      "label": "Like",
+      "parent": "notifications_page.group[0]"
+    },
+    {
+      "id": "notifications_page.group[0].card[3].alert",
+      "role": "status",
+      "label": "Marina, 10h ago",
+      "description": "Liked Classic Car in Studio",
+      "parent": "notifications_page.group[0].card[3]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[0].card[3].alert:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[0].card[4]",
+      "role": "group",
+      "label": "Video generated",
+      "parent": "notifications_page.group[0]"
+    },
+    {
+      "id": "notifications_page.group[0].card[4].alert",
+      "role": "status",
+      "label": "Animation is generated, 1d ago",
+      "description": "12s – 720p. Prompt: Create 3D character dancing",
+      "parent": "notifications_page.group[0].card[4]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[0].card[4].alert:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1]",
+      "role": "group",
+      "label": "Notification Dropdown",
+      "parent": "notifications_page"
+    },
+    {
+      "id": "notifications_page.group[1].card[0]",
+      "role": "group",
+      "label": "Notifications",
+      "parent": "notifications_page.group[1]"
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.filter[0]",
+      "role": "tab",
+      "label": "All",
+      "parent": "notifications_page.group[1].card[0].dropdown.filter",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "notifications_page.group[1].card[0].dropdown.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.filter[1]",
+      "role": "tab",
+      "label": "Unread",
+      "parent": "notifications_page.group[1].card[0].dropdown.filter",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "notifications_page.group[1].card[0].dropdown.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.filter",
+      "role": "tab_list",
+      "label": "Show",
+      "parent": "notifications_page.group[1].card[0].dropdown",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list",
+      "role": "list",
+      "label": "Notifications",
+      "parent": "notifications_page.group[1].card[0].dropdown",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 8
+        }
+      }
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[0]",
+      "role": "list_item",
+      "label": "Randomdash, 1h ago",
+      "description": "Commented on Classic Car in Studio. These draggabale sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y. But by default I don't think we need these controllers, you could just rotate the object by clicking and dragging anywhere as expected on any 3D tool (theoretically).",
+      "parent": "notifications_page.group[1].card[0].dropdown.list",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[1].card[0].dropdown.list[0]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[1]",
+      "role": "list_item",
+      "label": "Cute Turtle is generated, 2h ago",
+      "description": "Matte texture - Hoff Style. Prompt: Create 3D character dancing",
+      "parent": "notifications_page.group[1].card[0].dropdown.list",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[1].card[0].dropdown.list[1]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[2].action[0]",
+      "role": "button",
+      "label": "Decline",
+      "parent": "notifications_page.group[1].card[0].dropdown.list[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[2].action[1]",
+      "role": "button",
+      "label": "Accept",
+      "parent": "notifications_page.group[1].card[0].dropdown.list[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[2]",
+      "role": "list_item",
+      "label": "3D object is generated, 4h ago",
+      "description": "Invited you to edit Minimalist Architecture Scene",
+      "parent": "notifications_page.group[1].card[0].dropdown.list",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[1].card[0].dropdown.list[2]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[3]",
+      "role": "list_item",
+      "label": "Marina, 10h ago",
+      "description": "Liked Classic Car in Studio",
+      "parent": "notifications_page.group[1].card[0].dropdown.list",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[1].card[0].dropdown.list[3]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[4]",
+      "role": "list_item",
+      "label": "3D object is generated, 16h ago",
+      "description": "Commented on Classic Car in Studio. These draggabale sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y. But by default I don't think we need these controllers, you could just rotate the object by clicking and dragging anywhere as expected on any 3D tool (theoretically).",
+      "parent": "notifications_page.group[1].card[0].dropdown.list",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[1].card[0].dropdown.list[4]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[5]",
+      "role": "list_item",
+      "label": "Animation is generated, 1d ago",
+      "description": "12s – 720p. Prompt: Create 3D character dancing",
+      "parent": "notifications_page.group[1].card[0].dropdown.list",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[1].card[0].dropdown.list[5]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[6]",
+      "role": "list_item",
+      "label": "Randomdash, 1h ago",
+      "description": "Commented on Classic Car in Studio. These draggabale sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y. But by default I don't think we need these controllers, you could just rotate the object by clicking and dragging anywhere as expected on any 3D tool (theoretically).",
+      "parent": "notifications_page.group[1].card[0].dropdown.list",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[1].card[0].dropdown.list[6]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[7]",
+      "role": "list_item",
+      "label": "Cute Turtle is generated, 2h ago",
+      "description": "Matte texture - Hoff Style. Prompt: Create 3D character dancing",
+      "parent": "notifications_page.group[1].card[0].dropdown.list",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "notifications_page.group[1].card[0].dropdown.list[7]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown",
+      "role": "group",
+      "label": "Notifications",
+      "parent": "notifications_page.group[1].card[0]"
+    },
+    {
+      "id": "notifications_page.group[1].card[1]",
+      "role": "group",
+      "label": "Empty: nothing yet",
+      "parent": "notifications_page.group[1]"
+    },
+    {
+      "id": "notifications_page.group[1].card[1].dropdown.filter[0]",
+      "role": "tab",
+      "label": "All",
+      "parent": "notifications_page.group[1].card[1].dropdown.filter",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "notifications_page.group[1].card[1].dropdown.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[1].dropdown.filter[1]",
+      "role": "tab",
+      "label": "Unread",
+      "parent": "notifications_page.group[1].card[1].dropdown.filter",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "notifications_page.group[1].card[1].dropdown.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "notifications_page.group[1].card[1].dropdown.filter",
+      "role": "tab_list",
+      "label": "Show",
+      "parent": "notifications_page.group[1].card[1].dropdown",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "notifications_page.group[1].card[1].dropdown.list",
+      "role": "list",
+      "label": "Notifications",
+      "parent": "notifications_page.group[1].card[1].dropdown",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "notifications_page.group[1].card[1].dropdown",
+      "role": "group",
+      "label": "Notifications",
+      "parent": "notifications_page.group[1].card[1]"
+    }
+  ]
+}
