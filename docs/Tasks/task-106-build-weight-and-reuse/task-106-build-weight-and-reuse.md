@@ -133,8 +133,10 @@ A new checkout, through `builddir.sh seed`: the seed took 5 s and no disk, and `
 
 ## What was not verified
 
-- A real iOS or Android build with the plain libraries. No mobile target and no cargo-ndk is installed on the machine of this task; `cargo rustc --crate-type staticlib` and `cdylib` were run on the host triple, and cargo-ndk's forwarding of a `rustc` subcommand was read in its source.
+- A real iOS or Android build with the plain libraries. No mobile target and no cargo-ndk is installed on the machine of this task; `cargo rustc --crate-type staticlib` and `cdylib` were run on the host triple, and cargo-ndk's forwarding of a `rustc` subcommand was read in its source. Two defects a review found in the mobile script were fixed and tried on stand-ins only: the iOS build read the library from a fixed `target/` (it asks cargo now, so `CARGO_TARGET_DIR` is honored), and the Android build no longer cleared an old `libengine.so` from a reused `jniLibs`.
 - Sharing one build directory between the root workspace and urnadbapp's, now that the engine's file name carries the hash. The gate's leg keeps its own subdirectory.
+- The packaging of the web build of `graphs`. `tool/tasks/webtarget.sh graphs build` compiles the wasm release build to the end; trunk then needs wasm-bindgen 0.2.123, the lockfile's version, and the machine of this task has 0.2.129.
+- The gate on a clean runner. The `gatecheck` workflow is disabled and its last runs, on 2026-10-16, did not start for the account's billing, so the pinned toolchain, the linux leg of the matrix and the structural regression job were not run by CI.
 
 ## Open
 
