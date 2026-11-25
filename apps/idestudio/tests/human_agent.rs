@@ -690,9 +690,13 @@ fn the_commit_a_receipt_announces_is_projected_before_any_refresh() {
         rig.value(&format!("{node}:summary")),
         Value::from("fix login")
     );
+    // the author git gave the commit: the repository's own, or the one the
+    // environment exports (GIT_AUTHOR_NAME, an agent's session), which git
+    // puts first.
+    let author = rig.git(&["log", "-1", "--format=%an", &sha]);
     assert_eq!(
         rig.value(&format!("{node}:author")),
-        Value::from("Test Author")
+        Value::from(author.trim())
     );
     // A had only its staged row and leaves; B keeps its worktree change.
     assert_eq!(rig.value("changes:files"), list(&["B", "C"]));
@@ -710,7 +714,7 @@ fn the_commit_a_receipt_announces_is_projected_before_any_refresh() {
     );
     assert_eq!(
         rig.value(&format!("{node}:author")),
-        Value::from("Test Author")
+        Value::from(author.trim())
     );
     assert_eq!(rig.value("changes:files"), list(&["B", "C"]));
     assert_eq!(rig.value("changes.file[B]:status"), Value::from("modified"));

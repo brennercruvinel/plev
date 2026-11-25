@@ -14,6 +14,12 @@ if ! command -v rustup >/dev/null 2>&1; then
     echo "         CI (.github/workflows/gatecheck.yml) or install rustup." >&2
 fi
 
+# the tests commit in temp repositories under those repositories' own
+# config. a git identity the session exports (an agent's GIT_AUTHOR_NAME, a
+# signing key in GIT_CONFIG_*) comes before any config for git, so it would
+# author and sign those commits; the gate runs without it.
+unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL GIT_CONFIG_COUNT
+
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
 # the engine without its default features (no accessibility, no hot reload),
