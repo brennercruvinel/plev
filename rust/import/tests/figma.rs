@@ -11,7 +11,7 @@
 
 // shared with the other test binaries: this one reads the figma fixture.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use import::Category;
 use import::formats::figma::parse::FigNode;

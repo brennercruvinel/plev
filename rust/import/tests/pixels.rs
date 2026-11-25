@@ -18,7 +18,7 @@
 
 // shared with tests/ir.rs: this binary uses the fixtures, not the census.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 #[allow(dead_code)]
 mod sep {

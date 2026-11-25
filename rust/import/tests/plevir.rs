@@ -11,7 +11,7 @@
 // shared with the other test binaries (the html and figma helpers are
 // theirs).
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use import::formats::gpui::parse::{GExpr, GFn};
 use import::formats::react::parse::{TsxChild, TsxNode};
