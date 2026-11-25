@@ -8,6 +8,11 @@ no simulador do iOS e comparada com o desktop byte a byte. No navegador, 79 das 
 são idênticas; as outras três mostram conteúdo diferente de propósito,
 porque o navegador não tem Claude nem git.
 
+Comecei isso há uns seis anos, bem antes dos LLMs, quando decidi aprender
+Rust do jeito honesto: construindo algo real. O algo real era um app
+educativo para a minha filha, cem por cento em Rust, e ele precisava de uma
+engine que não existia. O plev é a engine por baixo desse sonho. 
+
 A scene é reconstruída a cada frame, o compositor redesenha só as layers que
 mudaram, e tudo termina numa surface sRGB. Há glass, backdrop blur, analytic
 shadows e layout que acompanha o conteúdo. O texto passa por shaping de
@@ -26,12 +31,6 @@ desde então é recusado, com o nome de quem mudou. Uma tela pode ser gerada a
 partir de um intent, como uma IR verificada, e uma sessão gravada abre no
 inspector ou roda de novo como teste.
 
-## Por que isso existe
-
-Comecei isso há uns seis anos, bem antes dos LLMs, quando decidi aprender
-Rust do jeito honesto: construindo algo real. O algo real era um app
-educativo para a minha filha, cem por cento em Rust, e ele precisava de uma
-engine que não existia. O plev é a engine por baixo desse sonho.
 
 O plev não compete com o [Flutter](https://flutter.dev), o
 [egui](https://github.com/emilk/egui), o [Dioxus](https://dioxuslabs.com) ou
@@ -338,10 +337,6 @@ construindo uma raw key em vez de passar pelo caminho único do TextStyle.
 
 MIT, veja [LICENSE](LICENSE).
 
-Feito simples, mas significativo.
+Made it simple, but significant (∂μFμν = Jν)
 
-Mantido por Brenner Cruvinel (brenner@hoffresearch.com).
-Toda contribuição é bem-vinda.
-(∂μfμν = jν)
-
-Brenner Cruvinel
+Brenner Cruvinel (brenner@hoffresearch.com)
