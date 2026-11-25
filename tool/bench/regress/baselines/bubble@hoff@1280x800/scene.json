@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "db932dec00d223a9",
+    "nodes": 23
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "bubble_page",
       "z": 0,
-      "hash": "5d3668937f26fdf9",
-      "nodes": 34,
+      "hash": "0e5dedea581e7572",
+      "nodes": 100,
       "bounds": [
-        283.0,
-        49.0,
-        957.0,
-        711.0
+        25.584782,
+        35.810867,
+        1222.4152,
+        732.18915
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "318e36033b90becd",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,198 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "bubble_page.group[0].card[0].bubble[0]",
+      "layer": "bubble_page",
+      "rect": [
+        40.0,
+        280.0,
+        121.794,
+        39.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[0].card[1].bubble[0]",
+      "layer": "bubble_page",
+      "rect": [
+        652.0,
+        280.0,
+        219.69598,
+        39.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[0].card[2].bubble[0]",
+      "layer": "bubble_page",
+      "rect": [
+        433.05603,
+        488.0,
+        194.94398,
+        39.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[0].card[3].bubble[0]",
+      "layer": "bubble_page",
+      "rect": [
+        895.225,
+        488.0,
+        101.55,
+        39.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[1].card[0].bubble[0]",
+      "layer": "bubble_page",
+      "rect": [
+        280.0,
+        753.0,
+        219.55598,
+        39.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[1].card[0].bubble[1]",
+      "layer": "bubble_page",
+      "rect": [
+        280.0,
+        800.0,
+        317.57162,
+        39.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[1].card[0].bubble[2]",
+      "layer": "bubble_page",
+      "rect": [
+        805.056,
+        847.0,
+        194.94398,
+        39.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[1].card[0].bubble[3]",
+      "layer": "bubble_page",
+      "rect": [
+        280.0,
+        894.0,
+        182.946,
+        39.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[2].card[0].bubble[0]",
+      "layer": "bubble_page",
+      "rect": [
+        40.0,
+        1119.0,
+        439.24402,
+        63.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[2].card[0].bubble[1]",
+      "layer": "bubble_page",
+      "rect": [
+        188.75598,
+        1190.0,
+        439.24402,
+        63.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[2].card[1].bubble[0]",
+      "layer": "bubble_page",
+      "rect": [
+        652.0,
+        1143.0,
+        373.97928,
+        39.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "bubble_page.group[2].card[1].bubble[1]",
+      "layer": "bubble_page",
+      "rect": [
+        866.02075,
+        1190.0,
+        373.97928,
+        39.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    }
+  ]
 }

@@ -1,0 +1,205 @@
+{
+  "nodes": [
+    {
+      "id": "message_page",
+      "role": "region",
+      "label": "Message"
+    },
+    {
+      "id": "message_page.group[0]",
+      "role": "group",
+      "label": "Comment",
+      "parent": "message_page"
+    },
+    {
+      "id": "message_page.group[0].card[0]",
+      "role": "list",
+      "label": "Default, Focus",
+      "parent": "message_page.group[0]"
+    },
+    {
+      "id": "message_page.group[0].card[0].message[0]",
+      "role": "list_item",
+      "label": "Luna Starfield, 2s",
+      "description": "I love this bag, it looks great. Could you make it with leather material? 🤔",
+      "parent": "message_page.group[0].card[0]",
+      "state": {
+        "verified": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[0].card[1]",
+      "role": "list",
+      "label": "Conversation",
+      "parent": "message_page.group[0]"
+    },
+    {
+      "id": "message_page.group[0].card[1].message[0]",
+      "role": "list_item",
+      "label": "Luna Starfield, 2s",
+      "description": "I love this bag, it looks great. Could you make it with leather material? 🤔",
+      "parent": "message_page.group[0].card[1]",
+      "state": {
+        "verified": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[0].card[1].message[1]",
+      "role": "list_item",
+      "label": "Sam, 1s",
+      "description": "@Luna Thank, I’m working on it",
+      "parent": "message_page.group[0].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[0].card[2]",
+      "role": "list",
+      "label": "Mention (pending)",
+      "parent": "message_page.group[0]"
+    },
+    {
+      "id": "message_page.group[0].card[2].message[0]",
+      "role": "list_item",
+      "label": "Sam, 1s",
+      "description": "@Luna Thank, I’m working on it",
+      "parent": "message_page.group[0].card[2]",
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[1]",
+      "role": "group",
+      "label": "Quick comment",
+      "parent": "message_page"
+    },
+    {
+      "id": "message_page.group[1].card[0]",
+      "role": "list",
+      "label": "Default, Hover, Press, Focus",
+      "parent": "message_page.group[1]"
+    },
+    {
+      "id": "message_page.group[1].card[0].message[0].reaction",
+      "role": "button",
+      "label": "2",
+      "description": "like",
+      "parent": "message_page.group[1].card[0].message[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[1].card[0].message[0]",
+      "role": "list_item",
+      "label": "Randomdash, 1h",
+      "description": "These draggable sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y. But by default I don't think we need these controllers, you could just rotate the object by clicking and dragging anywhere as expected on any 3D tool (theoretically).",
+      "parent": "message_page.group[1].card[0]",
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[1].card[1]",
+      "role": "list",
+      "label": "Disabled",
+      "parent": "message_page.group[1]"
+    },
+    {
+      "id": "message_page.group[1].card[1].message[0].reaction",
+      "role": "button",
+      "label": "2",
+      "description": "like",
+      "parent": "message_page.group[1].card[1].message[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[1].card[1].message[0]",
+      "role": "list_item",
+      "label": "Randomdash, 1h",
+      "description": "These draggable sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y. But by default I don't think we need these controllers, you could just rotate the object by clicking and dragging anywhere as expected on any 3D tool (theoretically).",
+      "parent": "message_page.group[1].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[2]",
+      "role": "group",
+      "label": "Content",
+      "parent": "message_page"
+    },
+    {
+      "id": "message_page.group[2].card[0]",
+      "role": "list",
+      "label": "Long text",
+      "parent": "message_page.group[2]"
+    },
+    {
+      "id": "message_page.group[2].card[0].message[0]",
+      "role": "list_item",
+      "label": "Luna Starfield, 4m",
+      "description": "These draggable sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y. But by default I don't think we need these controllers, you could just rotate the object by clicking and dragging anywhere as expected on any 3D tool (theoretically).",
+      "parent": "message_page.group[2].card[0]",
+      "state": {
+        "verified": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[2].card[1]",
+      "role": "list",
+      "label": "Mixed scripts",
+      "parent": "message_page.group[2]"
+    },
+    {
+      "id": "message_page.group[2].card[1].message[0]",
+      "role": "list_item",
+      "label": "سارة الأحمد, 3m",
+      "description": "Olá! مرحبا بالعالم · שלום עולם · नमस्ते दुनिया · 你好世界 · こんにちは · 안녕하세요 🎉👍🏽",
+      "parent": "message_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[2].card[2]",
+      "role": "list",
+      "label": "Long name, the time kept",
+      "parent": "message_page.group[2]"
+    },
+    {
+      "id": "message_page.group[2].card[2].message[0]",
+      "role": "list_item",
+      "label": "Maria Eduarda Albuquerque de Souza Vasconcelos Starfield, 12 min ago",
+      "description": "I love this bag, it looks great. Could you make it with leather material? 🤔",
+      "parent": "message_page.group[2].card[2]",
+      "focusable": true
+    },
+    {
+      "id": "message_page.group[2].card[3]",
+      "role": "list",
+      "label": "Empty body",
+      "parent": "message_page.group[2]"
+    },
+    {
+      "id": "message_page.group[2].card[3].message[0]",
+      "role": "list_item",
+      "label": "Sam, now",
+      "parent": "message_page.group[2].card[3]",
+      "focusable": true
+    }
+  ]
+}

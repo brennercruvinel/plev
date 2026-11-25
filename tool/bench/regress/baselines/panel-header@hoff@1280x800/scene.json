@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "50f5d78186b76f6f",
+    "nodes": 7
+  },
   "layers": [
     {
       "name": "z0",
       "z": 0,
-      "hash": "0066f38b452e107a",
-      "nodes": 11,
+      "hash": "0ad97d195ab2de46",
+      "nodes": 33,
       "bounds": [
-        283.0,
-        49.0,
-        725.0,
-        161.70001
+        25.584782,
+        35.810867,
+        1222.4152,
+        669.18915
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "318e36033b90becd",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",

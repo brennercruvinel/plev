@@ -1,0 +1,2813 @@
+{
+  "nodes": [
+    {
+      "id": "calendar_page",
+      "role": "region",
+      "label": "Calendar"
+    },
+    {
+      "id": "calendar_page.group[0]",
+      "role": "group",
+      "label": "Calendar",
+      "parent": "calendar_page"
+    },
+    {
+      "id": "calendar_page.group[0].card[0].prev",
+      "role": "button",
+      "label": "previous month",
+      "parent": "calendar_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0].next",
+      "role": "button",
+      "label": "next month",
+      "parent": "calendar_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-01]",
+      "role": "radio",
+      "label": "1 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-02]",
+      "role": "radio",
+      "label": "2 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-03]",
+      "role": "radio",
+      "label": "3 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-04]",
+      "role": "radio",
+      "label": "4 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-05]",
+      "role": "radio",
+      "label": "5 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-06]",
+      "role": "radio",
+      "label": "6 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-07]",
+      "role": "radio",
+      "label": "7 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-08]",
+      "role": "radio",
+      "label": "8 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-09]",
+      "role": "radio",
+      "label": "9 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-10]",
+      "role": "radio",
+      "label": "10 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-11]",
+      "role": "radio",
+      "label": "11 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-12]",
+      "role": "radio",
+      "label": "12 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-13]",
+      "role": "radio",
+      "label": "13 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-14]",
+      "role": "radio",
+      "label": "14 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-15]",
+      "role": "radio",
+      "label": "15 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-16]",
+      "role": "radio",
+      "label": "16 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-17]",
+      "role": "radio",
+      "label": "17 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-18]",
+      "role": "radio",
+      "label": "18 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-19]",
+      "role": "radio",
+      "label": "19 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-20]",
+      "role": "radio",
+      "label": "20 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-21]",
+      "role": "radio",
+      "label": "21 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-22]",
+      "role": "radio",
+      "label": "22 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-23]",
+      "role": "radio",
+      "label": "23 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-24]",
+      "role": "radio",
+      "label": "24 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-25]",
+      "role": "radio",
+      "label": "25 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-26]",
+      "role": "radio",
+      "label": "26 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-27]",
+      "role": "radio",
+      "label": "27 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-28]",
+      "role": "radio",
+      "label": "28 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-29]",
+      "role": "radio",
+      "label": "29 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-30]",
+      "role": "radio",
+      "label": "30 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0][2026-10-31]",
+      "role": "radio",
+      "label": "31 October 2026",
+      "parent": "calendar_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        },
+        "today": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[0]",
+      "role": "group",
+      "label": "due date",
+      "description": "Default, Hover, Press, Focus, Today",
+      "parent": "calendar_page.group[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "2026-10-14"
+        },
+        "month": {
+          "kind": "text",
+          "value": "2026-10"
+        }
+      }
+    },
+    {
+      "id": "calendar_page.group[0].card[1].prev",
+      "role": "button",
+      "label": "previous month",
+      "parent": "calendar_page.group[0].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1].next",
+      "role": "button",
+      "label": "next month",
+      "parent": "calendar_page.group[0].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-01]",
+      "role": "radio",
+      "label": "1 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-02]",
+      "role": "radio",
+      "label": "2 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-03]",
+      "role": "radio",
+      "label": "3 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-04]",
+      "role": "radio",
+      "label": "4 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-05]",
+      "role": "radio",
+      "label": "5 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-06]",
+      "role": "radio",
+      "label": "6 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-07]",
+      "role": "radio",
+      "label": "7 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-08]",
+      "role": "radio",
+      "label": "8 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-09]",
+      "role": "radio",
+      "label": "9 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-10]",
+      "role": "radio",
+      "label": "10 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-11]",
+      "role": "radio",
+      "label": "11 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-12]",
+      "role": "radio",
+      "label": "12 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-13]",
+      "role": "radio",
+      "label": "13 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-14]",
+      "role": "radio",
+      "label": "14 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-15]",
+      "role": "radio",
+      "label": "15 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-16]",
+      "role": "radio",
+      "label": "16 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-17]",
+      "role": "radio",
+      "label": "17 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-18]",
+      "role": "radio",
+      "label": "18 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-19]",
+      "role": "radio",
+      "label": "19 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-20]",
+      "role": "radio",
+      "label": "20 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-21]",
+      "role": "radio",
+      "label": "21 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-22]",
+      "role": "radio",
+      "label": "22 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-23]",
+      "role": "radio",
+      "label": "23 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-24]",
+      "role": "radio",
+      "label": "24 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-25]",
+      "role": "radio",
+      "label": "25 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-26]",
+      "role": "radio",
+      "label": "26 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-27]",
+      "role": "radio",
+      "label": "27 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-28]",
+      "role": "radio",
+      "label": "28 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-29]",
+      "role": "radio",
+      "label": "29 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-30]",
+      "role": "radio",
+      "label": "30 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1][2026-10-31]",
+      "role": "radio",
+      "label": "31 October 2026",
+      "parent": "calendar_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        },
+        "today": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[0].card[1]",
+      "role": "group",
+      "label": "due date",
+      "description": "Disabled",
+      "parent": "calendar_page.group[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "2026-10-14"
+        },
+        "month": {
+          "kind": "text",
+          "value": "2026-10"
+        }
+      },
+      "enabled": false
+    },
+    {
+      "id": "calendar_page.group[1]",
+      "role": "group",
+      "label": "Calendar, limits",
+      "parent": "calendar_page"
+    },
+    {
+      "id": "calendar_page.group[1].card[0].prev",
+      "role": "button",
+      "label": "previous month",
+      "parent": "calendar_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0].next",
+      "role": "button",
+      "label": "next month",
+      "parent": "calendar_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-01]",
+      "role": "radio",
+      "label": "1 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-02]",
+      "role": "radio",
+      "label": "2 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-03]",
+      "role": "radio",
+      "label": "3 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-04]",
+      "role": "radio",
+      "label": "4 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-05]",
+      "role": "radio",
+      "label": "5 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-06]",
+      "role": "radio",
+      "label": "6 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-07]",
+      "role": "radio",
+      "label": "7 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-08]",
+      "role": "radio",
+      "label": "8 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-09]",
+      "role": "radio",
+      "label": "9 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-10]",
+      "role": "radio",
+      "label": "10 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-11]",
+      "role": "radio",
+      "label": "11 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-12]",
+      "role": "radio",
+      "label": "12 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-13]",
+      "role": "radio",
+      "label": "13 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-14]",
+      "role": "radio",
+      "label": "14 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-15]",
+      "role": "radio",
+      "label": "15 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-16]",
+      "role": "radio",
+      "label": "16 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-17]",
+      "role": "radio",
+      "label": "17 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-18]",
+      "role": "radio",
+      "label": "18 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-19]",
+      "role": "radio",
+      "label": "19 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-20]",
+      "role": "radio",
+      "label": "20 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-21]",
+      "role": "radio",
+      "label": "21 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-22]",
+      "role": "radio",
+      "label": "22 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-23]",
+      "role": "radio",
+      "label": "23 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-24]",
+      "role": "radio",
+      "label": "24 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-25]",
+      "role": "radio",
+      "label": "25 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-26]",
+      "role": "radio",
+      "label": "26 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-27]",
+      "role": "radio",
+      "label": "27 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-28]",
+      "role": "radio",
+      "label": "28 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-29]",
+      "role": "radio",
+      "label": "29 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-30]",
+      "role": "radio",
+      "label": "30 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0][2026-10-31]",
+      "role": "radio",
+      "label": "31 October 2026",
+      "parent": "calendar_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        },
+        "today": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[0]",
+      "role": "group",
+      "label": "check-in",
+      "description": "Range: the 10th to the 20th",
+      "parent": "calendar_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "2026-10-15"
+        },
+        "month": {
+          "kind": "text",
+          "value": "2026-10"
+        }
+      }
+    },
+    {
+      "id": "calendar_page.group[1].card[1].prev",
+      "role": "button",
+      "label": "previous month",
+      "parent": "calendar_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1].next",
+      "role": "button",
+      "label": "next month",
+      "parent": "calendar_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-01]",
+      "role": "radio",
+      "label": "1 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-02]",
+      "role": "radio",
+      "label": "2 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-03]",
+      "role": "radio",
+      "label": "3 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-04]",
+      "role": "radio",
+      "label": "4 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-05]",
+      "role": "radio",
+      "label": "5 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-06]",
+      "role": "radio",
+      "label": "6 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-07]",
+      "role": "radio",
+      "label": "7 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-08]",
+      "role": "radio",
+      "label": "8 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-09]",
+      "role": "radio",
+      "label": "9 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-10]",
+      "role": "radio",
+      "label": "10 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-11]",
+      "role": "radio",
+      "label": "11 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-12]",
+      "role": "radio",
+      "label": "12 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-13]",
+      "role": "radio",
+      "label": "13 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-14]",
+      "role": "radio",
+      "label": "14 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-15]",
+      "role": "radio",
+      "label": "15 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-16]",
+      "role": "radio",
+      "label": "16 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-17]",
+      "role": "radio",
+      "label": "17 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-18]",
+      "role": "radio",
+      "label": "18 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-19]",
+      "role": "radio",
+      "label": "19 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-20]",
+      "role": "radio",
+      "label": "20 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-21]",
+      "role": "radio",
+      "label": "21 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-22]",
+      "role": "radio",
+      "label": "22 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-23]",
+      "role": "radio",
+      "label": "23 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-24]",
+      "role": "radio",
+      "label": "24 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-25]",
+      "role": "radio",
+      "label": "25 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-26]",
+      "role": "radio",
+      "label": "26 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-27]",
+      "role": "radio",
+      "label": "27 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-28]",
+      "role": "radio",
+      "label": "28 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1][2028-02-29]",
+      "role": "radio",
+      "label": "29 February 2028",
+      "parent": "calendar_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "calendar_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "calendar_page.group[1].card[1]",
+      "role": "group",
+      "label": "start",
+      "description": "Nothing chosen, a leap February",
+      "parent": "calendar_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": ""
+        },
+        "month": {
+          "kind": "text",
+          "value": "2028-02"
+        }
+      }
+    }
+  ]
+}

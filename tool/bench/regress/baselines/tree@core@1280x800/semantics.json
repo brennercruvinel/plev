@@ -6,6 +6,12 @@
       "label": "Tree"
     },
     {
+      "id": "tree_page.group[0]",
+      "role": "group",
+      "label": "Tree",
+      "parent": "tree_page"
+    },
+    {
       "id": "tree_page.tree[1]",
       "role": "tree_item",
       "label": "src",
@@ -227,8 +233,190 @@
     {
       "id": "tree_page.tree",
       "role": "tree",
-      "label": "files",
-      "parent": "tree_page"
+      "label": "Default, Hover, Selected, Focus, Expand: a project",
+      "parent": "tree_page.group[0]"
+    },
+    {
+      "id": "tree_page.group[0].card[1][1]",
+      "role": "tree_item",
+      "label": "workspace_of_the_whole_project",
+      "parent": "tree_page.group[0].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.group[0].card[1][1]:selected"
+          ]
+        },
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "tree_page.group[0].card[1][1]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.group[0].card[1][2]",
+      "role": "tree_item",
+      "label": "engine_crate_with_a_long_name",
+      "parent": "tree_page.group[0].card[1][1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.group[0].card[1][2]:selected"
+          ]
+        },
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "tree_page.group[0].card[1][2]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.group[0].card[1][3]",
+      "role": "tree_item",
+      "label": "drawing_backends_for_every_target",
+      "parent": "tree_page.group[0].card[1][2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.group[0].card[1][3]:selected"
+          ]
+        },
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "tree_page.group[0].card[1][3]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.group[0].card[1][4]",
+      "role": "tree_item",
+      "label": "compositor_and_its_layers",
+      "parent": "tree_page.group[0].card[1][3]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.group[0].card[1][4]:selected"
+          ]
+        },
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "tree_page.group[0].card[1][4]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.group[0].card[1][5]",
+      "role": "tree_item",
+      "label": "presentation_layer_of_the_scene",
+      "parent": "tree_page.group[0].card[1][4]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.group[0].card[1][5]:selected"
+          ]
+        },
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "tree_page.group[0].card[1][5]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.group[0].card[1][6]",
+      "role": "tree_item",
+      "label": "the_render_graph_of_every_frame_the_window_draws.rs",
+      "parent": "tree_page.group[0].card[1][5]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tree_page.group[0].card[1][6]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tree_page.group[0].card[1]",
+      "role": "tree",
+      "label": "Deep and long: names cut",
+      "parent": "tree_page.group[0]"
     }
   ]
 }

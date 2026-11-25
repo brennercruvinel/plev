@@ -84,7 +84,8 @@ usage:
                                         --dev <view> draws the dev mode's panel under the page,
                                         open on Frame, GPU, Zones, Plots, Memory, Log or
                                         Inspect; --dev-side docks it beside the page
-                                        (PLEV_DEV=1 in the window).
+                                        (in the window: PLEV_DEV=1 for its gear, PLEV_DEV=<view>
+                                        for the panel open on a view, F12 to open and close it).
 defaults: --theme core --width 1200 --height 800 --scale 1 (the window's
 launch size); width and height are logical pixels, the PNG is width*scale
 by height*scale and the SVG's viewBox is the logical size. page titles are

@@ -34,6 +34,7 @@ backs each claim.
 | what we know about a subject | [research](Research/Research.md), by the same themes as the ADRs, with the [generative runtime thesis](Research/Synthesis/generative-runtime-thesis.md) and its [program](Research/Synthesis/generative-runtime-program.md) |
 | what went wrong and what stayed | the learnings, beside the decision they speak to, in the ADR's folder; what taught the way of working in [Research/Workflows](Research/Workflows/autonomous-cycle-learnings.md) |
 | work on the code today | [Research/Workflows](Research/Research.md#workflows), starting with the [engine manual](Research/Workflows/code-against-the-plev-engine.md) |
+| see what a frame did, on screen | the dev mode: `PLEV_DEV=1 cargo run -p uigallery`, then the gear or F12; [task-105](Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md) says every view, [ADR 0093](adr/Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md) why it is the engine's own |
 | the architecture on one page | [ATLAS.toml](ATLAS.toml); the old names and today's in [TERMS.toml](TERMS.toml) |
 
 ## How the pieces connect

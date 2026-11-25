@@ -1,0 +1,125 @@
+{
+  "nodes": [
+    {
+      "id": "drawer_page",
+      "role": "region",
+      "label": "Drawer"
+    },
+    {
+      "id": "drawer_page.group[0]",
+      "role": "group",
+      "label": "Live",
+      "parent": "drawer_page"
+    },
+    {
+      "id": "drawer_page.group[0].card[0]",
+      "role": "button",
+      "label": "Open navigation",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "drawer_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "drawer_page.group[1]",
+      "role": "group",
+      "label": "States",
+      "parent": "drawer_page"
+    },
+    {
+      "id": "drawer_page.group[1].card[0]",
+      "role": "group",
+      "label": "Research",
+      "description": "Open, current link",
+      "parent": "drawer_page.group[1]"
+    },
+    {
+      "id": "drawer_page.group[1].card[0][0]",
+      "role": "label",
+      "label": "Branding",
+      "parent": "drawer_page.group[1].card[0]",
+      "state": {
+        "current": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "drawer_page.group[1].card[0][1]",
+      "role": "label",
+      "label": "Colors",
+      "parent": "drawer_page.group[1].card[0]",
+      "state": {
+        "current": {
+          "kind": "bool",
+          "value": true
+        }
+      }
+    },
+    {
+      "id": "drawer_page.group[1].card[0][2]",
+      "role": "label",
+      "label": "Depths",
+      "parent": "drawer_page.group[1].card[0]",
+      "state": {
+        "current": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "drawer_page.group[1].card[0][3]",
+      "role": "label",
+      "label": "Icons",
+      "parent": "drawer_page.group[1].card[0]",
+      "state": {
+        "current": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "drawer_page.group[1].card[0][4]",
+      "role": "label",
+      "label": "Buttons",
+      "parent": "drawer_page.group[1].card[0]",
+      "state": {
+        "current": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "drawer_page.group[1].card[0][5]",
+      "role": "label",
+      "label": "Inputs",
+      "parent": "drawer_page.group[1].card[0]",
+      "state": {
+        "current": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "drawer_page.group[1].card[0][6]",
+      "role": "label",
+      "label": "Modals",
+      "parent": "drawer_page.group[1].card[0]",
+      "state": {
+        "current": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    }
+  ]
+}

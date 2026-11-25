@@ -123,7 +123,7 @@ mod dev {
     use engine::drawing::gpu::RenderConfig;
     use engine::runtime::dev::DevMode;
     use engine::runtime::window::WindowHost;
-    use engine::widgets::prelude::{Button, ButtonSize, WidgetEvent};
+    use engine::widgets::prelude::WidgetEvent;
     use winit::window::WindowId;
 
     use super::{App, TURN};
@@ -131,9 +131,10 @@ mod dev {
 
     const WINDOW: (u32, u32) = (1280, 800);
 
-    /// A pixel of the window's corner, where the page draws nothing and
-    /// the open panel does.
-    const CORNER: (u32, u32) = (WINDOW.0 - 4, WINDOW.1 - 4);
+    /// A pixel of the window's right edge just under its middle: the
+    /// page's ground while the panel is closed, the panel's strip, which
+    /// has another ground, while it is open at the bottom.
+    const CORNER: (u32, u32) = (WINDOW.0 - 2, WINDOW.1 / 2 + 6);
 
     /// The shell around the Todo page, launched with a dev mode or
     /// without (`dev`), in a window that draws into a texture and times
@@ -161,13 +162,8 @@ mod dev {
             .expect("the window is there");
     }
 
-    /// A click on the "Dev" button where the dev mode puts it: the bottom
-    /// center of the page, a large space above its edge.
-    fn press_dev(app: &mut App, id: WindowId) {
-        let theme = &app.view.theme;
-        let button = Button::new("Dev").size(ButtonSize::Sm);
-        let x = app.view.width / 2.0;
-        let y = app.view.height - theme.spacing.lg - button.preferred_size(theme).1 / 2.0;
+    /// A click in the middle of `at`.
+    fn press(app: &mut App, id: WindowId, (x, y): (f32, f32)) {
         for event in [
             WidgetEvent::MouseMove { x, y },
             WidgetEvent::MouseDown { x, y },
@@ -177,6 +173,19 @@ mod dev {
         }
     }
 
+    /// A click on the gear where the dev mode puts it: the page's lower
+    /// right corner.
+    fn press_gear(app: &mut App, id: WindowId) {
+        let gear = app.dev.gear(WINDOW.0 as f32, WINDOW.1 as f32);
+        press(app, id, gear.center());
+    }
+
+    /// A click on the close of the open panel: the right end of its strip.
+    fn press_close(app: &mut App, id: WindowId) {
+        let (_, page_h) = app.dev.page_size(WINDOW.0 as f32, WINDOW.1 as f32);
+        press(app, id, (WINDOW.0 as f32 - 16.0, page_h + 16.0));
+    }
+
     fn corner(app: &App, id: WindowId) -> Option<[u8; 4]> {
         let host = app.windows.get(id).expect("the window is there");
         let shot = host.read().expect("the frame reads back");
@@ -184,7 +193,7 @@ mod dev {
     }
 
     #[test]
-    fn the_dev_button_opens_the_panel_in_the_window_and_the_panel_reads_its_frames() {
+    fn the_gear_opens_the_panel_in_the_window_and_the_panel_reads_its_frames() {
         let Some((mut app, id)) = windowed(true) else {
             return;
         };
@@ -193,7 +202,7 @@ mod dev {
         assert!(!app.dev.is_open());
         assert!(!app.windows.get(id).unwrap().dev().is_on());
 
-        press_dev(&mut app, id);
+        press_gear(&mut app, id);
         assert!(app.dev.is_open(), "the press opened the panel");
         let half = (WINDOW.0 as f32, WINDOW.1 as f32 / 2.0);
         assert_eq!(
@@ -226,9 +235,14 @@ mod dev {
                 "no frame got its GPU time back"
             );
         }
-        assert_ne!(corner(&app, id), page, "the panel is drawn over the corner");
+        assert_ne!(corner(&app, id), page, "the panel's strip is drawn there");
+        let whole = recorder.settled().expect("a frame to show");
+        assert!(
+            !recorder.gpu_available() || whole.gpu.is_some(),
+            "the frame the panel shows has its GPU time"
+        );
 
-        press_dev(&mut app, id);
+        press_close(&mut app, id);
         assert!(!app.dev.is_open(), "the press closed the panel");
         assert_eq!(
             app.view.height, WINDOW.1 as f32,
@@ -236,11 +250,109 @@ mod dev {
         );
         frame(&mut app, id);
         assert!(!app.windows.get(id).unwrap().dev().is_on());
-        assert_eq!(corner(&app, id), page, "the page is back in the corner");
+        assert_eq!(corner(&app, id), page, "the page is back there");
     }
 
     #[test]
-    fn a_launch_without_the_dev_mode_draws_no_button_and_takes_no_press() {
+    fn the_picker_chooses_the_control_under_the_pointer_and_the_page_keeps_its_state() {
+        let Some((mut app, id)) = windowed(true) else {
+            return;
+        };
+        frame(&mut app, id);
+        press_gear(&mut app, id);
+        frame(&mut app, id);
+        let (_, page_h) = app.dev.page_size(WINDOW.0 as f32, WINDOW.1 as f32);
+        // the picker is the first place of the strip
+        press(&mut app, id, (16.0, page_h + 16.0));
+        assert_eq!(app.dev.tab(), engine::runtime::dev::Tab::Inspect);
+        frame(&mut app, id);
+
+        // a control of the page that shows in its half of the window
+        let host = app.windows.get(id).unwrap();
+        let (target, [x, y, w, h]) = host
+            .compositor()
+            .visible_bindings()
+            .filter(|(_, [_, y, _, h])| y + h < page_h)
+            .map(|(id, rect)| (id.clone(), rect))
+            .last()
+            .expect("the Todo page binds its controls");
+        let before = app.view.semantics();
+        press(&mut app, id, (x + w / 2.0, y + h / 2.0));
+        // the control itself, or what it draws under the pointer (its
+        // label, its mark), whichever is the more particular: either way
+        // the control the choice is, or sits in, is the one pressed
+        let chosen = app.dev.picked_kind().expect("the press chose something");
+        assert_eq!(
+            app.dev.picked_owner(),
+            Some(&target),
+            "the control under the press, or a {chosen} node of it"
+        );
+        assert_eq!(
+            app.view.semantics(),
+            before,
+            "the press did not reach the page"
+        );
+    }
+
+    #[test]
+    fn the_picker_chooses_an_icon_of_a_page_that_gives_it_no_id() {
+        let Some((mut app, id)) = windowed(true) else {
+            return;
+        };
+        app.view.jump_to_page("Icons");
+        frame(&mut app, id);
+        press_gear(&mut app, id);
+        frame(&mut app, id);
+        let (_, page_h) = app.dev.page_size(WINDOW.0 as f32, WINDOW.1 as f32);
+        press(&mut app, id, (16.0, page_h + 16.0));
+        frame(&mut app, id);
+
+        // an icon the page draws in its half of the window, at no id:
+        // nothing is bound where it is
+        let host = app.windows.get(id).unwrap();
+        let c = host.compositor();
+        let [x, y, w, h] = c
+            .layers()
+            .iter()
+            .filter(|layer| layer.z_order == 0)
+            .flat_map(|layer| layer.nodes())
+            .filter(|node| node.kind() == "Path")
+            .filter_map(|node| node.bounds())
+            .find(|[x, y, w, h]| {
+                let at = (x + w / 2.0, y + h / 2.0);
+                *y > 160.0 && y + h < page_h - 8.0 && c.hit(at.0, at.1).is_none()
+            })
+            .expect("the Icons page draws its icons as paths");
+        press(&mut app, id, (x + w / 2.0, y + h / 2.0));
+        assert_eq!(
+            app.dev.picked_kind(),
+            Some("Path"),
+            "the icon under the press is what was chosen"
+        );
+        assert_eq!(app.dev.picked(), None, "it is no control");
+    }
+
+    #[test]
+    fn the_dev_key_opens_and_closes_the_panel_and_is_the_pages_without_a_dev_mode() {
+        let (Some((mut app, id)), Some((mut none, none_id))) = (windowed(true), windowed(false))
+        else {
+            return;
+        };
+        frame(&mut app, id);
+        assert!(app.dev_key(id), "the key is the dev mode's");
+        assert!(app.dev.is_open());
+        assert_eq!(app.view.height, WINDOW.1 as f32 / 2.0, "the page gave half");
+        assert!(app.dev_key(id));
+        assert!(!app.dev.is_open());
+        assert_eq!(app.view.height, WINDOW.1 as f32);
+
+        frame(&mut none, none_id);
+        assert!(!none.dev_key(none_id), "no dev mode: the key goes on");
+        assert!(!none.dev.is_open());
+    }
+
+    #[test]
+    fn a_launch_without_the_dev_mode_draws_no_gear_and_takes_no_press() {
         let (Some((mut with, with_id)), Some((mut app, id))) = (windowed(true), windowed(false))
         else {
             return;
@@ -254,7 +366,7 @@ mod dev {
             "no layer of its own"
         );
 
-        press_dev(&mut app, id);
+        press_gear(&mut app, id);
         frame(&mut app, id);
         assert!(!app.dev.is_open());
         assert_eq!(app.view.height, WINDOW.1 as f32);

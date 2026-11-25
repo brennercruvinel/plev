@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "853357d9ee6cd967",
+    "nodes": 47
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "command_page",
       "z": 0,
-      "hash": "fac363fa88cb2cc8",
-      "nodes": 8,
+      "hash": "fe778b55d896424c",
+      "nodes": 241,
       "bounds": [
-        283.0,
-        49.0,
-        725.0,
-        222.6
+        25.584782,
+        35.810867,
+        1222.4152,
+        732.18915
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "318e36033b90becd",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,534 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "command_page.group[0].card[0]",
+      "layer": "command_page",
+      "rect": [
+        190.0,
+        239.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[0].action",
+      "layer": "command_page",
+      "rect": [
+        194.0,
+        243.0,
+        32.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[0].list[0]",
+      "layer": "command_page",
+      "rect": [
+        190.0,
+        343.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        190.0,
+        299.0,
+        288.0,
+        304.0
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[0].list[1]",
+      "layer": "command_page",
+      "rect": [
+        190.0,
+        387.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        190.0,
+        299.0,
+        288.0,
+        304.0
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[0].list[2]",
+      "layer": "command_page",
+      "rect": [
+        190.0,
+        431.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        190.0,
+        299.0,
+        288.0,
+        304.0
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[0].list[3]",
+      "layer": "command_page",
+      "rect": [
+        190.0,
+        519.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        190.0,
+        299.0,
+        288.0,
+        304.0
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[0].list[4]",
+      "layer": "command_page",
+      "rect": [
+        190.0,
+        563.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        190.0,
+        299.0,
+        288.0,
+        304.0
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[1]",
+      "layer": "command_page",
+      "rect": [
+        802.0,
+        303.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[1].action",
+      "layer": "command_page",
+      "rect": [
+        806.0,
+        307.0,
+        32.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[1].list[2]",
+      "layer": "command_page",
+      "rect": [
+        802.0,
+        407.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        802.0,
+        363.0,
+        288.0,
+        176.0
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[1].list[4]",
+      "layer": "command_page",
+      "rect": [
+        802.0,
+        495.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        802.0,
+        363.0,
+        288.0,
+        176.0
+      ]
+    },
+    {
+      "id": "command_page.group[1].card[0]",
+      "layer": "command_page",
+      "rect": [
+        190.0,
+        927.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[1].card[0].action",
+      "layer": "command_page",
+      "rect": [
+        194.0,
+        931.0,
+        32.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[1].card[1]",
+      "layer": "command_page",
+      "rect": [
+        802.0,
+        797.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[1].card[1].action",
+      "layer": "command_page",
+      "rect": [
+        806.0,
+        801.0,
+        32.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[1].card[1].list[0]",
+      "layer": "command_page",
+      "rect": [
+        802.0,
+        901.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        802.0,
+        857.0,
+        288.0,
+        -89.0
+      ]
+    },
+    {
+      "id": "command_page.group[1].card[1].list[1]",
+      "layer": "command_page",
+      "rect": [
+        802.0,
+        945.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        802.0,
+        857.0,
+        288.0,
+        -89.0
+      ]
+    },
+    {
+      "id": "command_page.group[1].card[1].list[2]",
+      "layer": "command_page",
+      "rect": [
+        802.0,
+        989.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        802.0,
+        857.0,
+        288.0,
+        -89.0
+      ]
+    },
+    {
+      "id": "command_page.group[1].card[1].list[3]",
+      "layer": "command_page",
+      "rect": [
+        802.0,
+        1077.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        802.0,
+        857.0,
+        288.0,
+        -89.0
+      ]
+    },
+    {
+      "id": "command_page.group[1].card[1].list[4]",
+      "layer": "command_page",
+      "rect": [
+        802.0,
+        1121.0,
+        288.0,
+        44.0
+      ],
+      "clip": [
+        802.0,
+        857.0,
+        288.0,
+        -89.0
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[0].trigger",
+      "layer": "command_page",
+      "rect": [
+        214.0,
+        1551.0,
+        240.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1]",
+      "layer": "command_page",
+      "rect": [
+        763.0,
+        1355.0,
+        366.0,
+        436.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette",
+      "layer": "command_page",
+      "rect": [
+        795.0,
+        1387.0,
+        302.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.action",
+      "layer": "command_page",
+      "rect": [
+        799.0,
+        1391.0,
+        32.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[0]",
+      "layer": "command_page",
+      "rect": [
+        795.0,
+        1491.0,
+        302.0,
+        44.0
+      ],
+      "clip": [
+        795.0,
+        1447.0,
+        302.0,
+        -679.0
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[1]",
+      "layer": "command_page",
+      "rect": [
+        795.0,
+        1535.0,
+        302.0,
+        44.0
+      ],
+      "clip": [
+        795.0,
+        1447.0,
+        302.0,
+        -679.0
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[2]",
+      "layer": "command_page",
+      "rect": [
+        795.0,
+        1579.0,
+        302.0,
+        44.0
+      ],
+      "clip": [
+        795.0,
+        1447.0,
+        302.0,
+        -679.0
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[3]",
+      "layer": "command_page",
+      "rect": [
+        795.0,
+        1667.0,
+        302.0,
+        44.0
+      ],
+      "clip": [
+        795.0,
+        1447.0,
+        302.0,
+        -679.0
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[4]",
+      "layer": "command_page",
+      "rect": [
+        795.0,
+        1711.0,
+        302.0,
+        44.0
+      ],
+      "clip": [
+        795.0,
+        1447.0,
+        302.0,
+        -679.0
+      ]
+    },
+    {
+      "id": "command_page.group[3].card[0]",
+      "layer": "command_page",
+      "rect": [
+        353.0,
+        1977.0,
+        574.12335,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[3].card[0].action",
+      "layer": "command_page",
+      "rect": [
+        357.0,
+        1981.0,
+        32.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "command_page.group[3].card[0].list[0]",
+      "layer": "command_page",
+      "rect": [
+        353.0,
+        2081.0,
+        574.12335,
+        44.0
+      ],
+      "clip": [
+        353.0,
+        2037.0,
+        574.12335,
+        -1269.0
+      ]
+    },
+    {
+      "id": "command_page.group[3].card[0].list[1]",
+      "layer": "command_page",
+      "rect": [
+        353.0,
+        2125.0,
+        574.12335,
+        44.0
+      ],
+      "clip": [
+        353.0,
+        2037.0,
+        574.12335,
+        -1269.0
+      ]
+    }
+  ]
 }

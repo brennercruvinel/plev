@@ -1,0 +1,382 @@
+{
+  "nodes": [
+    {
+      "id": "chart_page",
+      "role": "region",
+      "label": "Chart"
+    },
+    {
+      "id": "chart_page.group[0]",
+      "role": "group",
+      "label": "Chart",
+      "parent": "chart_page"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[0]",
+      "role": "row",
+      "label": "1: 0.30",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[1]",
+      "role": "row",
+      "label": "2: 0.50",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[2]",
+      "role": "row",
+      "label": "3: 0.40",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[3]",
+      "role": "row",
+      "label": "4: 0.70",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[4]",
+      "role": "row",
+      "label": "5: 0.60",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[5]",
+      "role": "row",
+      "label": "6: 0.90",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[6]",
+      "role": "row",
+      "label": "7: 0.75",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[7]",
+      "role": "row",
+      "label": "8: 0.85",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[8]",
+      "role": "row",
+      "label": "9: 0.65",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[9]",
+      "role": "row",
+      "label": "10: 0.95",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[10]",
+      "role": "row",
+      "label": "11: 0.80",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data[11]",
+      "role": "row",
+      "label": "12: 0.92",
+      "parent": "chart_page.group[0].card[0].data"
+    },
+    {
+      "id": "chart_page.group[0].card[0].data",
+      "role": "table",
+      "label": "data",
+      "parent": "chart_page.group[0].card[0]"
+    },
+    {
+      "id": "chart_page.group[0].card[0]",
+      "role": "image",
+      "label": "Sessions per week",
+      "description": "line chart, 12 values from 0.30 to 0.95",
+      "parent": "chart_page.group[0]"
+    },
+    {
+      "id": "chart_page.group[0].card[1].data[0]",
+      "role": "row",
+      "label": "1: 0.60",
+      "parent": "chart_page.group[0].card[1].data"
+    },
+    {
+      "id": "chart_page.group[0].card[1].data[1]",
+      "role": "row",
+      "label": "2: 0.80",
+      "parent": "chart_page.group[0].card[1].data"
+    },
+    {
+      "id": "chart_page.group[0].card[1].data[2]",
+      "role": "row",
+      "label": "3: 0.45",
+      "parent": "chart_page.group[0].card[1].data"
+    },
+    {
+      "id": "chart_page.group[0].card[1].data[3]",
+      "role": "row",
+      "label": "4: 0.90",
+      "parent": "chart_page.group[0].card[1].data"
+    },
+    {
+      "id": "chart_page.group[0].card[1].data[4]",
+      "role": "row",
+      "label": "5: 0.55",
+      "parent": "chart_page.group[0].card[1].data"
+    },
+    {
+      "id": "chart_page.group[0].card[1].data[5]",
+      "role": "row",
+      "label": "6: 0.75",
+      "parent": "chart_page.group[0].card[1].data"
+    },
+    {
+      "id": "chart_page.group[0].card[1].data[6]",
+      "role": "row",
+      "label": "7: 0.65",
+      "parent": "chart_page.group[0].card[1].data"
+    },
+    {
+      "id": "chart_page.group[0].card[1].data[7]",
+      "role": "row",
+      "label": "8: 0.85",
+      "parent": "chart_page.group[0].card[1].data"
+    },
+    {
+      "id": "chart_page.group[0].card[1].data",
+      "role": "table",
+      "label": "data",
+      "parent": "chart_page.group[0].card[1]"
+    },
+    {
+      "id": "chart_page.group[0].card[1]",
+      "role": "image",
+      "label": "Deploys per day",
+      "description": "bar chart, 8 values from 0.45 to 0.90",
+      "parent": "chart_page.group[0]"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data[0]",
+      "role": "row",
+      "label": "1: 0.20 and 0.10",
+      "parent": "chart_page.group[0].card[2].data"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data[1]",
+      "role": "row",
+      "label": "2: 0.35 and 0.20",
+      "parent": "chart_page.group[0].card[2].data"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data[2]",
+      "role": "row",
+      "label": "3: 0.30 and 0.15",
+      "parent": "chart_page.group[0].card[2].data"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data[3]",
+      "role": "row",
+      "label": "4: 0.50 and 0.30",
+      "parent": "chart_page.group[0].card[2].data"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data[4]",
+      "role": "row",
+      "label": "5: 0.45 and 0.25",
+      "parent": "chart_page.group[0].card[2].data"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data[5]",
+      "role": "row",
+      "label": "6: 0.60 and 0.35",
+      "parent": "chart_page.group[0].card[2].data"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data[6]",
+      "role": "row",
+      "label": "7: 0.55 and 0.30",
+      "parent": "chart_page.group[0].card[2].data"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data[7]",
+      "role": "row",
+      "label": "8: 0.70 and 0.40",
+      "parent": "chart_page.group[0].card[2].data"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data[8]",
+      "role": "row",
+      "label": "9: 0.65 and 0.35",
+      "parent": "chart_page.group[0].card[2].data"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data[9]",
+      "role": "row",
+      "label": "10: 0.75 and 0.45",
+      "parent": "chart_page.group[0].card[2].data"
+    },
+    {
+      "id": "chart_page.group[0].card[2].data",
+      "role": "table",
+      "label": "data",
+      "parent": "chart_page.group[0].card[2]"
+    },
+    {
+      "id": "chart_page.group[0].card[2]",
+      "role": "image",
+      "label": "Bandwidth by region",
+      "description": "stacked area chart, two series of 10",
+      "parent": "chart_page.group[0]"
+    },
+    {
+      "id": "chart_page.group[0].card[3].data[0]",
+      "role": "row",
+      "label": "Search: 35%",
+      "parent": "chart_page.group[0].card[3].data"
+    },
+    {
+      "id": "chart_page.group[0].card[3].data[1]",
+      "role": "row",
+      "label": "Direct: 25%",
+      "parent": "chart_page.group[0].card[3].data"
+    },
+    {
+      "id": "chart_page.group[0].card[3].data[2]",
+      "role": "row",
+      "label": "Social: 20%",
+      "parent": "chart_page.group[0].card[3].data"
+    },
+    {
+      "id": "chart_page.group[0].card[3].data[3]",
+      "role": "row",
+      "label": "Email: 12%",
+      "parent": "chart_page.group[0].card[3].data"
+    },
+    {
+      "id": "chart_page.group[0].card[3].data[4]",
+      "role": "row",
+      "label": "Ads: 8%",
+      "parent": "chart_page.group[0].card[3].data"
+    },
+    {
+      "id": "chart_page.group[0].card[3].data",
+      "role": "table",
+      "label": "data",
+      "parent": "chart_page.group[0].card[3]"
+    },
+    {
+      "id": "chart_page.group[0].card[3]",
+      "role": "image",
+      "label": "Traffic sources",
+      "description": "donut chart, 5 parts",
+      "parent": "chart_page.group[0]"
+    },
+    {
+      "id": "chart_page.group[1]",
+      "role": "group",
+      "label": "Meter",
+      "parent": "chart_page"
+    },
+    {
+      "id": "chart_page.group[1].card[0].data[0]",
+      "role": "row",
+      "label": "done: 62%",
+      "parent": "chart_page.group[1].card[0].data"
+    },
+    {
+      "id": "chart_page.group[1].card[0].data",
+      "role": "table",
+      "label": "data",
+      "parent": "chart_page.group[1].card[0]"
+    },
+    {
+      "id": "chart_page.group[1].card[0]",
+      "role": "image",
+      "label": "Index built",
+      "description": "meter at 62%",
+      "parent": "chart_page.group[1]"
+    },
+    {
+      "id": "chart_page.group[1].card[1].data[0]",
+      "role": "row",
+      "label": "vectors: 38412 chunks",
+      "parent": "chart_page.group[1].card[1].data"
+    },
+    {
+      "id": "chart_page.group[1].card[1].data[1]",
+      "role": "row",
+      "label": "documents: 12840 chunks",
+      "parent": "chart_page.group[1].card[1].data"
+    },
+    {
+      "id": "chart_page.group[1].card[1].data[2]",
+      "role": "row",
+      "label": "images: 2481 chunks",
+      "parent": "chart_page.group[1].card[1].data"
+    },
+    {
+      "id": "chart_page.group[1].card[1].data",
+      "role": "table",
+      "label": "data",
+      "parent": "chart_page.group[1].card[1]"
+    },
+    {
+      "id": "chart_page.group[1].card[1]",
+      "role": "image",
+      "label": "Chunks per store",
+      "description": "bar list, 3 items",
+      "parent": "chart_page.group[1]"
+    },
+    {
+      "id": "chart_page.group[2]",
+      "role": "group",
+      "label": "Long content",
+      "parent": "chart_page"
+    },
+    {
+      "id": "chart_page.group[2].card[0].data[0]",
+      "role": "row",
+      "label": "Pesquisa orgânica: 35%",
+      "parent": "chart_page.group[2].card[0].data"
+    },
+    {
+      "id": "chart_page.group[2].card[0].data[1]",
+      "role": "row",
+      "label": "Acesso direto: 25%",
+      "parent": "chart_page.group[2].card[0].data"
+    },
+    {
+      "id": "chart_page.group[2].card[0].data[2]",
+      "role": "row",
+      "label": "Redes sociais: 20%",
+      "parent": "chart_page.group[2].card[0].data"
+    },
+    {
+      "id": "chart_page.group[2].card[0].data[3]",
+      "role": "row",
+      "label": "Correio eletrônico: 12%",
+      "parent": "chart_page.group[2].card[0].data"
+    },
+    {
+      "id": "chart_page.group[2].card[0].data[4]",
+      "role": "row",
+      "label": "Anúncios pagos: 8%",
+      "parent": "chart_page.group[2].card[0].data"
+    },
+    {
+      "id": "chart_page.group[2].card[0].data",
+      "role": "table",
+      "label": "data",
+      "parent": "chart_page.group[2].card[0]"
+    },
+    {
+      "id": "chart_page.group[2].card[0]",
+      "role": "image",
+      "label": "Origem do tráfego",
+      "description": "donut chart, 5 parts",
+      "parent": "chart_page.group[2]"
+    }
+  ]
+}

@@ -42,6 +42,22 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         ],
     ),
     (
+        "memory-stick",
+        &[
+            Path("M6 19v-3"),
+            Path("M10 19v-3"),
+            Path("M14 19v-3"),
+            Path("M18 19v-3"),
+            Path("M8 11V9"),
+            Path("M16 11V9"),
+            Path("M12 11V9"),
+            Path("M2 15h20"),
+            Path(
+                "M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v1.1a2 2 0 0 0 0 3.837V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5.1a2 2 0 0 0 0-3.837Z",
+            ),
+        ],
+    ),
+    (
         "menu",
         &[
             Line(4.0, 12.0, 20.0, 12.0),
@@ -73,6 +89,10 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
         )],
     ),
     (
+        "panel-bottom",
+        &[SvgRect(3.0, 3.0, 18.0, 18.0, 2.0), Path("M3 15h18")],
+    ),
+    (
         "panel-left-close",
         &[
             SvgRect(3.0, 3.0, 18.0, 18.0, 2.0),
@@ -87,6 +107,10 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Path("M9 3v18"),
             Path("m14 9 3 3-3 3"),
         ],
+    ),
+    (
+        "panel-right",
+        &[SvgRect(3.0, 3.0, 18.0, 18.0, 2.0), Path("M15 3v18")],
     ),
     (
         "pause",
@@ -225,6 +249,14 @@ pub(super) static ICONS: &[(&str, &[Shape])] = &[
             Path(
                 "M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z",
             ),
+        ],
+    ),
+    (
+        "timer",
+        &[
+            Line(10.0, 2.0, 14.0, 2.0),
+            Line(12.0, 14.0, 15.0, 11.0),
+            Circle(12.0, 14.0, 8.0),
         ],
     ),
     (

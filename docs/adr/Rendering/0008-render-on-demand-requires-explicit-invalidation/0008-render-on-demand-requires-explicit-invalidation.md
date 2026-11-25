@@ -53,5 +53,6 @@ was initially misread as "scroll not implemented".
 ## Related
 
 - [ADR 0023: official app pattern: state in structs, retained widgets, explicit invalidation](../../Structure/0023-official-app-pattern/0023-official-app-pattern.md)
+- [ADR 0093: the dev mode is the engine's own: one report a frame, shown once it is whole, in a panel that offers its places as it draws](../../Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md)
 - [task-105: a dev mode over any app: the frame, the GPU, the zones, the heap and the page's controls](../../../Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)
 <!-- /related -->

@@ -6,11 +6,23 @@
       "label": "Resizable"
     },
     {
+      "id": "resizable_page.group[0]",
+      "role": "group",
+      "label": "Resizable",
+      "parent": "resizable_page"
+    },
+    {
+      "id": "resizable_page.group[1]",
+      "role": "group",
+      "label": "Resizable, vertical",
+      "parent": "resizable_page"
+    },
+    {
       "id": "resizable_page.split",
       "role": "group",
-      "label": "panes",
+      "label": "Default, Hover, Drag: two panes",
       "description": "the first pane takes 35%",
-      "parent": "resizable_page",
+      "parent": "resizable_page.group[0]",
       "state": {
         "ratio": {
           "kind": "num",
@@ -22,6 +34,38 @@
           "name": "set_ratio",
           "reads": [
             "resizable_page.split:ratio"
+          ],
+          "param": {
+            "kind": "num",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "resizable_page.group[1].card[0]",
+      "role": "group",
+      "label": "Stacked: a pane over another",
+      "description": "the first pane takes 50%",
+      "parent": "resizable_page.group[1]",
+      "state": {
+        "ratio": {
+          "kind": "num",
+          "value": 0.5
+        }
+      },
+      "actions": [
+        {
+          "name": "set_ratio",
+          "reads": [
+            "resizable_page.group[1].card[0]:ratio"
           ],
           "param": {
             "kind": "num",

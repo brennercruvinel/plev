@@ -1,0 +1,636 @@
+{
+  "nodes": [
+    {
+      "id": "avatar_page",
+      "role": "region",
+      "label": "Avatar"
+    },
+    {
+      "id": "avatar_page.group[0]",
+      "role": "group",
+      "label": "Size",
+      "parent": "avatar_page"
+    },
+    {
+      "id": "avatar_page.group[0].card[0]",
+      "role": "list",
+      "label": "Pin, Xs",
+      "parent": "avatar_page.group[0]"
+    },
+    {
+      "id": "avatar_page.group[0].card[0].avatar[0]",
+      "role": "image",
+      "label": "Luna Starfield",
+      "parent": "avatar_page.group[0].card[0]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[0].card[1]",
+      "role": "list",
+      "label": "Thread, Sm",
+      "parent": "avatar_page.group[0]"
+    },
+    {
+      "id": "avatar_page.group[0].card[1].avatar[0]",
+      "role": "image",
+      "label": "Randomdash",
+      "parent": "avatar_page.group[0].card[1]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[0].card[2]",
+      "role": "list",
+      "label": "Header, Md",
+      "parent": "avatar_page.group[0]"
+    },
+    {
+      "id": "avatar_page.group[0].card[2].avatar[0]",
+      "role": "image",
+      "label": "Tran Mau Tri Tam",
+      "parent": "avatar_page.group[0].card[2]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[0].card[3]",
+      "role": "list",
+      "label": "Upload, Lg",
+      "parent": "avatar_page.group[0]"
+    },
+    {
+      "id": "avatar_page.group[0].card[3].avatar[0]",
+      "role": "image",
+      "label": "Marina",
+      "parent": "avatar_page.group[0].card[3]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[0].card[4]",
+      "role": "list",
+      "label": "Profile, Xl",
+      "parent": "avatar_page.group[0]"
+    },
+    {
+      "id": "avatar_page.group[0].card[4].avatar[0]",
+      "role": "image",
+      "label": "Joyce",
+      "parent": "avatar_page.group[0].card[4]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[1]",
+      "role": "group",
+      "label": "Presence",
+      "parent": "avatar_page"
+    },
+    {
+      "id": "avatar_page.group[1].card[0]",
+      "role": "list",
+      "label": "Offline",
+      "parent": "avatar_page.group[1]"
+    },
+    {
+      "id": "avatar_page.group[1].card[0].avatar[0]",
+      "role": "image",
+      "label": "Orion",
+      "parent": "avatar_page.group[1].card[0]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[1].card[1]",
+      "role": "list",
+      "label": "Online",
+      "parent": "avatar_page.group[1]"
+    },
+    {
+      "id": "avatar_page.group[1].card[1].avatar[0]",
+      "role": "image",
+      "label": "Kai",
+      "parent": "avatar_page.group[1].card[1]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[1].card[2]",
+      "role": "list",
+      "label": "Online, every size",
+      "parent": "avatar_page.group[1]"
+    },
+    {
+      "id": "avatar_page.group[1].card[2].avatar[0]",
+      "role": "image",
+      "label": "Luna Starfield",
+      "parent": "avatar_page.group[1].card[2]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[1].card[2].avatar[1]",
+      "role": "image",
+      "label": "Luna Starfield",
+      "parent": "avatar_page.group[1].card[2]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[1].card[2].avatar[2]",
+      "role": "image",
+      "label": "Luna Starfield",
+      "parent": "avatar_page.group[1].card[2]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[1].card[2].avatar[3]",
+      "role": "image",
+      "label": "Luna Starfield",
+      "parent": "avatar_page.group[1].card[2]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[1].card[2].avatar[4]",
+      "role": "image",
+      "label": "Luna Starfield",
+      "parent": "avatar_page.group[1].card[2]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2]",
+      "role": "group",
+      "label": "Stack",
+      "parent": "avatar_page"
+    },
+    {
+      "id": "avatar_page.group[2].card[0]",
+      "role": "group",
+      "label": "Two",
+      "parent": "avatar_page.group[2]"
+    },
+    {
+      "id": "avatar_page.group[2].card[0].stack",
+      "role": "list",
+      "label": "Two",
+      "parent": "avatar_page.group[2].card[0]"
+    },
+    {
+      "id": "avatar_page.group[2].card[0].stack.avatar[0]",
+      "role": "image",
+      "label": "Luna Starfield",
+      "parent": "avatar_page.group[2].card[0].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[0].stack.avatar[1]",
+      "role": "image",
+      "label": "Randomdash",
+      "parent": "avatar_page.group[2].card[0].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[1]",
+      "role": "group",
+      "label": "Five",
+      "parent": "avatar_page.group[2]"
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack",
+      "role": "list",
+      "label": "Five",
+      "parent": "avatar_page.group[2].card[1]"
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack.avatar[0]",
+      "role": "image",
+      "label": "Luna Starfield",
+      "parent": "avatar_page.group[2].card[1].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack.avatar[1]",
+      "role": "image",
+      "label": "Randomdash",
+      "parent": "avatar_page.group[2].card[1].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack.avatar[2]",
+      "role": "image",
+      "label": "Tran Mau Tri Tam",
+      "parent": "avatar_page.group[2].card[1].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack.avatar[3]",
+      "role": "image",
+      "label": "Marina",
+      "parent": "avatar_page.group[2].card[1].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack.avatar[4]",
+      "role": "image",
+      "label": "Joyce",
+      "parent": "avatar_page.group[2].card[1].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2]",
+      "role": "group",
+      "label": "Twelve, counted",
+      "parent": "avatar_page.group[2]"
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack",
+      "role": "list",
+      "label": "Twelve, counted",
+      "parent": "avatar_page.group[2].card[2]"
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[0]",
+      "role": "image",
+      "label": "Luna Starfield",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[1]",
+      "role": "image",
+      "label": "Randomdash",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[2]",
+      "role": "image",
+      "label": "Tran Mau Tri Tam",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[3]",
+      "role": "image",
+      "label": "Marina",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[4]",
+      "role": "image",
+      "label": "Joyce",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[5]",
+      "role": "image",
+      "label": "Orion",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[6]",
+      "role": "image",
+      "label": "Kai",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[7]",
+      "role": "image",
+      "label": "Sol",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[8]",
+      "role": "image",
+      "label": "Iris",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[9]",
+      "role": "image",
+      "label": "Noah",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[10]",
+      "role": "image",
+      "label": "Vera",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[11]",
+      "role": "image",
+      "label": "Theo",
+      "parent": "avatar_page.group[2].card[2].stack",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[3]",
+      "role": "group",
+      "label": "Content",
+      "parent": "avatar_page"
+    },
+    {
+      "id": "avatar_page.group[3].card[0]",
+      "role": "list",
+      "label": "Mixed scripts",
+      "parent": "avatar_page.group[3]"
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[0]",
+      "role": "image",
+      "label": "Ólafur",
+      "parent": "avatar_page.group[3].card[0]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[1]",
+      "role": "image",
+      "label": "مريم",
+      "parent": "avatar_page.group[3].card[0]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[2]",
+      "role": "image",
+      "label": "שירה",
+      "parent": "avatar_page.group[3].card[0]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[3]",
+      "role": "image",
+      "label": "नमिता",
+      "parent": "avatar_page.group[3].card[0]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[4]",
+      "role": "image",
+      "label": "王芳",
+      "parent": "avatar_page.group[3].card[0]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[5]",
+      "role": "image",
+      "label": "안나",
+      "parent": "avatar_page.group[3].card[0]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[6]",
+      "role": "image",
+      "label": "🎉 Party",
+      "parent": "avatar_page.group[3].card[0]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "avatar_page.group[3].card[1]",
+      "role": "list",
+      "label": "Long name",
+      "parent": "avatar_page.group[3]"
+    },
+    {
+      "id": "avatar_page.group[3].card[1].avatar[0]",
+      "role": "image",
+      "label": "Maximiliana Alexandrina von Hohenzollern-Sigmaringen",
+      "parent": "avatar_page.group[3].card[1]",
+      "state": {
+        "online": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    }
+  ]
+}

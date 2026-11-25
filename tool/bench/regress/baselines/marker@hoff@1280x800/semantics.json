@@ -1,0 +1,263 @@
+{
+  "nodes": [
+    {
+      "id": "marker_page",
+      "role": "region",
+      "label": "Marker"
+    },
+    {
+      "id": "marker_page.group[0]",
+      "role": "group",
+      "label": "Cursor",
+      "parent": "marker_page"
+    },
+    {
+      "id": "marker_page.group[0].card[0]",
+      "role": "list",
+      "label": "Point",
+      "parent": "marker_page.group[0]"
+    },
+    {
+      "id": "marker_page.group[0].card[0].marker[0]",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "point",
+      "parent": "marker_page.group[0].card[0]"
+    },
+    {
+      "id": "marker_page.group[0].card[1]",
+      "role": "list",
+      "label": "Pinned",
+      "parent": "marker_page.group[0]"
+    },
+    {
+      "id": "marker_page.group[0].card[1].marker[0]",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "pinned",
+      "parent": "marker_page.group[0].card[1]"
+    },
+    {
+      "id": "marker_page.group[0].card[2]",
+      "role": "list",
+      "label": "Uploading",
+      "parent": "marker_page.group[0]"
+    },
+    {
+      "id": "marker_page.group[0].card[2].marker[0]",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "uploading",
+      "parent": "marker_page.group[0].card[2]"
+    },
+    {
+      "id": "marker_page.group[0].card[3]",
+      "role": "list",
+      "label": "Typing",
+      "parent": "marker_page.group[0]"
+    },
+    {
+      "id": "marker_page.group[0].card[3].marker[0]",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "typing",
+      "parent": "marker_page.group[0].card[3]"
+    },
+    {
+      "id": "marker_page.group[1]",
+      "role": "group",
+      "label": "Pin",
+      "parent": "marker_page"
+    },
+    {
+      "id": "marker_page.group[1].card[0]",
+      "role": "list",
+      "label": "Conversation, Read",
+      "parent": "marker_page.group[1]"
+    },
+    {
+      "id": "marker_page.group[1].card[0].marker[0]",
+      "role": "button",
+      "label": "Comment by Luna, Sam",
+      "parent": "marker_page.group[1].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "marker_page.group[1].card[0].marker[0]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "marker_page.group[1].card[1]",
+      "role": "list",
+      "label": "Single comment, Unread, Hover, Press, Focus",
+      "parent": "marker_page.group[1]"
+    },
+    {
+      "id": "marker_page.group[1].card[1].marker[0]",
+      "role": "button",
+      "label": "Comment by Luna",
+      "parent": "marker_page.group[1].card[1]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "marker_page.group[1].card[1].marker[0]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "marker_page.group[1].card[2]",
+      "role": "list",
+      "label": "Many people",
+      "parent": "marker_page.group[1]"
+    },
+    {
+      "id": "marker_page.group[1].card[2].marker[0]",
+      "role": "button",
+      "label": "Comment by Luna, Sam, Ada, Kai, Noor",
+      "parent": "marker_page.group[1].card[2]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "marker_page.group[1].card[2].marker[0]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "marker_page.group[1].card[3]",
+      "role": "list",
+      "label": "Mixed scripts",
+      "parent": "marker_page.group[1]"
+    },
+    {
+      "id": "marker_page.group[1].card[3].marker[0]",
+      "role": "button",
+      "label": "Comment by سارة, 李华, Ана, Ömer",
+      "parent": "marker_page.group[1].card[3]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "marker_page.group[1].card[3].marker[0]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "marker_page.group[2]",
+      "role": "group",
+      "label": "On a canvas",
+      "parent": "marker_page"
+    },
+    {
+      "id": "marker_page.group[2].card[0]",
+      "role": "list",
+      "label": "Pins anchored to their spots, someone typing",
+      "parent": "marker_page.group[2]"
+    },
+    {
+      "id": "marker_page.group[2].card[0].marker[0]",
+      "role": "button",
+      "label": "Comment by Luna, Sam",
+      "parent": "marker_page.group[2].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "marker_page.group[2].card[0].marker[0]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "marker_page.group[2].card[0].marker[1]",
+      "role": "button",
+      "label": "Comment by Ada",
+      "parent": "marker_page.group[2].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "marker_page.group[2].card[0].marker[1]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "marker_page.group[2].card[0].marker[2]",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "typing",
+      "parent": "marker_page.group[2].card[0]"
+    },
+    {
+      "id": "marker_page.group[2].card[0].marker[3]",
+      "role": "button",
+      "label": "Comment by Kai",
+      "parent": "marker_page.group[2].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "marker_page.group[2].card[0].marker[3]:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

@@ -1,0 +1,136 @@
+{
+  "nodes": [
+    {
+      "id": "menubar_page",
+      "role": "region",
+      "label": "Menubar"
+    },
+    {
+      "id": "menubar_page.group[0]",
+      "role": "group",
+      "label": "Live",
+      "parent": "menubar_page"
+    },
+    {
+      "id": "menubar_page.bar",
+      "role": "toolbar",
+      "label": "menubar",
+      "description": "Default, Hover, Open, Focus",
+      "parent": "menubar_page.group[0]"
+    },
+    {
+      "id": "menubar_page.bar[0]",
+      "role": "button",
+      "label": "File",
+      "parent": "menubar_page.bar",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menubar_page.bar[1]",
+      "role": "button",
+      "label": "Edit",
+      "parent": "menubar_page.bar",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menubar_page.bar[2]",
+      "role": "button",
+      "label": "View",
+      "parent": "menubar_page.bar",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menubar_page.picked",
+      "role": "label",
+      "label": "nothing picked",
+      "parent": "menubar_page.group[0]"
+    },
+    {
+      "id": "menubar_page.group[1]",
+      "role": "group",
+      "label": "States",
+      "parent": "menubar_page"
+    },
+    {
+      "id": "menubar_page.group[1][0]",
+      "role": "group",
+      "label": "Open",
+      "parent": "menubar_page.group[1]"
+    },
+    {
+      "id": "menubar_page.group[1][0][0]",
+      "role": "label",
+      "label": "File",
+      "parent": "menubar_page.group[1][0]"
+    },
+    {
+      "id": "menubar_page.group[1][0][0][1]",
+      "role": "label",
+      "label": "New scene",
+      "parent": "menubar_page.group[1][0][0]"
+    },
+    {
+      "id": "menubar_page.group[1][0][0][2]",
+      "role": "label",
+      "label": "Open...",
+      "parent": "menubar_page.group[1][0][0]"
+    },
+    {
+      "id": "menubar_page.group[1][0][0][3]",
+      "role": "label",
+      "label": "Duplicate",
+      "parent": "menubar_page.group[1][0][0]"
+    },
+    {
+      "id": "menubar_page.group[1][0][0][4]",
+      "role": "label",
+      "label": "Export...",
+      "parent": "menubar_page.group[1][0][0]"
+    },
+    {
+      "id": "menubar_page.group[1][0][1]",
+      "role": "label",
+      "label": "Edit",
+      "parent": "menubar_page.group[1][0]"
+    },
+    {
+      "id": "menubar_page.group[1][0][2]",
+      "role": "label",
+      "label": "View",
+      "parent": "menubar_page.group[1][0]"
+    }
+  ]
+}

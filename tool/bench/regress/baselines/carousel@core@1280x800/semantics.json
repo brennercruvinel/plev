@@ -1,0 +1,582 @@
+{
+  "nodes": [
+    {
+      "id": "carousel_page",
+      "role": "region",
+      "label": "Carousel"
+    },
+    {
+      "id": "carousel_page.group[0]",
+      "role": "group",
+      "label": "Carousel",
+      "parent": "carousel_page"
+    },
+    {
+      "id": "carousel_page.group[0].card[0].previous",
+      "role": "button",
+      "label": "previous",
+      "parent": "carousel_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[0].next",
+      "role": "button",
+      "label": "next",
+      "parent": "carousel_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[0]",
+      "role": "option",
+      "label": "Material 1",
+      "parent": "carousel_page.group[0].card[0]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[0].slide[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[1]",
+      "role": "option",
+      "label": "Material 2",
+      "parent": "carousel_page.group[0].card[0]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[0].slide[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[2]",
+      "role": "option",
+      "label": "Material 3",
+      "parent": "carousel_page.group[0].card[0]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[0].slide[2]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[3]",
+      "role": "option",
+      "label": "Material 4",
+      "parent": "carousel_page.group[0].card[0]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[0].slide[3]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[4]",
+      "role": "option",
+      "label": "Material 5",
+      "parent": "carousel_page.group[0].card[0]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[0].slide[4]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[0].slide[5]",
+      "role": "option",
+      "label": "Material 6",
+      "parent": "carousel_page.group[0].card[0]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[0].slide[5]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[0]",
+      "role": "group",
+      "label": "Default, Hover, Focus",
+      "description": "0 of 8",
+      "parent": "carousel_page.group[0]"
+    },
+    {
+      "id": "carousel_page.group[0].card[1].previous",
+      "role": "button",
+      "label": "previous",
+      "parent": "carousel_page.group[0].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[1].next",
+      "role": "button",
+      "label": "next",
+      "parent": "carousel_page.group[0].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[0]",
+      "role": "option",
+      "label": "Material 1",
+      "parent": "carousel_page.group[0].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[1].slide[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[1]",
+      "role": "option",
+      "label": "Material 2",
+      "parent": "carousel_page.group[0].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[1].slide[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[2]",
+      "role": "option",
+      "label": "Material 3",
+      "parent": "carousel_page.group[0].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[1].slide[2]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[3]",
+      "role": "option",
+      "label": "Material 4",
+      "parent": "carousel_page.group[0].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[1].slide[3]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[4]",
+      "role": "option",
+      "label": "Material 5",
+      "parent": "carousel_page.group[0].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[1].slide[4]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[1].slide[5]",
+      "role": "option",
+      "label": "Material 6",
+      "parent": "carousel_page.group[0].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[0].card[1].slide[5]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[0].card[1]",
+      "role": "group",
+      "label": "Chosen",
+      "description": "2 of 8",
+      "parent": "carousel_page.group[0]"
+    },
+    {
+      "id": "carousel_page.group[1]",
+      "role": "group",
+      "label": "Carousel, ranges",
+      "parent": "carousel_page"
+    },
+    {
+      "id": "carousel_page.group[1].card[0].previous",
+      "role": "button",
+      "label": "previous",
+      "parent": "carousel_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[0].next",
+      "role": "button",
+      "label": "next",
+      "parent": "carousel_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[0].slide[0]",
+      "role": "option",
+      "label": "Material 1",
+      "parent": "carousel_page.group[1].card[0]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[1].card[0].slide[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[0].slide[1]",
+      "role": "option",
+      "label": "Material 2",
+      "parent": "carousel_page.group[1].card[0]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[1].card[0].slide[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[0]",
+      "role": "group",
+      "label": "Two slides",
+      "description": "0 of 2",
+      "parent": "carousel_page.group[1]"
+    },
+    {
+      "id": "carousel_page.group[1].card[1].previous",
+      "role": "button",
+      "label": "previous",
+      "parent": "carousel_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[1].next",
+      "role": "button",
+      "label": "next",
+      "parent": "carousel_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[1].slide[0]",
+      "role": "option",
+      "label": "Material 1",
+      "parent": "carousel_page.group[1].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[1].card[1].slide[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[1].slide[1]",
+      "role": "option",
+      "label": "Material 2",
+      "parent": "carousel_page.group[1].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[1].card[1].slide[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[1].slide[2]",
+      "role": "option",
+      "label": "Material 3",
+      "parent": "carousel_page.group[1].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[1].card[1].slide[2]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[1].slide[3]",
+      "role": "option",
+      "label": "Material 4",
+      "parent": "carousel_page.group[1].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[1].card[1].slide[3]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[1]",
+      "role": "group",
+      "label": "Many slides",
+      "description": "1 of 24",
+      "parent": "carousel_page.group[1]"
+    },
+    {
+      "id": "carousel_page.group[1].card[2].previous",
+      "role": "button",
+      "label": "previous",
+      "parent": "carousel_page.group[1].card[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[2].next",
+      "role": "button",
+      "label": "next",
+      "parent": "carousel_page.group[1].card[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[2].slide[0]",
+      "role": "option",
+      "label": "Material 1",
+      "parent": "carousel_page.group[1].card[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "carousel_page.group[1].card[2].slide[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "carousel_page.group[1].card[2]",
+      "role": "group",
+      "label": "One slide",
+      "description": "0 of 1",
+      "parent": "carousel_page.group[1]"
+    }
+  ]
+}

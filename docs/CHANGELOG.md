@@ -72,6 +72,26 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
 
 ## 2026-11-25
 
+- the dev mode reads as a tool
+  ([task-105](Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)):
+  a gear at the page's lower right corner in place of the "Dev" button,
+  a strip of small tabs with icons, the frame's vital numbers on one line
+  under them, and the edge of the panel dragged to size it; `PLEV_DEV`
+  takes a view's name to open on it (`?dev=` in the browser), and F12
+  opens and closes the panel. The Frame view says what its numbers mean
+  (the insights); the Log view keeps its lines after their frames, by
+  level, with what `log::warn!` and `log::error!` say, and a press opens
+  a long line whole; the Inspect view shows the page's controls as a tree
+  that folds, and its picker chooses anything the frame draws, a control
+  or a scene node (`Compositor::node_at`): an icon of a page that binds
+  nothing is chosen like a button. A node chosen is kept by what it is
+  (`SceneNode::mark`) and found again in every frame, ringed by what its
+  clip shows, with the control it sat in; a node drawn over a control is
+  not that control; an open log line is cut to the panel. A frame shows
+  once its GPU time is in,
+  which a window never showed at rest before. The README says how to use
+  it.
+- ADR 0093: [the dev mode is the engine's own: one report a frame, shown once it is whole, in a panel that offers its places as it draws](adr/Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md)
 - task-106 after its review: `.design`, `.devops` and `.secops` are gone
   from the root and the lychee, nextest and typos contracts live in
   `.config`; `builddir.sh seed` refuses where it cannot clone; the iOS

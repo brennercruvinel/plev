@@ -1,0 +1,589 @@
+{
+  "format": "regress.baseline.v1",
+  "hash": "regress.layer.v1",
+  "page": "Topbar",
+  "theme": "core",
+  "width": 1280.0,
+  "height": 800.0,
+  "scale": 1.0,
+  "settle": {
+    "steps": 2,
+    "settled": true
+  },
+  "semantics": {
+    "revision": "f199226a4a067c04",
+    "nodes": 40
+  },
+  "layers": [
+    {
+      "name": "topbar_page",
+      "z": 0,
+      "hash": "49ed26063bc12801",
+      "nodes": 119,
+      "bounds": [
+        0.0,
+        24.0,
+        1280.0,
+        728.0
+      ]
+    },
+    {
+      "name": "z10",
+      "z": 10,
+      "hash": "c853f02ec00cb9d8",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1000",
+      "z": 1000,
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1200",
+      "z": 1200,
+      "hash": "ef5874151115e51e",
+      "nodes": 0,
+      "bounds": null
+    }
+  ],
+  "bindings": [
+    {
+      "id": "topbar_page.group[0].card[0].back",
+      "layer": "topbar_page",
+      "rect": [
+        113.0,
+        234.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[0].forward",
+      "layer": "topbar_page",
+      "rect": [
+        161.0,
+        234.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[0].search",
+      "layer": "topbar_page",
+      "rect": [
+        217.0,
+        234.0,
+        260.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[0].search.action",
+      "layer": "topbar_page",
+      "rect": [
+        221.0,
+        238.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[0].alerts",
+      "layer": "topbar_page",
+      "rect": [
+        963.0,
+        234.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[0].create",
+      "layer": "topbar_page",
+      "rect": [
+        1019.0,
+        234.0,
+        92.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[0].profile",
+      "layer": "topbar_page",
+      "rect": [
+        1127.0,
+        234.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[1].close",
+      "layer": "topbar_page",
+      "rect": [
+        113.0,
+        402.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[1].download",
+      "layer": "topbar_page",
+      "rect": [
+        931.0,
+        402.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[1].share",
+      "layer": "topbar_page",
+      "rect": [
+        983.0,
+        402.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[1].add",
+      "layer": "topbar_page",
+      "rect": [
+        1035.0,
+        402.0,
+        132.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[1].assets",
+      "layer": "topbar_page",
+      "rect": [
+        486.0,
+        392.0,
+        308.0,
+        60.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[1].assets[0]",
+      "layer": "topbar_page",
+      "rect": [
+        486.0,
+        397.0,
+        50.0,
+        50.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[1].assets[1]",
+      "layer": "topbar_page",
+      "rect": [
+        548.0,
+        397.0,
+        50.0,
+        50.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[1].assets[2]",
+      "layer": "topbar_page",
+      "rect": [
+        610.0,
+        392.0,
+        60.0,
+        60.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[1].assets[3]",
+      "layer": "topbar_page",
+      "rect": [
+        682.0,
+        397.0,
+        50.0,
+        50.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[1].assets[4]",
+      "layer": "topbar_page",
+      "rect": [
+        744.0,
+        397.0,
+        50.0,
+        50.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[2].logo",
+      "layer": "topbar_page",
+      "rect": [
+        113.0,
+        570.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[2].find",
+      "layer": "topbar_page",
+      "rect": [
+        1015.0,
+        570.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[2].alerts",
+      "layer": "topbar_page",
+      "rect": [
+        1071.0,
+        570.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[2].profile",
+      "layer": "topbar_page",
+      "rect": [
+        1127.0,
+        570.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[3].back",
+      "layer": "topbar_page",
+      "rect": [
+        113.0,
+        738.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[3].forward",
+      "layer": "topbar_page",
+      "rect": [
+        161.0,
+        738.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[3].search",
+      "layer": "topbar_page",
+      "rect": [
+        217.0,
+        738.0,
+        260.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[3].search.action",
+      "layer": "topbar_page",
+      "rect": [
+        221.0,
+        742.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[3].filters",
+      "layer": "topbar_page",
+      "rect": [
+        1015.0,
+        738.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[3].alerts",
+      "layer": "topbar_page",
+      "rect": [
+        1071.0,
+        738.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[3].profile",
+      "layer": "topbar_page",
+      "rect": [
+        1127.0,
+        738.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[4].logo",
+      "layer": "topbar_page",
+      "rect": [
+        113.0,
+        906.0,
+        92.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[4].search",
+      "layer": "topbar_page",
+      "rect": [
+        795.0,
+        906.0,
+        260.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[4].search.action",
+      "layer": "topbar_page",
+      "rect": [
+        799.0,
+        910.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[4].alerts",
+      "layer": "topbar_page",
+      "rect": [
+        1071.0,
+        906.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "topbar_page.group[0].card[4].profile",
+      "layer": "topbar_page",
+      "rect": [
+        1127.0,
+        906.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    }
+  ]
+}

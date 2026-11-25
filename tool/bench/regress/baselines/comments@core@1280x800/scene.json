@@ -1,0 +1,1309 @@
+{
+  "format": "regress.baseline.v1",
+  "hash": "regress.layer.v1",
+  "page": "Comments",
+  "theme": "core",
+  "width": 1280.0,
+  "height": 800.0,
+  "scale": 1.0,
+  "settle": {
+    "steps": 2,
+    "settled": true
+  },
+  "semantics": {
+    "revision": "f7a223041e7067f7",
+    "nodes": 110
+  },
+  "layers": [
+    {
+      "name": "comments_page",
+      "z": 0,
+      "hash": "257f23cc100b51d8",
+      "nodes": 401,
+      "bounds": [
+        0.0,
+        24.0,
+        1280.0,
+        728.0
+      ]
+    },
+    {
+      "name": "z10",
+      "z": 10,
+      "hash": "c853f02ec00cb9d8",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1000",
+      "z": 1000,
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1200",
+      "z": 1200,
+      "hash": "ef5874151115e51e",
+      "nodes": 0,
+      "bounds": null
+    }
+  ],
+  "bindings": [
+    {
+      "id": "comments_page.group[0].card[0].marker",
+      "layer": "comments_page",
+      "rect": [
+        183.0,
+        313.0,
+        20.0,
+        18.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[0].card[1].marker",
+      "layer": "comments_page",
+      "rect": [
+        476.0,
+        308.0,
+        30.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[0].card[2].marker",
+      "layer": "comments_page",
+      "rect": [
+        774.0,
+        308.0,
+        30.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[0].card[3].marker",
+      "layer": "comments_page",
+      "rect": [
+        1072.0,
+        308.0,
+        30.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[0].card[4].marker",
+      "layer": "comments_page",
+      "rect": [
+        169.0,
+        514.0,
+        49.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[0].card[5].marker",
+      "layer": "comments_page",
+      "rect": [
+        475.0,
+        514.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[0].new",
+      "layer": "comments_page",
+      "rect": [
+        179.0,
+        879.0,
+        326.0,
+        50.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[0].new.cursor",
+      "layer": "comments_page",
+      "rect": [
+        179.0,
+        889.0,
+        30.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[0].new.text",
+      "layer": "comments_page",
+      "rect": [
+        242.0,
+        892.0,
+        246.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread",
+      "layer": "comments_page",
+      "rect": [
+        775.0,
+        808.0,
+        326.0,
+        191.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.pin",
+      "layer": "comments_page",
+      "rect": [
+        775.0,
+        808.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.messages[0]",
+      "layer": "comments_page",
+      "rect": [
+        822.0,
+        809.0,
+        278.0,
+        113.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.reply",
+      "layer": "comments_page",
+      "rect": [
+        900.0,
+        948.0,
+        138.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.send",
+      "layer": "comments_page",
+      "rect": [
+        1046.0,
+        944.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.close",
+      "layer": "comments_page",
+      "rect": [
+        1071.0,
+        814.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread",
+      "layer": "comments_page",
+      "rect": [
+        171.0,
+        1087.0,
+        343.0,
+        264.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.pin",
+      "layer": "comments_page",
+      "rect": [
+        171.0,
+        1087.0,
+        49.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.messages[0]",
+      "layer": "comments_page",
+      "rect": [
+        235.0,
+        1088.0,
+        278.0,
+        113.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.messages[1]",
+      "layer": "comments_page",
+      "rect": [
+        235.0,
+        1201.0,
+        278.0,
+        73.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.reply",
+      "layer": "comments_page",
+      "rect": [
+        313.0,
+        1300.0,
+        138.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.send",
+      "layer": "comments_page",
+      "rect": [
+        459.0,
+        1296.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.close",
+      "layer": "comments_page",
+      "rect": [
+        484.0,
+        1093.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[0].new",
+      "layer": "comments_page",
+      "rect": [
+        179.0,
+        1604.0,
+        326.0,
+        50.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[0].new.cursor",
+      "layer": "comments_page",
+      "rect": [
+        179.0,
+        1614.0,
+        30.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[0].new.text",
+      "layer": "comments_page",
+      "rect": [
+        242.0,
+        1617.0,
+        246.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[1].new",
+      "layer": "comments_page",
+      "rect": [
+        775.0,
+        1576.0,
+        326.0,
+        107.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.cursor",
+      "layer": "comments_page",
+      "rect": [
+        775.0,
+        1586.0,
+        30.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.text",
+      "layer": "comments_page",
+      "rect": [
+        838.0,
+        1589.0,
+        246.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.tools[0]",
+      "layer": "comments_page",
+      "rect": [
+        830.0,
+        1642.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.tools[1]",
+      "layer": "comments_page",
+      "rect": [
+        866.0,
+        1642.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.tools[2]",
+      "layer": "comments_page",
+      "rect": [
+        902.0,
+        1642.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.send",
+      "layer": "comments_page",
+      "rect": [
+        1060.0,
+        1642.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new",
+      "layer": "comments_page",
+      "rect": [
+        179.0,
+        1777.0,
+        326.0,
+        181.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.cursor",
+      "layer": "comments_page",
+      "rect": [
+        179.0,
+        1787.0,
+        30.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.text",
+      "layer": "comments_page",
+      "rect": [
+        242.0,
+        1790.0,
+        246.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.files[0]",
+      "layer": "comments_page",
+      "rect": [
+        242.0,
+        1832.0,
+        60.0,
+        60.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.files[0].remove",
+      "layer": "comments_page",
+      "rect": [
+        286.0,
+        1824.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.files[1]",
+      "layer": "comments_page",
+      "rect": [
+        310.0,
+        1832.0,
+        60.0,
+        60.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.files[1].remove",
+      "layer": "comments_page",
+      "rect": [
+        354.0,
+        1824.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.tools[0]",
+      "layer": "comments_page",
+      "rect": [
+        234.0,
+        1917.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.tools[1]",
+      "layer": "comments_page",
+      "rect": [
+        270.0,
+        1917.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.tools[2]",
+      "layer": "comments_page",
+      "rect": [
+        306.0,
+        1917.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.send",
+      "layer": "comments_page",
+      "rect": [
+        464.0,
+        1917.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[3].new",
+      "layer": "comments_page",
+      "rect": [
+        775.0,
+        1777.0,
+        326.0,
+        181.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.cursor",
+      "layer": "comments_page",
+      "rect": [
+        775.0,
+        1787.0,
+        30.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.text",
+      "layer": "comments_page",
+      "rect": [
+        838.0,
+        1790.0,
+        246.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.files[0]",
+      "layer": "comments_page",
+      "rect": [
+        838.0,
+        1832.0,
+        127.0,
+        60.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.files[0].remove",
+      "layer": "comments_page",
+      "rect": [
+        949.0,
+        1824.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.tools[0]",
+      "layer": "comments_page",
+      "rect": [
+        830.0,
+        1917.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.tools[1]",
+      "layer": "comments_page",
+      "rect": [
+        866.0,
+        1917.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.tools[2]",
+      "layer": "comments_page",
+      "rect": [
+        902.0,
+        1917.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.send",
+      "layer": "comments_page",
+      "rect": [
+        1060.0,
+        1917.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[4].new",
+      "layer": "comments_page",
+      "rect": [
+        179.0,
+        2046.0,
+        326.0,
+        181.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.cursor",
+      "layer": "comments_page",
+      "rect": [
+        179.0,
+        2056.0,
+        30.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.text",
+      "layer": "comments_page",
+      "rect": [
+        242.0,
+        2059.0,
+        246.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.files[0]",
+      "layer": "comments_page",
+      "rect": [
+        242.0,
+        2101.0,
+        60.0,
+        60.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.files[0].remove",
+      "layer": "comments_page",
+      "rect": [
+        286.0,
+        2093.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.tools[0]",
+      "layer": "comments_page",
+      "rect": [
+        234.0,
+        2186.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.tools[1]",
+      "layer": "comments_page",
+      "rect": [
+        270.0,
+        2186.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.tools[2]",
+      "layer": "comments_page",
+      "rect": [
+        306.0,
+        2186.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.send",
+      "layer": "comments_page",
+      "rect": [
+        464.0,
+        2186.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick",
+      "layer": "comments_page",
+      "rect": [
+        158.0,
+        2445.0,
+        368.0,
+        606.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.close",
+      "layer": "comments_page",
+      "rect": [
+        174.0,
+        2461.0,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.comments[0]",
+      "layer": "comments_page",
+      "rect": [
+        162.0,
+        2799.0,
+        360.0,
+        140.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.comments[0].reaction",
+      "layer": "comments_page",
+      "rect": [
+        222.0,
+        2899.0,
+        48.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.reply",
+      "layer": "comments_page",
+      "rect": [
+        222.0,
+        2961.0,
+        288.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.tools[0]",
+      "layer": "comments_page",
+      "rect": [
+        174.0,
+        2999.0,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.tools[1]",
+      "layer": "comments_page",
+      "rect": [
+        214.0,
+        2999.0,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.tools[2]",
+      "layer": "comments_page",
+      "rect": [
+        254.0,
+        2999.0,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.tools[3]",
+      "layer": "comments_page",
+      "rect": [
+        294.0,
+        2999.0,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.send",
+      "layer": "comments_page",
+      "rect": [
+        441.0,
+        2999.0,
+        69.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread",
+      "layer": "comments_page",
+      "rect": [
+        171.0,
+        3269.0,
+        343.0,
+        444.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.pin",
+      "layer": "comments_page",
+      "rect": [
+        171.0,
+        3269.0,
+        49.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.messages[0]",
+      "layer": "comments_page",
+      "rect": [
+        235.0,
+        3270.0,
+        278.0,
+        253.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.messages[1]",
+      "layer": "comments_page",
+      "rect": [
+        235.0,
+        3523.0,
+        278.0,
+        113.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.reply",
+      "layer": "comments_page",
+      "rect": [
+        313.0,
+        3662.0,
+        138.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.send",
+      "layer": "comments_page",
+      "rect": [
+        459.0,
+        3658.0,
+        32.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.close",
+      "layer": "comments_page",
+      "rect": [
+        484.0,
+        3275.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    }
+  ]
+}

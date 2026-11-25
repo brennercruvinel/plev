@@ -1,0 +1,445 @@
+{
+  "nodes": [
+    {
+      "id": "toolbar_page",
+      "role": "region",
+      "label": "Toolbar"
+    },
+    {
+      "id": "toolbar_page.group[0]",
+      "role": "group",
+      "label": "Toolbar",
+      "parent": "toolbar_page"
+    },
+    {
+      "id": "toolbar_page.bar[0]",
+      "role": "toolbar",
+      "label": "Default, Zoom - View options, Export: On",
+      "parent": "toolbar_page.group[0]"
+    },
+    {
+      "id": "toolbar_page.bar[0].tool[0]",
+      "role": "button",
+      "label": "Select",
+      "description": "V",
+      "parent": "toolbar_page.bar[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[0].tool[1]",
+      "role": "button",
+      "label": "Move",
+      "description": "M",
+      "parent": "toolbar_page.bar[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[0].tool[2]",
+      "role": "button",
+      "label": "Message",
+      "description": "Q",
+      "parent": "toolbar_page.bar[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[0].tool[3]",
+      "role": "button",
+      "label": "Crop",
+      "description": "C",
+      "parent": "toolbar_page.bar[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[0].tool[4]",
+      "role": "button",
+      "label": "Play",
+      "description": "P",
+      "parent": "toolbar_page.bar[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[0].zoom",
+      "role": "button",
+      "label": "Zoom",
+      "description": "100%",
+      "parent": "toolbar_page.bar[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[0].history[0]",
+      "role": "button",
+      "label": "Undo",
+      "description": "U",
+      "parent": "toolbar_page.bar[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[0].history[1]",
+      "role": "button",
+      "label": "Redo",
+      "description": "R",
+      "parent": "toolbar_page.bar[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[0].export",
+      "role": "button",
+      "label": "Export",
+      "parent": "toolbar_page.bar[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[1]",
+      "role": "toolbar",
+      "label": "Playmode",
+      "parent": "toolbar_page.group[0]"
+    },
+    {
+      "id": "toolbar_page.bar[1].tool[0]",
+      "role": "button",
+      "label": "Close",
+      "description": "X",
+      "parent": "toolbar_page.bar[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[1].tool[1]",
+      "role": "button",
+      "label": "Back",
+      "description": "B",
+      "parent": "toolbar_page.bar[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[1].tool[2]",
+      "role": "button",
+      "label": "Crop",
+      "description": "C",
+      "parent": "toolbar_page.bar[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[1].zoom",
+      "role": "button",
+      "label": "Zoom",
+      "description": "100%",
+      "parent": "toolbar_page.bar[1]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.bar[1].export",
+      "role": "button",
+      "label": "Export",
+      "parent": "toolbar_page.bar[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.group[1]",
+      "role": "group",
+      "label": "Video player",
+      "parent": "toolbar_page"
+    },
+    {
+      "id": "toolbar_page.player[0]",
+      "role": "group",
+      "label": "Default",
+      "description": "8s",
+      "parent": "toolbar_page.group[1]",
+      "state": {
+        "progress": {
+          "kind": "num",
+          "value": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "id": "toolbar_page.player[0].play",
+      "role": "toggle",
+      "label": "Play",
+      "parent": "toolbar_page.player[0]",
+      "state": {
+        "playing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.player[1]",
+      "role": "group",
+      "label": "Repeat",
+      "description": "8s",
+      "parent": "toolbar_page.group[1]",
+      "state": {
+        "progress": {
+          "kind": "num",
+          "value": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "id": "toolbar_page.player[1].play",
+      "role": "toggle",
+      "label": "Play",
+      "parent": "toolbar_page.player[1]",
+      "state": {
+        "playing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.player[1].repeat",
+      "role": "button",
+      "label": "Repeat",
+      "parent": "toolbar_page.player[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.group[2]",
+      "role": "group",
+      "label": "View controller",
+      "parent": "toolbar_page"
+    },
+    {
+      "id": "toolbar_page.view[0]",
+      "role": "group",
+      "label": "Orbit",
+      "parent": "toolbar_page.group[2]"
+    },
+    {
+      "id": "toolbar_page.view[0].back",
+      "role": "button",
+      "label": "Orbit left",
+      "parent": "toolbar_page.view[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.view[0].forward",
+      "role": "button",
+      "label": "Orbit right",
+      "parent": "toolbar_page.view[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.view[1]",
+      "role": "group",
+      "label": "Tilt",
+      "parent": "toolbar_page.group[2]"
+    },
+    {
+      "id": "toolbar_page.view[1].back",
+      "role": "button",
+      "label": "Tilt down",
+      "parent": "toolbar_page.view[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.view[1].forward",
+      "role": "button",
+      "label": "Tilt up",
+      "parent": "toolbar_page.view[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.group[3]",
+      "role": "group",
+      "label": "On an image",
+      "parent": "toolbar_page"
+    },
+    {
+      "id": "toolbar_page.player[2]",
+      "role": "group",
+      "label": "Default",
+      "description": "8s",
+      "parent": "toolbar_page.group[3]",
+      "state": {
+        "progress": {
+          "kind": "num",
+          "value": 0.4000000059604645
+        }
+      }
+    },
+    {
+      "id": "toolbar_page.player[2].play",
+      "role": "toggle",
+      "label": "Play",
+      "parent": "toolbar_page.player[2]",
+      "state": {
+        "playing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toolbar_page.player[2].repeat",
+      "role": "button",
+      "label": "Repeat",
+      "parent": "toolbar_page.player[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

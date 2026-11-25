@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "540b1f5eba88c4fb",
+    "nodes": 60
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "avatar_page",
       "z": 0,
-      "hash": "1b0565475c560922",
-      "nodes": 14,
+      "hash": "33c3b7c5d38fed2b",
+      "nodes": 206,
       "bounds": [
-        283.0,
-        49.0,
-        280.14197,
-        170.6
+        25.584782,
+        35.810867,
+        1222.4152,
+        732.18915
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "0da36fadc97d4a48",
-      "nodes": 48,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,678 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "avatar_page.group[0].card[0].avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        219.0,
+        286.0,
+        26.400002,
+        26.400002
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[0].card[1].avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        622.0,
+        281.0,
+        35.2,
+        35.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[0].card[2].avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        1026.0,
+        277.0,
+        44.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[0].card[3].avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        206.0,
+        481.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[0].card[4].avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        596.0,
+        463.0,
+        88.0,
+        88.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[1].card[0].avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        206.0,
+        787.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[1].card[1].avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        614.0,
+        787.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[1].card[2].avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        909.0,
+        769.0,
+        26.400002,
+        26.400002
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[1].card[2].avatar[1]",
+      "layer": "avatar_page",
+      "rect": [
+        943.4,
+        769.0,
+        35.2,
+        35.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[1].card[2].avatar[2]",
+      "layer": "avatar_page",
+      "rect": [
+        986.6,
+        769.0,
+        44.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[1].card[2].avatar[3]",
+      "layer": "avatar_page",
+      "rect": [
+        1038.6,
+        769.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[1].card[2].avatar[4]",
+      "layer": "avatar_page",
+      "rect": [
+        1099.4,
+        769.0,
+        88.0,
+        88.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[0].stack",
+      "layer": "avatar_page",
+      "rect": [
+        201.0,
+        1101.0,
+        61.600002,
+        35.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[0].stack.avatar[1]",
+      "layer": "avatar_page",
+      "rect": [
+        229.4,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[0].stack.avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        203.0,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack",
+      "layer": "avatar_page",
+      "rect": [
+        570.0,
+        1101.0,
+        140.8,
+        35.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack.avatar[4]",
+      "layer": "avatar_page",
+      "rect": [
+        677.6,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack.avatar[3]",
+      "layer": "avatar_page",
+      "rect": [
+        651.2,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack.avatar[2]",
+      "layer": "avatar_page",
+      "rect": [
+        624.8,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack.avatar[1]",
+      "layer": "avatar_page",
+      "rect": [
+        598.4,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[1].stack.avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        572.0,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack",
+      "layer": "avatar_page",
+      "rect": [
+        885.0,
+        1101.0,
+        325.60004,
+        35.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[11]",
+      "layer": "avatar_page",
+      "rect": [
+        1177.4,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[10]",
+      "layer": "avatar_page",
+      "rect": [
+        1151.0,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[9]",
+      "layer": "avatar_page",
+      "rect": [
+        1124.6,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[8]",
+      "layer": "avatar_page",
+      "rect": [
+        1098.2,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[7]",
+      "layer": "avatar_page",
+      "rect": [
+        1071.8,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[6]",
+      "layer": "avatar_page",
+      "rect": [
+        1045.4,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[5]",
+      "layer": "avatar_page",
+      "rect": [
+        1019.0,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[4]",
+      "layer": "avatar_page",
+      "rect": [
+        992.6,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[3]",
+      "layer": "avatar_page",
+      "rect": [
+        966.2,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[2]",
+      "layer": "avatar_page",
+      "rect": [
+        939.8,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[1]",
+      "layer": "avatar_page",
+      "rect": [
+        913.4,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[2].card[2].stack.avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        887.0,
+        1103.0,
+        31.2,
+        31.2
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        125.0,
+        1399.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[1]",
+      "layer": "avatar_page",
+      "rect": [
+        185.8,
+        1399.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[2]",
+      "layer": "avatar_page",
+      "rect": [
+        246.6,
+        1399.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[3]",
+      "layer": "avatar_page",
+      "rect": [
+        307.40002,
+        1399.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[4]",
+      "layer": "avatar_page",
+      "rect": [
+        368.2,
+        1399.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[5]",
+      "layer": "avatar_page",
+      "rect": [
+        429.0,
+        1399.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[3].card[0].avatar[6]",
+      "layer": "avatar_page",
+      "rect": [
+        489.8,
+        1399.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "avatar_page.group[3].card[1].avatar[0]",
+      "layer": "avatar_page",
+      "rect": [
+        920.0,
+        1399.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    }
+  ]
 }

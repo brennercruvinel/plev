@@ -1,0 +1,341 @@
+{
+  "nodes": [
+    {
+      "id": "card_page",
+      "role": "region",
+      "label": "Card"
+    },
+    {
+      "id": "card_page.group[0]",
+      "role": "group",
+      "label": "Pricing card",
+      "parent": "card_page"
+    },
+    {
+      "id": "card_page.group[0].card[0].plan",
+      "role": "button",
+      "label": "You're on Creator",
+      "parent": "card_page.group[0].card[0]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "card_page.group[0].card[0].plan:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[0].card[0]",
+      "role": "group",
+      "label": "Free",
+      "description": "Free",
+      "parent": "card_page.group[0]"
+    },
+    {
+      "id": "card_page.group[0].card[1].plan",
+      "role": "button",
+      "label": "Get Studio",
+      "parent": "card_page.group[0].card[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "card_page.group[0].card[1].plan:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[0].card[1]",
+      "role": "group",
+      "label": "Studio",
+      "description": "Studio",
+      "parent": "card_page.group[0]"
+    },
+    {
+      "id": "card_page.group[0].card[2].plan",
+      "role": "button",
+      "label": "Current Plan",
+      "parent": "card_page.group[0].card[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "card_page.group[0].card[2].plan:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[0].card[2]",
+      "role": "group",
+      "label": "Creator",
+      "description": "Creator",
+      "parent": "card_page.group[0]"
+    },
+    {
+      "id": "card_page.group[1]",
+      "role": "group",
+      "label": "Slide item",
+      "parent": "card_page"
+    },
+    {
+      "id": "card_page.group[1].card[0]",
+      "role": "button",
+      "label": "Slide",
+      "description": "Default, Hover",
+      "parent": "card_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "card_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[1].card[1]",
+      "role": "button",
+      "label": "Slide",
+      "description": "Active",
+      "parent": "card_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "card_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[2]",
+      "role": "group",
+      "label": "Asset",
+      "parent": "card_page"
+    },
+    {
+      "id": "card_page.group[2].card[0]",
+      "role": "button",
+      "label": "Asset",
+      "description": "Default, Hover",
+      "parent": "card_page.group[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "card_page.group[2].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[3]",
+      "role": "group",
+      "label": "Asset",
+      "parent": "card_page"
+    },
+    {
+      "id": "card_page.group[3].card[0]",
+      "role": "button",
+      "label": "Futuristic Humanoid Robot",
+      "description": "Default, Hover",
+      "parent": "card_page.group[3]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "card_page.group[3].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[3].card[1]",
+      "role": "button",
+      "label": "Loading scene",
+      "description": "Skeleton",
+      "parent": "card_page.group[3]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "card_page.group[3].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[4]",
+      "role": "group",
+      "label": "Explore tags",
+      "parent": "card_page"
+    },
+    {
+      "id": "card_page.group[4].card[0]",
+      "role": "button",
+      "label": "Product Design",
+      "description": "Default, Hover",
+      "parent": "card_page.group[4]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "card_page.group[4].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[5]",
+      "role": "group",
+      "label": "Explore tags",
+      "parent": "card_page"
+    },
+    {
+      "id": "card_page.group[5].card[0]",
+      "role": "button",
+      "label": "Tran Mau Tri Tam",
+      "description": "Default, Hover",
+      "parent": "card_page.group[5]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "card_page.group[5].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[6]",
+      "role": "group",
+      "label": "Asset",
+      "parent": "card_page"
+    },
+    {
+      "id": "card_page.group[6].card[0]",
+      "role": "label",
+      "label": "3:4",
+      "description": "Ratio",
+      "parent": "card_page.group[6]"
+    },
+    {
+      "id": "card_page.group[6].card[1]",
+      "role": "option",
+      "label": "Material",
+      "description": "Material, Add",
+      "parent": "card_page.group[6]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "card_page.group[6].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "card_page.group[6].card[2]",
+      "role": "option",
+      "label": "Style",
+      "description": "Style, Add",
+      "parent": "card_page.group[6]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "card_page.group[6].card[2]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

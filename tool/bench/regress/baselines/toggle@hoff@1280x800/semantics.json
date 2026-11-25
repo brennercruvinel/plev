@@ -1,47 +1,24 @@
 {
   "nodes": [
     {
-      "id": "chip_page",
+      "id": "toggle_page",
       "role": "region",
       "label": "Toggle"
     },
     {
-      "id": "chip_page.chip[0]",
-      "role": "label",
-      "label": "exact",
-      "parent": "chip_page"
+      "id": "toggle_page.group[0]",
+      "role": "group",
+      "label": "Toggle",
+      "parent": "toggle_page"
     },
     {
-      "id": "chip_page.chip[1]",
-      "role": "label",
-      "label": "ann",
-      "parent": "chip_page"
-    },
-    {
-      "id": "chip_page.chip[2]",
-      "role": "label",
-      "label": "bm25",
-      "parent": "chip_page"
-    },
-    {
-      "id": "chip_page.chip[3]",
-      "role": "label",
-      "label": "missing",
-      "parent": "chip_page"
-    },
-    {
-      "id": "chip_page.chip[4]",
-      "role": "label",
-      "label": "beta",
-      "parent": "chip_page"
-    },
-    {
-      "id": "chip_page.chip[5]",
+      "id": "toggle_page.group[0].card[0]",
       "role": "toggle",
-      "label": "click me",
-      "parent": "chip_page",
+      "label": "Preview",
+      "description": "Off: Default, Hover, Press, Focus",
+      "parent": "toggle_page.group[0]",
       "state": {
-        "selected": {
+        "on": {
           "kind": "bool",
           "value": false
         }
@@ -50,7 +27,317 @@
         {
           "name": "toggle",
           "reads": [
-            "chip_page.chip[5]:selected"
+            "toggle_page.group[0].card[0]:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[0].card[1]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "On: Default, Hover, Focus",
+      "parent": "toggle_page.group[0]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[0].card[1]:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[0].card[2]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "Disabled",
+      "parent": "toggle_page.group[0]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[0].card[2]:on"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[0].card[3]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "Disabled, on",
+      "parent": "toggle_page.group[0]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[0].card[3]:on"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[1]",
+      "role": "group",
+      "label": "Toggle with label",
+      "parent": "toggle_page"
+    },
+    {
+      "id": "toggle_page.group[1].card[0]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "Off: Default, Hover, Press, Focus",
+      "parent": "toggle_page.group[1]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[1].card[0]:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[1].card[1]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "On: Default, Hover, Focus",
+      "parent": "toggle_page.group[1]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[1].card[1]:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[1].card[2]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "Disabled",
+      "parent": "toggle_page.group[1]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[1].card[2]:on"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[1].card[3]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "Disabled, on",
+      "parent": "toggle_page.group[1]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[1].card[3]:on"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[2]",
+      "role": "group",
+      "label": "Toggle with icon and label",
+      "parent": "toggle_page"
+    },
+    {
+      "id": "toggle_page.group[2].card[0]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "Off: Default, Hover, Press, Focus",
+      "parent": "toggle_page.group[2]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[2].card[0]:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[2].card[1]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "On: Default, Hover, Focus",
+      "parent": "toggle_page.group[2]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[2].card[1]:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[2].card[2]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "Disabled",
+      "parent": "toggle_page.group[2]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[2].card[2]:on"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[2].card[3]",
+      "role": "toggle",
+      "label": "Preview",
+      "description": "Disabled, on",
+      "parent": "toggle_page.group[2]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[2].card[3]:on"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[3]",
+      "role": "group",
+      "label": "Long content",
+      "parent": "toggle_page"
+    },
+    {
+      "id": "toggle_page.group[3].card[0]",
+      "role": "toggle",
+      "label": "Show hidden files and folders in every view",
+      "description": "Long label",
+      "parent": "toggle_page.group[3]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[3].card[0]:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "toggle_page.group[3].card[1]",
+      "role": "toggle",
+      "label": "Versteckte Dateien und Ordner anzeigen",
+      "description": "Translated label, on",
+      "parent": "toggle_page.group[3]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "toggle_page.group[3].card[1]:on"
           ]
         }
       ],

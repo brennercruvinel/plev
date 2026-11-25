@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "78e77a4bb159584d",
+    "nodes": 15
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "input_otp_page",
       "z": 0,
-      "hash": "bd8a369b335dc4aa",
-      "nodes": 8,
+      "hash": "f594ae5c6aa20116",
+      "nodes": 204,
       "bounds": [
-        283.0,
-        49.0,
-        725.0,
-        225.20001
+        0.0,
+        24.0,
+        1280.0,
+        728.0
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "41dc04b6fa7988ef",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,166 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "input_otp_page.group[0].card[0]",
+      "layer": "input_otp_page",
+      "rect": [
+        166.0,
+        298.0,
+        352.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "input_otp_page.group[0].card[1]",
+      "layer": "input_otp_page",
+      "rect": [
+        762.0,
+        298.0,
+        352.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "input_otp_page.group[0].card[2]",
+      "layer": "input_otp_page",
+      "rect": [
+        166.0,
+        506.0,
+        352.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "input_otp_page.group[0].card[3]",
+      "layer": "input_otp_page",
+      "rect": [
+        762.0,
+        506.0,
+        352.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "input_otp_page.group[1].card[0]",
+      "layer": "input_otp_page",
+      "rect": [
+        166.0,
+        844.0,
+        352.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "input_otp_page.group[1].card[1]",
+      "layer": "input_otp_page",
+      "rect": [
+        762.0,
+        844.0,
+        352.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "input_otp_page.group[2].card[0]",
+      "layer": "input_otp_page",
+      "rect": [
+        166.0,
+        1182.0,
+        352.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "input_otp_page.group[2].card[1]",
+      "layer": "input_otp_page",
+      "rect": [
+        762.0,
+        1182.0,
+        352.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "input_otp_page.group[3].card[0]",
+      "layer": "input_otp_page",
+      "rect": [
+        234.0,
+        1520.0,
+        216.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "input_otp_page.group[3].card[1]",
+      "layer": "input_otp_page",
+      "rect": [
+        706.0,
+        1520.0,
+        464.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    }
+  ]
 }
