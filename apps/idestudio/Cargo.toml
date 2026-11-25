@@ -6,6 +6,11 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 description = "Simple IDE test"
+# the integration tests are one executable, tests/suite.rs, a module per file
+# (task-106): cargo links every file under tests/ as an executable of its
+# own, each with the whole crate inside. a target listed apart at the end of
+# this file is one that needs a process to itself.
+autotests = false
 
 [dependencies]
 engine.workspace = true
@@ -52,3 +57,14 @@ replay.workspace = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "suite"
+path = "tests/suite.rs"
+
+# apart for its shape, not for a process of its own: rerun was already one
+# executable, a folder whose modules name each other by `crate::`. as a
+# module of the suite those paths would have to change.
+[[test]]
+name = "rerun"
+path = "tests/rerun/main.rs"

@@ -1,15 +1,22 @@
 {
   "nodes": [
     {
-      "id": "dialog_page",
+      "id": "alert_dialog_page",
       "role": "region",
       "label": "Alert Dialog"
     },
     {
-      "id": "dialog_page.open",
+      "id": "alert_dialog_page.group[0]",
+      "role": "group",
+      "label": "Live",
+      "parent": "alert_dialog_page"
+    },
+    {
+      "id": "alert_dialog_page.group[0].card[0]",
       "role": "button",
-      "label": "Open dialog",
-      "parent": "dialog_page",
+      "label": "Delete file",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "alert_dialog_page.group[0]",
       "actions": [
         {
           "name": "activate"
@@ -18,16 +25,48 @@
       "focusable": true
     },
     {
-      "id": "dialog_page.delete",
-      "role": "button",
-      "label": "Delete repository…",
-      "parent": "dialog_page",
-      "actions": [
-        {
-          "name": "activate"
-        }
-      ],
-      "focusable": true
+      "id": "alert_dialog_page.group[1]",
+      "role": "group",
+      "label": "States",
+      "parent": "alert_dialog_page"
+    },
+    {
+      "id": "alert_dialog_page.group[1].card[0]",
+      "role": "group",
+      "label": "Delete this file?",
+      "description": "This action cannot be undone. Blinky is a bit nervous about it too.",
+      "parent": "alert_dialog_page.group[1]"
+    },
+    {
+      "id": "alert_dialog_page.group[1].card[0][0]",
+      "role": "label",
+      "label": "Yes, delete it",
+      "parent": "alert_dialog_page.group[1].card[0]"
+    },
+    {
+      "id": "alert_dialog_page.group[1].card[0][1]",
+      "role": "label",
+      "label": "Cancel",
+      "parent": "alert_dialog_page.group[1].card[0]"
+    },
+    {
+      "id": "alert_dialog_page.group[1].card[1]",
+      "role": "group",
+      "label": "Apply settings?",
+      "description": "Your workspace will reload to apply the new configuration.",
+      "parent": "alert_dialog_page.group[1]"
+    },
+    {
+      "id": "alert_dialog_page.group[1].card[1][0]",
+      "role": "label",
+      "label": "Apply",
+      "parent": "alert_dialog_page.group[1].card[1]"
+    },
+    {
+      "id": "alert_dialog_page.group[1].card[1][1]",
+      "role": "label",
+      "label": "Cancel",
+      "parent": "alert_dialog_page.group[1].card[1]"
     }
   ]
 }

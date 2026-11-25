@@ -1,5 +1,5 @@
 # socket: the agent surface (task-61,
-# docs/adr/semantics/0039-agents-act-through-the-semantic-contract.md). an agent outside
+# docs/adr/Semantics/0039-agents-act-through-the-semantic-contract/0039-agents-act-through-the-semantic-contract.md). an agent outside
 # the process observes and operates a plev app through the semantic
 # contract only: protocol v1 as json lines, the pure part (messages, codec,
 # the ring of served revisions, the server core) compiles everywhere,
@@ -13,6 +13,11 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 description = "Agent surface of plev: observe and act over the semantic contract through a local unix socket, json lines, and the plev cli"
+# the integration tests are one executable, tests/suite.rs, a module per file
+# (task-106): cargo links every file under tests/ as an executable of its
+# own, each with the whole crate inside. a target listed apart at the end of
+# this file is one that needs a process to itself.
+autotests = false
 
 # the agent's command line: plev observe, plev act (unix only; elsewhere it
 # says so and exits).
@@ -35,3 +40,7 @@ tempfile.workspace = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "suite"
+path = "tests/suite.rs"

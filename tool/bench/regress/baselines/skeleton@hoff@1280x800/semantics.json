@@ -1,0 +1,216 @@
+{
+  "nodes": [
+    {
+      "id": "skeleton_page",
+      "role": "region",
+      "label": "Skeleton"
+    },
+    {
+      "id": "skeleton_page.group[0]",
+      "role": "group",
+      "label": "Scene card",
+      "parent": "skeleton_page"
+    },
+    {
+      "id": "skeleton_page.group[0].card[0]",
+      "role": "group",
+      "label": "Rest, Breathing",
+      "parent": "skeleton_page.group[0]"
+    },
+    {
+      "id": "skeleton_page.group[0].card[0].skeleton",
+      "role": "progress_bar",
+      "label": "Loading a scene card",
+      "parent": "skeleton_page.group[0].card[0]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        },
+        "breathing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_page.group[0].card[1]",
+      "role": "group",
+      "label": "Paragraph",
+      "parent": "skeleton_page.group[0]"
+    },
+    {
+      "id": "skeleton_page.group[0].card[1].skeleton",
+      "role": "progress_bar",
+      "label": "Loading a paragraph",
+      "parent": "skeleton_page.group[0].card[1]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        },
+        "breathing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_page.group[1]",
+      "role": "group",
+      "label": "Shape",
+      "parent": "skeleton_page"
+    },
+    {
+      "id": "skeleton_page.group[1].card[0]",
+      "role": "group",
+      "label": "Lines",
+      "parent": "skeleton_page.group[1]"
+    },
+    {
+      "id": "skeleton_page.group[1].card[0].skeleton",
+      "role": "progress_bar",
+      "label": "Loading lines of text",
+      "parent": "skeleton_page.group[1].card[0]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        },
+        "breathing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_page.group[1].card[1]",
+      "role": "group",
+      "label": "Block",
+      "parent": "skeleton_page.group[1]"
+    },
+    {
+      "id": "skeleton_page.group[1].card[1].skeleton",
+      "role": "progress_bar",
+      "label": "Loading an image",
+      "parent": "skeleton_page.group[1].card[1]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        },
+        "breathing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_page.group[1].card[2]",
+      "role": "group",
+      "label": "Disc",
+      "parent": "skeleton_page.group[1]"
+    },
+    {
+      "id": "skeleton_page.group[1].card[2].skeleton",
+      "role": "progress_bar",
+      "label": "Loading an avatar",
+      "parent": "skeleton_page.group[1].card[2]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        },
+        "breathing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_page.group[2]",
+      "role": "group",
+      "label": "Content",
+      "parent": "skeleton_page"
+    },
+    {
+      "id": "skeleton_page.group[2].card[0]",
+      "role": "group",
+      "label": "One line",
+      "parent": "skeleton_page.group[2]"
+    },
+    {
+      "id": "skeleton_page.group[2].card[0].skeleton",
+      "role": "progress_bar",
+      "label": "Loading a line of text",
+      "parent": "skeleton_page.group[2].card[0]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        },
+        "breathing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ]
+    },
+    {
+      "id": "skeleton_page.group[2].card[1]",
+      "role": "group",
+      "label": "Many lines",
+      "parent": "skeleton_page.group[2]"
+    },
+    {
+      "id": "skeleton_page.group[2].card[1].skeleton",
+      "role": "progress_bar",
+      "label": "Loading a long text",
+      "parent": "skeleton_page.group[2].card[1]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        },
+        "breathing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ]
+    }
+  ]
+}

@@ -6,10 +6,17 @@
       "label": "Icon Button"
     },
     {
-      "id": "icon_button_page.button[copy]",
+      "id": "icon_button_page.group[0]",
+      "role": "group",
+      "label": "Ghost icon button",
+      "parent": "icon_button_page"
+    },
+    {
+      "id": "icon_button_page.group[0].card[0]",
       "role": "button",
-      "label": "copy",
-      "parent": "icon_button_page",
+      "label": "x",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "icon_button_page.group[0]",
       "actions": [
         {
           "name": "activate"
@@ -18,10 +25,31 @@
       "focusable": true
     },
     {
-      "id": "icon_button_page.button[search]",
+      "id": "icon_button_page.group[0].card[1]",
       "role": "button",
-      "label": "search",
-      "parent": "icon_button_page",
+      "label": "x",
+      "description": "Disabled",
+      "parent": "icon_button_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.group[1]",
+      "role": "group",
+      "label": "Large icon button",
+      "parent": "icon_button_page"
+    },
+    {
+      "id": "icon_button_page.group[1].card[0]",
+      "role": "button",
+      "label": "plus",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "icon_button_page.group[1]",
       "actions": [
         {
           "name": "activate"
@@ -30,10 +58,31 @@
       "focusable": true
     },
     {
-      "id": "icon_button_page.button[settings]",
+      "id": "icon_button_page.group[1].card[1]",
       "role": "button",
-      "label": "settings",
-      "parent": "icon_button_page",
+      "label": "plus",
+      "description": "Disabled",
+      "parent": "icon_button_page.group[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.group[2]",
+      "role": "group",
+      "label": "Small icon button",
+      "parent": "icon_button_page"
+    },
+    {
+      "id": "icon_button_page.group[2].card[0]",
+      "role": "button",
+      "label": "plus",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "icon_button_page.group[2]",
       "actions": [
         {
           "name": "activate"
@@ -42,10 +91,76 @@
       "focusable": true
     },
     {
-      "id": "icon_button_page.button[trash]",
+      "id": "icon_button_page.group[2].card[1]",
       "role": "button",
-      "label": "trash",
-      "parent": "icon_button_page",
+      "label": "plus",
+      "description": "Disabled",
+      "parent": "icon_button_page.group[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.group[3]",
+      "role": "group",
+      "label": "Toolbar button",
+      "parent": "icon_button_page"
+    },
+    {
+      "id": "icon_button_page.group[3].card[0]",
+      "role": "button",
+      "label": "send",
+      "description": "Default, Hover",
+      "parent": "icon_button_page.group[3]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "icon_button_page.group[3].card[0]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.group[3].card[1]",
+      "role": "button",
+      "label": "send",
+      "description": "Disabled",
+      "parent": "icon_button_page.group[3]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "icon_button_page.group[3].card[1]:active"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "icon_button_page.group[3].card[2]",
+      "role": "button",
+      "label": "send",
+      "description": "Active",
+      "parent": "icon_button_page.group[3]",
       "state": {
         "active": {
           "kind": "bool",
@@ -56,47 +171,10 @@
         {
           "name": "activate",
           "reads": [
-            "icon_button_page.button[trash]:active"
+            "icon_button_page.group[3].card[2]:active"
           ]
         }
       ],
-      "focusable": true
-    },
-    {
-      "id": "icon_button_page.button[save]",
-      "role": "button",
-      "label": "save",
-      "parent": "icon_button_page",
-      "actions": [
-        {
-          "name": "activate"
-        }
-      ],
-      "focusable": true
-    },
-    {
-      "id": "icon_button_page.button[play]",
-      "role": "button",
-      "label": "play",
-      "parent": "icon_button_page",
-      "actions": [
-        {
-          "name": "activate"
-        }
-      ],
-      "focusable": true
-    },
-    {
-      "id": "icon_button_page.button[undo]",
-      "role": "button",
-      "label": "undo",
-      "parent": "icon_button_page",
-      "actions": [
-        {
-          "name": "activate"
-        }
-      ],
-      "enabled": false,
       "focusable": true
     }
   ]

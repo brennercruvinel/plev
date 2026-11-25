@@ -1,0 +1,225 @@
+{
+  "nodes": [
+    {
+      "id": "bubble_page",
+      "role": "region",
+      "label": "Bubble"
+    },
+    {
+      "id": "bubble_page.group[0]",
+      "role": "group",
+      "label": "Bubble",
+      "parent": "bubble_page"
+    },
+    {
+      "id": "bubble_page.group[0].card[0]",
+      "role": "list",
+      "label": "Read, Focus",
+      "parent": "bubble_page.group[0]"
+    },
+    {
+      "id": "bubble_page.group[0].card[0].bubble[0]",
+      "role": "list_item",
+      "label": "I love this bag",
+      "parent": "bubble_page.group[0].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[0].card[1]",
+      "role": "list",
+      "label": "Unread",
+      "parent": "bubble_page.group[0]"
+    },
+    {
+      "id": "bubble_page.group[0].card[1].bubble[0]",
+      "role": "list_item",
+      "label": "Could you make it in leather?",
+      "parent": "bubble_page.group[0].card[1]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[0].card[2]",
+      "role": "list",
+      "label": "Mine",
+      "parent": "bubble_page.group[0]"
+    },
+    {
+      "id": "bubble_page.group[0].card[2].bubble[0]",
+      "role": "list_item",
+      "label": "Thanks, I'm working on it",
+      "parent": "bubble_page.group[0].card[2]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[0].card[3]",
+      "role": "list",
+      "label": "Note",
+      "parent": "bubble_page.group[0]"
+    },
+    {
+      "id": "bubble_page.group[0].card[3].bubble[0]",
+      "role": "list_item",
+      "label": "Sam joined",
+      "parent": "bubble_page.group[0].card[3]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[1]",
+      "role": "group",
+      "label": "Conversation",
+      "parent": "bubble_page"
+    },
+    {
+      "id": "bubble_page.group[1].card[0]",
+      "role": "list",
+      "label": "A thread, newest unread",
+      "parent": "bubble_page.group[1]"
+    },
+    {
+      "id": "bubble_page.group[1].card[0].bubble[0]",
+      "role": "list_item",
+      "label": "I love this bag, it looks great.",
+      "parent": "bubble_page.group[1].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[1].card[0].bubble[1]",
+      "role": "list_item",
+      "label": "Could you make it with leather material? 🤔",
+      "parent": "bubble_page.group[1].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[1].card[0].bubble[2]",
+      "role": "list_item",
+      "label": "Thanks, I'm working on it",
+      "parent": "bubble_page.group[1].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[1].card[0].bubble[3]",
+      "role": "list_item",
+      "label": "Great, send me a photo",
+      "parent": "bubble_page.group[1].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[2]",
+      "role": "group",
+      "label": "Content",
+      "parent": "bubble_page"
+    },
+    {
+      "id": "bubble_page.group[2].card[0]",
+      "role": "list",
+      "label": "Long text",
+      "parent": "bubble_page.group[2]"
+    },
+    {
+      "id": "bubble_page.group[2].card[0].bubble[0]",
+      "role": "list_item",
+      "label": "These draggable sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y.",
+      "parent": "bubble_page.group[2].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[2].card[0].bubble[1]",
+      "role": "list_item",
+      "label": "These draggable sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y.",
+      "parent": "bubble_page.group[2].card[0]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[2].card[1]",
+      "role": "list",
+      "label": "Mixed scripts",
+      "parent": "bubble_page.group[2]"
+    },
+    {
+      "id": "bubble_page.group[2].card[1].bubble[0]",
+      "role": "list_item",
+      "label": "Olá! مرحبا · שלום · नमस्ते · 你好 · こんにちは · 안녕 🎉👍🏽",
+      "parent": "bubble_page.group[2].card[1]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "bubble_page.group[2].card[1].bubble[1]",
+      "role": "list_item",
+      "label": "Olá! مرحبا · שלום · नमस्ते · 你好 · こんにちは · 안녕 🎉👍🏽",
+      "parent": "bubble_page.group[2].card[1]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "focusable": true
+    }
+  ]
+}

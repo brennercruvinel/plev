@@ -6,10 +6,22 @@
       "label": "Toast"
     },
     {
+      "id": "toast_page.group[0]",
+      "role": "group",
+      "label": "Trigger",
+      "parent": "toast_page"
+    },
+    {
+      "id": "toast_page.group[0].card[0]",
+      "role": "group",
+      "label": "Click, Activate",
+      "parent": "toast_page.group[0]"
+    },
+    {
       "id": "toast_page.button[neutral]",
       "role": "button",
       "label": "Neutral",
-      "parent": "toast_page",
+      "parent": "toast_page.group[0].card[0]",
       "actions": [
         {
           "name": "activate"
@@ -21,7 +33,7 @@
       "id": "toast_page.button[success]",
       "role": "button",
       "label": "Success",
-      "parent": "toast_page",
+      "parent": "toast_page.group[0].card[0]",
       "actions": [
         {
           "name": "activate"
@@ -33,7 +45,7 @@
       "id": "toast_page.button[error]",
       "role": "button",
       "label": "Error",
-      "parent": "toast_page",
+      "parent": "toast_page.group[0].card[0]",
       "actions": [
         {
           "name": "activate"
@@ -45,13 +57,133 @@
       "id": "toast_page.button[info]",
       "role": "button",
       "label": "Info",
-      "parent": "toast_page",
+      "parent": "toast_page.group[0].card[0]",
       "actions": [
         {
           "name": "activate"
         }
       ],
       "focusable": true
+    },
+    {
+      "id": "toast_page.group[1]",
+      "role": "group",
+      "label": "Intent",
+      "parent": "toast_page"
+    },
+    {
+      "id": "toast_page.group[1].card[0]",
+      "role": "group",
+      "label": "Neutral",
+      "parent": "toast_page.group[1]"
+    },
+    {
+      "id": "toast_page.group[1].card[0].toast",
+      "role": "label",
+      "label": "Neutral toast: plain information.",
+      "parent": "toast_page.group[1].card[0]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "neutral"
+        }
+      }
+    },
+    {
+      "id": "toast_page.group[1].card[1]",
+      "role": "group",
+      "label": "Success",
+      "parent": "toast_page.group[1]"
+    },
+    {
+      "id": "toast_page.group[1].card[1].toast",
+      "role": "label",
+      "label": "Saved! Everything went fine.",
+      "parent": "toast_page.group[1].card[1]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "constructive"
+        }
+      }
+    },
+    {
+      "id": "toast_page.group[1].card[2]",
+      "role": "group",
+      "label": "Error",
+      "parent": "toast_page.group[1]"
+    },
+    {
+      "id": "toast_page.group[1].card[2].toast",
+      "role": "label",
+      "label": "Failed to push: remote rejected.",
+      "parent": "toast_page.group[1].card[2]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "destructive"
+        }
+      }
+    },
+    {
+      "id": "toast_page.group[1].card[3]",
+      "role": "group",
+      "label": "Info",
+      "parent": "toast_page.group[1]"
+    },
+    {
+      "id": "toast_page.group[1].card[3].toast",
+      "role": "label",
+      "label": "3 new commits fetched from origin.",
+      "parent": "toast_page.group[1].card[3]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "informational"
+        }
+      }
+    },
+    {
+      "id": "toast_page.group[2]",
+      "role": "group",
+      "label": "Content",
+      "parent": "toast_page"
+    },
+    {
+      "id": "toast_page.group[2].card[0]",
+      "role": "group",
+      "label": "Long message",
+      "parent": "toast_page.group[2]"
+    },
+    {
+      "id": "toast_page.group[2].card[0].toast",
+      "role": "label",
+      "label": "Failed to push to origin: the remote rejected the update because the branch moved since you fetched. Pull, resolve what conflicts and push again.",
+      "parent": "toast_page.group[2].card[0]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "destructive"
+        }
+      }
+    },
+    {
+      "id": "toast_page.group[2].card[1]",
+      "role": "group",
+      "label": "Mixed scripts",
+      "parent": "toast_page.group[2]"
+    },
+    {
+      "id": "toast_page.group[2].card[1].toast",
+      "role": "label",
+      "label": "Olá · مرحبا · שלום · नमस्ते · 你好 · 안녕 🎉 synced",
+      "parent": "toast_page.group[2].card[1]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "informational"
+        }
+      }
     }
   ]
 }

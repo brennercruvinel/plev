@@ -50,6 +50,7 @@ pub fn present_frame(
     clear_linear: [f32; 4],
     label: &str,
 ) -> Option<u32> {
+    crate::zone!("present_frame");
     // A shader saved on disk since the last frame: swap its pipeline and
     // redraw every layer, clean ones still hold the old shader's output.
     #[cfg(hot_reload)]
@@ -74,7 +75,11 @@ pub fn present_frame(
     }
 
     let surface = gpu.surface.as_ref()?;
-    let output = match surface.get_current_texture() {
+    let acquired = {
+        crate::zone!("acquire surface");
+        surface.get_current_texture()
+    };
+    let output = match acquired {
         wgpu::CurrentSurfaceTexture::Success(t) | wgpu::CurrentSurfaceTexture::Suboptimal(t) => t,
         wgpu::CurrentSurfaceTexture::Lost | wgpu::CurrentSurfaceTexture::Outdated => {
             // A lost device loses its surface too: ask for another frame,
@@ -110,7 +115,10 @@ pub fn present_frame(
         clear_linear,
         label,
     );
-    output.present();
+    {
+        crate::zone!("present");
+        output.present();
+    }
 
     Some(draws)
 }
@@ -133,7 +141,13 @@ pub fn present_frame(
 /// With `perf::stages` on it records each stage it runs; on a context
 /// built with `RenderConfig::gpu_timestamps` the layer and composite
 /// passes also write GPU timestamps, read back by a later frame without
-/// waiting (see `perf::gpu_time`). Neither changes a pixel.
+/// waiting (see `perf::gpu_time`), tagged with
+/// `Compositor::frame_index`. Neither changes a pixel. With
+/// `perf::zones` on it records a zone per step.
+///
+/// It leaves in the compositor what the frame drew: the encode stats
+/// (`Compositor::stats`) and the layers it redrew with their draw calls
+/// (`Compositor::drawn_layers`).
 ///
 /// Returns the number of draw calls issued.
 #[allow(clippy::too_many_arguments)] // the frame's resources, one each
@@ -147,7 +161,9 @@ pub fn draw_frame(
     clear_linear: [f32; 4],
     label: &str,
 ) -> u32 {
+    crate::zone!("draw_frame");
     let draw = stages::span(Stage::Draw);
+    let resolve = crate::runtime::perf::zones::enter("resolve");
     compositor.resolve(&crate::drawing::compositor::ResolveResources {
         device: &gpu.device,
         queue: &gpu.queue,
@@ -159,18 +175,26 @@ pub fn draw_frame(
         opacity_bgl: &gpu.opacity_bind_group_layout,
         sampler: &gpu.composite_sampler,
     });
+    drop(resolve);
 
     // Resolve text for each dirty layer (clip-group aware).
-    let text = stages::span(Stage::TextResolve);
-    text_system.begin_frame();
-    resolve_layer_text(compositor, gpu, text_system);
-    text_system.finish_frame();
-    text.end(|| dirty_glyphs(compositor));
+    {
+        crate::zone!("text resolve");
+        let text = stages::span(Stage::TextResolve);
+        text_system.begin_frame();
+        resolve_layer_text(compositor, gpu, text_system);
+        text_system.finish_frame();
+        text.end(|| dirty_glyphs(compositor));
+    }
 
     // Upload any images loaded while building the scene.
-    gpu.prepare_images();
+    {
+        crate::zone!("prepare images");
+        gpu.prepare_images();
+    }
 
     let encode = stages::span(Stage::Encode);
+    let encode_start = web_time::Instant::now();
     let mut encoder = gpu
         .device
         .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some(label) });
@@ -199,45 +223,62 @@ pub fn draw_frame(
     if let Some(timestamps) = &gpu.timestamps {
         timestamps.resolve_finished(&mut encoder);
     }
-    let mut stamps = FrameStamps::begin(gpu.timestamps.as_ref());
+    let mut stamps = FrameStamps::begin(gpu.timestamps.as_ref(), compositor.frame_index());
 
-    let layer_draws = encode_layer_passes_timed(
-        compositor,
-        gpu,
-        text_system,
-        effects,
-        texture_pool,
-        clear_color,
-        &dirty_layer_ids,
-        &mut encoder,
-        stamps.as_mut(),
-    );
+    let mut drawn = std::mem::take(&mut compositor.drawn);
+    drawn.clear();
+    let layer_draws = {
+        crate::zone!("encode layers");
+        encode_layer_passes_timed(
+            compositor,
+            gpu,
+            text_system,
+            effects,
+            texture_pool,
+            clear_color,
+            &dirty_layer_ids,
+            &mut encoder,
+            stamps.as_mut(),
+            Some(&mut drawn),
+        )
+    };
+    compositor.drawn = drawn;
     for id in &dirty_layer_ids {
         compositor.mark_layer_clean(*id);
     }
 
-    let composite_draws = encode_composite_pass_timed(
-        compositor,
-        clear_color,
-        gpu,
-        target,
-        &[],
-        &mut encoder,
-        stamps.as_ref(),
-    );
+    let composite_draws = {
+        crate::zone!("encode composite");
+        encode_composite_pass_timed(
+            compositor,
+            clear_color,
+            gpu,
+            target,
+            &[],
+            &mut encoder,
+            stamps.as_ref(),
+        )
+    };
 
-    gpu.queue.submit(std::iter::once(encoder.finish()));
+    {
+        crate::zone!("submit");
+        gpu.queue.submit(std::iter::once(encoder.finish()));
+    }
     if let Some(stamps) = stamps {
         stamps.submitted(&gpu.queue);
     }
-    encode.end(|| u64::from(layer_draws + composite_draws));
+    let draws = layer_draws + composite_draws;
+    encode.end(|| u64::from(draws));
     drop(draw);
+    let glyphs = compositor.layers().iter().map(|l| l.glyph_count()).sum();
+    let encode_micros = u64::try_from(encode_start.elapsed().as_micros()).unwrap_or(u64::MAX);
+    compositor.record_encode_stats(draws, glyphs, encode_micros);
     stages::wait_for_gpu(&gpu.device);
     if let Some(timestamps) = &gpu.timestamps {
         timestamps.collect();
     }
 
-    layer_draws + composite_draws
+    draws
 }
 
 /// Glyphs in the layers whose text was resolved this frame (the dirty

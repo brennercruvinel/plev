@@ -11,7 +11,7 @@
 //! between two frames it answers for the frame on screen, which is what a
 //! person clicking saw.
 //!
-//! See docs/adr/semantics/0035-semantic-binding-beside-the-scene.md.
+//! See docs/adr/Semantics/0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md.
 
 use accord::SemId;
 use indexmap::IndexMap;
@@ -36,6 +36,10 @@ pub struct Binding {
     /// Position among this frame's bindings. Within one layer a higher
     /// order was bound later, so it sits on top.
     pub order: u32,
+    /// How many nodes `layer` held at the bind: a node pushed before it
+    /// is under what the widget draws, a node pushed from it on is the
+    /// widget's own or over it.
+    pub nodes: usize,
     /// The temporary render identity, when the widget registered a hit
     /// region under one this frame (`Compositor::set_binding_view`).
     pub view: Option<ViewId>,
@@ -159,6 +163,7 @@ impl Compositor {
                 layer,
                 clip,
                 order,
+                nodes: target.nodes.len(),
                 view: None,
             },
         );

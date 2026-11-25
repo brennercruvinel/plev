@@ -9,12 +9,12 @@
 //! projection, never a second declaration by hand.
 //!
 //! The file is a golden. This test fails when the projection moves away
-//! from it; `UIR_BLESS=1 cargo test -p idestudio --test uir_fixture` writes it
+//! from it; `UIR_BLESS=1 cargo test -p idestudio --test suite plevir_fixture::` writes it
 //! again, and the uir tests then say whether the IR fixtures still verify.
 
 // shared with the other ide tests: this binary uses the rig and a helper.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -68,7 +68,8 @@ fn the_workbench_projection_is_the_uir_fixture() {
 
 /// The snapshot in the lean serde form of `sem`, each node without its
 /// `source`: the place in the code that projected a node moves with every
-/// edit of that code and means nothing to a capability.
+/// edit of that code and means nothing to a capability. The keys of each
+/// object are written in order (`sorted`).
 fn lean(snap: &Snapshot) -> String {
     let mut json = serde_json::to_value(snap).expect("a snapshot serializes");
     if let Some(nodes) = json.get_mut("nodes").and_then(|n| n.as_array_mut()) {
@@ -78,9 +79,26 @@ fn lean(snap: &Snapshot) -> String {
             }
         }
     }
-    let mut text = serde_json::to_string_pretty(&json).expect("json prints");
+    let mut text = serde_json::to_string_pretty(&sorted(json)).expect("json prints");
     text.push('\n');
     text
+}
+
+/// `value` with the keys of every object in order, whatever map serde_json
+/// was built with (`preserve_order` reaches every member through `unions`,
+/// and then a map keeps the order of insertion): the fixture never depends
+/// on a cargo feature.
+fn sorted(value: serde_json::Value) -> serde_json::Value {
+    use serde_json::Value;
+    match value {
+        Value::Object(map) => {
+            let mut pairs: Vec<(String, Value)> = map.into_iter().collect();
+            pairs.sort_by(|a, b| a.0.cmp(&b.0));
+            Value::Object(pairs.into_iter().map(|(k, v)| (k, sorted(v))).collect())
+        }
+        Value::Array(items) => Value::Array(items.into_iter().map(sorted).collect()),
+        other => other,
+    }
 }
 
 /// What the probe of task-68 reads: every state with its kind and every
@@ -116,6 +134,6 @@ fn golden(text: &str) {
     assert!(
         kept == text,
         "the workbench projection moved away from {FIXTURE}; regenerate it with \
-         UIR_BLESS=1 cargo test -p idestudio --test plevir_fixture, then run cargo test -p plevir"
+         UIR_BLESS=1 cargo test -p idestudio --test suite plevir_fixture::, then run cargo test -p plevir"
     );
 }

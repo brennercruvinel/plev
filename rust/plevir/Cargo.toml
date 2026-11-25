@@ -1,5 +1,5 @@
 # plevir: the plev IR and its verifier (task-68,
-# docs/adr/generated/0049-plev-ir-typed-and-verified.md). pure on purpose, like accord: it
+# docs/adr/Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md). pure on purpose, like accord: it
 # depends on accord and serde only, never on engine (its widgets included) or socket. the
 # component and token vocabulary is declared here as data; binding it to
 # the engine's widgets and the theme is the materializer's job (task-69).
@@ -11,6 +11,11 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 description = "plev IR: an interface surface described by meaning (identity, a closed component vocabulary, props by token, state and actions bound to the capabilities an app declares) and the verifier that is the only way to a VerifiedIr"
+# the integration tests are one executable, tests/suite.rs, a module per file
+# (task-106): cargo links every file under tests/ as an executable of its
+# own, each with the whole crate inside. a target listed apart at the end of
+# this file is one that needs a process to itself.
+autotests = false
 
 [dependencies]
 # the contract the IR references: SemId, StateRef, ValueKind, Role,
@@ -28,3 +33,7 @@ proptest.workspace = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "suite"
+path = "tests/suite.rs"

@@ -1,16 +1,74 @@
 {
   "nodes": [
     {
-      "id": "navigation_menu_page",
+      "id": "kbd_page",
       "role": "region",
       "label": "Kbd"
     },
     {
-      "id": "navigation_menu_page.link[0]",
+      "id": "kbd_page.group[0]",
+      "role": "group",
+      "label": "Key cap",
+      "parent": "kbd_page"
+    },
+    {
+      "id": "kbd_page.group[0].card[0]",
+      "role": "group",
+      "label": "Small: a menu's shortcuts",
+      "parent": "kbd_page.group[0]"
+    },
+    {
+      "id": "kbd_page.group[0].card[0].key[0]",
+      "role": "label",
+      "label": "⇧⌘E",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[0].card[0]"
+    },
+    {
+      "id": "kbd_page.group[0].card[0].key[1]",
+      "role": "label",
+      "label": "⌘N",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[0].card[0]"
+    },
+    {
+      "id": "kbd_page.group[0].card[0].key[2]",
+      "role": "label",
+      "label": "⌘D",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[0].card[0]"
+    },
+    {
+      "id": "kbd_page.group[0].card[1]",
+      "role": "group",
+      "label": "Medium: the search's",
+      "parent": "kbd_page.group[0]"
+    },
+    {
+      "id": "kbd_page.group[0].card[1].key[0]",
+      "role": "label",
+      "label": "⌘ K",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[0].card[1]"
+    },
+    {
+      "id": "kbd_page.group[1]",
+      "role": "group",
+      "label": "Key cap in context",
+      "parent": "kbd_page"
+    },
+    {
+      "id": "kbd_page.group[1].card[0]",
+      "role": "group",
+      "label": "Nav link shortcut: Default, Hover, Active, Focus",
+      "parent": "kbd_page.group[1]"
+    },
+    {
+      "id": "kbd_page.group[1].card[0].link[0]",
       "role": "link",
-      "label": "Workspace",
-      "description": "1",
-      "parent": "navigation_menu_page",
+      "label": "Explore",
+      "description": "shortcut 1",
+      "parent": "kbd_page.group[1].card[0]",
       "state": {
         "active": {
           "kind": "bool",
@@ -21,18 +79,18 @@
         {
           "name": "activate",
           "reads": [
-            "navigation_menu_page.link[0]:active"
+            "kbd_page.group[1].card[0].link[0]:active"
           ]
         }
       ],
       "focusable": true
     },
     {
-      "id": "navigation_menu_page.link[1]",
+      "id": "kbd_page.group[1].card[0].link[1]",
       "role": "link",
-      "label": "Branches",
-      "description": "2",
-      "parent": "navigation_menu_page",
+      "label": "Assets",
+      "description": "shortcut 2",
+      "parent": "kbd_page.group[1].card[0]",
       "state": {
         "active": {
           "kind": "bool",
@@ -43,18 +101,18 @@
         {
           "name": "activate",
           "reads": [
-            "navigation_menu_page.link[1]:active"
+            "kbd_page.group[1].card[0].link[1]:active"
           ]
         }
       ],
       "focusable": true
     },
     {
-      "id": "navigation_menu_page.link[2]",
+      "id": "kbd_page.group[1].card[0].link[2]",
       "role": "link",
-      "label": "History",
-      "description": "4",
-      "parent": "navigation_menu_page",
+      "label": "Likes",
+      "description": "shortcut 3",
+      "parent": "kbd_page.group[1].card[0]",
       "state": {
         "active": {
           "kind": "bool",
@@ -65,33 +123,92 @@
         {
           "name": "activate",
           "reads": [
-            "navigation_menu_page.link[2]:active"
+            "kbd_page.group[1].card[0].link[2]:active"
           ]
         }
       ],
       "focusable": true
     },
     {
-      "id": "navigation_menu_page.link[3]",
-      "role": "link",
-      "label": "A label long enough to truncate in a narrow rail",
-      "description": "9",
-      "parent": "navigation_menu_page",
-      "state": {
-        "active": {
-          "kind": "bool",
-          "value": false
-        }
-      },
-      "actions": [
-        {
-          "name": "activate",
-          "reads": [
-            "navigation_menu_page.link[3]:active"
-          ]
-        }
-      ],
-      "focusable": true
+      "id": "kbd_page.group[1].card[1]",
+      "role": "group",
+      "label": "Disabled",
+      "parent": "kbd_page.group[1]"
+    },
+    {
+      "id": "kbd_page.group[1].card[1].key[0]",
+      "role": "label",
+      "label": "⌘ +",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[1].card[1]"
+    },
+    {
+      "id": "kbd_page.group[1].card[1].key[1]",
+      "role": "label",
+      "label": "⌘ -",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[1].card[1]"
+    },
+    {
+      "id": "kbd_page.group[1].card[1].key[2]",
+      "role": "label",
+      "label": "⌘ 0",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[1].card[1]"
+    },
+    {
+      "id": "kbd_page.group[2]",
+      "role": "group",
+      "label": "Key cap, long content",
+      "parent": "kbd_page"
+    },
+    {
+      "id": "kbd_page.group[2].card[0]",
+      "role": "group",
+      "label": "Chords that wrap",
+      "parent": "kbd_page.group[2]"
+    },
+    {
+      "id": "kbd_page.group[2].card[0].key[0]",
+      "role": "label",
+      "label": "⌃⌥⇧⌘ Delete",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[2].card[0]"
+    },
+    {
+      "id": "kbd_page.group[2].card[0].key[1]",
+      "role": "label",
+      "label": "Fn F12",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[2].card[0]"
+    },
+    {
+      "id": "kbd_page.group[2].card[0].key[2]",
+      "role": "label",
+      "label": "⌘ Shift Option Return",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[2].card[0]"
+    },
+    {
+      "id": "kbd_page.group[2].card[0].key[3]",
+      "role": "label",
+      "label": "Ctrl Alt Page Down",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[2].card[0]"
+    },
+    {
+      "id": "kbd_page.group[2].card[0].key[4]",
+      "role": "label",
+      "label": "⌥ Space",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[2].card[0]"
+    },
+    {
+      "id": "kbd_page.group[2].card[0].key[5]",
+      "role": "label",
+      "label": "⇧ Tab",
+      "description": "keyboard shortcut",
+      "parent": "kbd_page.group[2].card[0]"
     }
   ]
 }

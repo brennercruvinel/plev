@@ -3,7 +3,7 @@
 //! The repository's file-hygiene rule caps production code at 639 lines
 //! per source file, with test code out of the count. The rule lived only in prose, and three
 //! deliveries in one cycle went past it before anyone counted
-//! (docs/learnings/general.md, process). This test counts, so the
+//! (docs/Research/Workflows/autonomous-cycle-learnings.md, process). This test counts, so the
 //! gate says it first.
 //!
 //! What counts as test code, and is left out: files under a `tests` or
@@ -25,7 +25,6 @@ const LIMIT: usize = 639;
 /// lines each had then: debt, frozen. A split that brings one under the
 /// limit removes it from here.
 const FROZEN: &[(&str, usize)] = &[
-    ("rust/engine/src/widgets/content/card.rs", 1343),
     ("apps/urnadbapp/src/view/explorer/mod.rs", 1019),
     ("apps/urnadbapp/src/backend/sources/reader.rs", 794),
     ("apps/urnadbapp/src/view/search.rs", 752),

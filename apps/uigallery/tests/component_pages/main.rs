@@ -48,7 +48,7 @@ mod field_menu;
 mod promises;
 
 // task-104: one file per front, the same request from the three on its
-// pages (`cargo test -p uigallery --test component_pages <front>`).
+// pages (`cargo test -p uigallery --test suite component_pages::<front>`).
 
 /// Front A, fields (#154).
 mod fields;

@@ -6,7 +6,7 @@
 // shared with the other surface tests: this binary uses the fixtures and
 // the app.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{Actor, Actors, Policy, Role, Snapshot, SnapshotBuilder};
 use plevir::{Capabilities, GenerationPolicy, Op, Step, TransformError, verify_json};

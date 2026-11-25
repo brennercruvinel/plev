@@ -1,0 +1,45 @@
+{
+  "nodes": [
+    {
+      "id": "panel_page",
+      "role": "region",
+      "label": "Panel"
+    },
+    {
+      "id": "panel_page.group[0]",
+      "role": "group",
+      "label": "Panel",
+      "parent": "panel_page"
+    },
+    {
+      "id": "panel_page.group[0].card[0]",
+      "role": "group",
+      "label": "Scene",
+      "parent": "panel_page.group[0]"
+    },
+    {
+      "id": "panel_page.group[0].card[1]",
+      "role": "group",
+      "label": "Camera",
+      "parent": "panel_page.group[0]"
+    },
+    {
+      "id": "panel_page.group[0].card[2]",
+      "role": "group",
+      "label": "Export",
+      "parent": "panel_page.group[0]"
+    },
+    {
+      "id": "panel_page.group[1]",
+      "role": "group",
+      "label": "Panel, ranges",
+      "parent": "panel_page"
+    },
+    {
+      "id": "panel_page.group[1].card[0]",
+      "role": "group",
+      "label": "Design and animation",
+      "parent": "panel_page.group[1]"
+    }
+  ]
+}

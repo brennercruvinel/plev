@@ -6,10 +6,94 @@
       "label": "Spinner"
     },
     {
+      "id": "spinner_page.group[0]",
+      "role": "group",
+      "label": "Size",
+      "parent": "spinner_page"
+    },
+    {
+      "id": "spinner_page.group[1]",
+      "role": "group",
+      "label": "Motion",
+      "parent": "spinner_page"
+    },
+    {
+      "id": "spinner_page.group[0].card[0]",
+      "role": "group",
+      "label": "Sm, inline",
+      "parent": "spinner_page.group[0]"
+    },
+    {
+      "id": "spinner_page.group[0].card[0].spinner",
+      "role": "progress_bar",
+      "label": "Loading",
+      "parent": "spinner_page.group[0].card[0]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        },
+        "spinning": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "spinner_page.group[0].card[1]",
+      "role": "group",
+      "label": "Md",
+      "parent": "spinner_page.group[0]"
+    },
+    {
+      "id": "spinner_page.group[0].card[1].spinner",
+      "role": "progress_bar",
+      "label": "Loading",
+      "parent": "spinner_page.group[0].card[1]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        },
+        "spinning": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "spinner_page.group[0].card[2]",
+      "role": "group",
+      "label": "Lg, page",
+      "parent": "spinner_page.group[0]"
+    },
+    {
+      "id": "spinner_page.group[0].card[2].spinner",
+      "role": "progress_bar",
+      "label": "Loading",
+      "parent": "spinner_page.group[0].card[2]",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": true
+        },
+        "spinning": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "spinner_page.group[1].card[0]",
+      "role": "group",
+      "label": "Start, Stop",
+      "parent": "spinner_page.group[1]"
+    },
+    {
       "id": "spinner_page.toggle",
       "role": "button",
       "label": "Start spinners",
-      "parent": "spinner_page",
+      "parent": "spinner_page.group[1].card[0]",
       "actions": [
         {
           "name": "activate"

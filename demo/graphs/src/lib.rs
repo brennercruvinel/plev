@@ -208,7 +208,10 @@ impl GraphsView {
         // on the desktop, a measuring script asks for the report after that many frames
         // (PLEV_REPORT=300): it is printed and the process ends, so a check needs no window to watch
         #[cfg(not(target_arch = "wasm32"))]
-        if let Some(after) = std::env::var("PLEV_REPORT").ok().and_then(|v| v.parse::<u64>().ok()) {
+        if let Some(after) = std::env::var("PLEV_REPORT")
+            .ok()
+            .and_then(|v| v.parse::<u64>().ok())
+        {
             if self.frame >= after {
                 println!("{}", self.report());
                 std::process::exit(0);

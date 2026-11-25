@@ -6,6 +6,7 @@ impl Compositor {
         self.next_layer_id += 1;
         self.layers.push(Layer::new(id, z_order));
         self.sorted = false;
+        crate::message!("layer {} created at z {z_order}", id.0);
         id
     }
 
@@ -15,6 +16,7 @@ impl Compositor {
             return;
         }
         self.layers.retain(|l| l.id != id);
+        crate::message!("layer {} removed", id.0);
     }
 
     /// Change a layer's z-order. Marks the layer order dirty only when the

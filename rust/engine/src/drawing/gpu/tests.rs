@@ -145,6 +145,59 @@ mod loss {
     }
 }
 
+/// Headless contexts name nothing off Apple's platforms
+/// (`GpuContext::instance_flags`). The flags need no device; the rest
+/// skips without an adapter.
+mod headless {
+    use crate::drawing::gpu::GpuContext;
+
+    #[test]
+    fn a_headless_instance_names_nothing_off_apple_platforms_and_a_window_keeps_the_flags() {
+        let build = wgpu::InstanceFlags::from_build_config();
+        assert_eq!(GpuContext::instance_flags(false), build);
+        let headless = GpuContext::instance_flags(true);
+        let apple = cfg!(any(target_os = "macos", target_os = "ios"));
+        let names = build.contains(wgpu::InstanceFlags::DEBUG) && apple;
+        assert_eq!(headless.contains(wgpu::InstanceFlags::DEBUG), names);
+        // nothing else changes: validation stays what the build asks
+        assert_eq!(
+            headless - wgpu::InstanceFlags::DEBUG,
+            build - wgpu::InstanceFlags::DEBUG
+        );
+    }
+
+    /// Contexts made on several threads at once each get their own
+    /// instance and device, as one made alone does.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn headless_contexts_made_at_once_each_get_their_own_device() {
+        use crate::drawing::gpu::RenderConfig;
+        let made: Vec<Option<GpuContext>> = std::thread::scope(|scope| {
+            let threads: Vec<_> = (0..4)
+                .map(|_| {
+                    scope.spawn(|| {
+                        pollster::block_on(GpuContext::new_headless(8, 8, RenderConfig::default()))
+                    })
+                })
+                .collect();
+            threads
+                .into_iter()
+                .map(|t| t.join().expect("a thread made its context"))
+                .collect()
+        });
+        let Some(made) = made.into_iter().collect::<Option<Vec<_>>>() else {
+            eprintln!("no GPU adapter; skipping");
+            return;
+        };
+        for (i, a) in made.iter().enumerate() {
+            assert!(!a.poll_device_loss());
+            for b in &made[i + 1..] {
+                assert!(a.instance() != b.instance(), "an instance each");
+            }
+        }
+    }
+}
+
 /// A library computing on the renderer's device (`RenderConfig::compute`,
 /// `GpuContext::instance` and `adapter`). Skips without an adapter.
 #[cfg(not(target_arch = "wasm32"))]

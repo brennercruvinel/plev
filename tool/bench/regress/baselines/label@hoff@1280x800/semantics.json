@@ -1,99 +1,131 @@
 {
   "nodes": [
     {
-      "id": "input_page",
+      "id": "label_page",
       "role": "region",
       "label": "Label"
     },
     {
-      "id": "input_page.field[0]",
-      "role": "text_input",
-      "label": "Full name",
-      "parent": "input_page",
-      "state": {
-        "text": {
-          "kind": "text",
-          "value": ""
-        }
-      },
-      "actions": [
-        {
-          "name": "set_value",
-          "reads": [
-            "input_page.field[0]:text"
-          ],
-          "param": {
-            "kind": "text",
-            "constrained": true
-          }
-        }
-      ],
-      "constraints": {
-        "editable": true
-      },
-      "focusable": true
+      "id": "label_page.group[0]",
+      "role": "group",
+      "label": "Label",
+      "parent": "label_page"
     },
     {
-      "id": "input_page.field[1]",
-      "role": "text_input",
-      "label": "Email address",
-      "parent": "input_page",
-      "state": {
-        "text": {
-          "kind": "text",
-          "value": ""
-        }
-      },
-      "actions": [
-        {
-          "name": "set_value",
-          "reads": [
-            "input_page.field[1]:text"
-          ],
-          "param": {
-            "kind": "text",
-            "constrained": true
-          }
-        }
-      ],
-      "constraints": {
-        "editable": true
-      },
-      "focusable": true
-    },
-    {
-      "id": "input_page.field[2]",
-      "role": "text_input",
-      "label": "Project codename",
-      "parent": "input_page",
-      "state": {
-        "text": {
-          "kind": "text",
-          "value": ""
-        }
-      },
-      "actions": [
-        {
-          "name": "set_value",
-          "reads": [
-            "input_page.field[2]:text"
-          ],
-          "param": {
-            "kind": "text",
-            "constrained": true
-          }
-        }
-      ],
-      "constraints": {
-        "editable": true
-      },
-      "focusable": true
-    },
-    {
-      "id": "input_page.preview",
+      "id": "label_page.group[0].card[0]",
       "role": "label",
-      "label": "live value: (empty)",
-      "parent": "input_page"
+      "label": "Email address",
+      "parent": "label_page.group[0]"
+    },
+    {
+      "id": "label_page.group[0].card[1]",
+      "role": "label",
+      "label": "Email address",
+      "parent": "label_page.group[0]",
+      "enabled": false
+    },
+    {
+      "id": "label_page.group[0].card[2]",
+      "role": "label",
+      "label": "ACCOUNT",
+      "parent": "label_page.group[0]"
+    },
+    {
+      "id": "label_page.group[1]",
+      "role": "group",
+      "label": "With a field",
+      "parent": "label_page"
+    },
+    {
+      "id": "label_page.group[1].card[0]",
+      "role": "text_input",
+      "label": "Email",
+      "parent": "label_page.group[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "valid": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "label_page.group[1].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "label_page.group[1].card[1]",
+      "role": "text_input",
+      "label": "Email",
+      "parent": "label_page.group[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "valid": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "label_page.group[1].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "label_page.group[2]",
+      "role": "group",
+      "label": "Content",
+      "parent": "label_page"
+    },
+    {
+      "id": "label_page.group[2].card[0]",
+      "role": "label",
+      "label": "Geschäftliche E-Mail-Adresse für Rechnungen, Belege und Hinweise zu Ihrem Arbeitsbereich",
+      "parent": "label_page.group[2]"
+    },
+    {
+      "id": "label_page.group[2].card[1]",
+      "role": "label",
+      "label": "כתובת דוא״ל",
+      "parent": "label_page.group[2]"
     }
   ]
 }

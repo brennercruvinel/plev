@@ -12,13 +12,8 @@ use engine::widgets::prelude::{Rect, Wake};
 use super::{Pane, ShowcaseView};
 
 impl ShowcaseView {
-    /// Natural (unclipped) height of the active page's content.
-    pub(super) fn page_content_height(&self, content: Rect) -> f32 {
-        self.pane_content_height(content) + self.note_h()
-    }
-
-    /// The active pane's natural height in `content`.
-    fn pane_content_height(&self, content: Rect) -> f32 {
+    /// The active pane's natural (unclipped) height in `content`.
+    pub(super) fn pane_content_height(&self, content: Rect) -> f32 {
         let t = &self.theme;
         match self.pane() {
             None => t.size.card_min_w / 2.0,

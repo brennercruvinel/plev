@@ -7,7 +7,7 @@
 A header is YAML restricted to one `key: value` per line, where a value is
 a bare word, a JSON string, `null` or an inline list `[a, "b c"]`, so the
 standard library reads it and any YAML reader agrees. The fields and their
-vocabularies are docs/ref/operations/docs-conventions.md.
+vocabularies are docs/Research/Workflows/docs-conventions.md.
 """
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -30,18 +30,28 @@ STATES = {'active', 'reference', 'proposed', 'accepted', 'superseded', 'pending'
           'in-progress', 'done', 'draft'}
 BASES = {'header', 'text', 'git', 'reconstructed', 'editorial', 'undated', 'generated'}
 REVIEWS = {'pending', 'reviewed', 'generated'}
-THEMES = {'generated', 'importing', 'interface', 'recording', 'rendering', 'semantics',
-          'structure', 'workflows'}
+# the themes adr/ and Research/ share: a decision and what was learned about
+# the same subject sit under the same name in both trees
+THEMES = {'Ecosystem', 'Importing', 'Interface', 'Recording', 'Rendering', 'Semantics',
+          'Structure', 'Synthesis', 'Workflows'}
+# Research/ has one theme more, the experiments: what was measured, not decided
+RESEARCH = THEMES | {'Exploring'}
+# a folder note: the page that is its folder, named like it (an ADR, a task, an index)
+NOTES = {'Tasks': 'docs/Tasks/Tasks.md', 'Research': 'docs/Research/Research.md'}
+ADR_INDEX = 'docs/adr/adr.md'
+RELATED = ('<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; '
+           'edit the headers, not this list -->')
+RELATED_END = '<!-- /related -->'
+# the order a Related list keeps, by type
+KIND_ORDER = ['adr', 'learning', 'task', 'section', 'experiment', 'research', 'thesis', 'program',
+              'reference', 'manual', 'record', 'draft']
 SKIP = {'docs/adr/TEMPLATE.md'}
 HOMES = {
-    'tasks': ('Tasks', 'One folder per task: the plan, the execution, the delivery and what stayed open. '
-              'A long task keeps its phases as pages beside its README.'),
-    'experiments': ('Experiments', 'What was measured or tested: the question, the setup, the results '
-                    'and their limits, with the task pages that hold the full record.'),
-    'research': ('Research', 'The references studied, the comparisons, the thesis and the paper drafts.'),
-    'learnings': ('Learnings', 'What the problems and the implementations taught.'),
-    'ref': ('Reference', 'How each subsystem is built, how to operate the repository, the platforms, '
-            'and the conventions of this archive.'),
+    'Tasks': ('Tasks', 'One folder per task, its note named like the folder: the plan, the execution, '
+              'the delivery and what stayed open. A long task keeps its phases as pages beside its note.'),
+    'Research': ('Research', 'What we know, by the themes the ADRs use, and in Exploring what was '
+                 'measured: the references studied, the comparisons, the thesis and the program, how each '
+                 'subsystem was designed, how to work on the repository and the experiments.'),
 }
 
 
@@ -151,22 +161,66 @@ def write(root, path, ident, title, body):
     (root / path[5:]).write_text(emit(meta, f'# {title}\n\n{body}'))
 
 
+def related_lists(pages):
+    """page path -> the Related list its body ends with: the pages its header
+    names and the pages that name it, an index or the changelog left out"""
+    by_id = {m['id']: p for p, (m, _) in pages.items()}
+    skip = {p for p, (m, _) in pages.items() if m['type'] in ('index', 'template') or m['id'] == 'changelog'}
+    links = defaultdict(set)
+    for p, (m, _) in pages.items():
+        if p in skip:
+            continue
+        for ref in m.get('relations', []) + ([m['parent']] if m.get('parent') else []):
+            q = by_id.get(ref)
+            if q and q != p and q not in skip:
+                links[p].add(q)
+                links[q].add(p)
+    out = {}
+    for p, (m, _) in pages.items():
+        if p in skip:
+            continue
+        items = []
+        for q in links[p]:
+            t = pages[q][0]
+            title = str(t['title']).replace('[', '(').replace(']', ')')
+            if t['type'] == 'adr':
+                title = f"ADR {t['id'][4:]}: {title}"
+            rank = KIND_ORDER.index(t['type']) if t['type'] in KIND_ORDER else len(KIND_ORDER)
+            items.append((rank, t['id'], f'- [{title}]({link(q, p)})'))
+        out[p] = '' if not items else '\n'.join(
+            [RELATED, '## Related', ''] + [i[2] for i in sorted(items)] + [RELATED_END])
+    return out
+
+
+def without_related(body):
+    a = body.find(RELATED)
+    if a < 0:
+        return body
+    b = body.find(RELATED_END, a)
+    return (body[:a] + body[b + len(RELATED_END):]).rstrip() + '\n'
+
+
 def index(root):
     pages = {p: m for p, (m, _) in load(root).items() if m['type'] != 'index'}
     for home, (title, intro) in HOMES.items():
-        path = f'docs/{home}/README.md'
+        path = NOTES[home]
         rows = [(p, m) for p, m in pages.items() if p.startswith(f'docs/{home}/') and not m.get('parent')]
         groups = defaultdict(list)
         for p, m in rows:
             parts = Path(p).parts
-            own = parts[-1] == 'README.md'  # a page that is its own folder: a task, an experiment
-            groups[parts[2] if len(parts) > 3 and not own else ''].append((p, m))
+            groups[parts[2] if home == 'Research' else ''].append((p, m))
         body = intro + '\n'
         for group in sorted(groups):
             if group:
                 body += f'\n## {group}\n'
             body += '\n' + table(groups[group], path) + '\n'
-        write(root, path, f'index-{home}', title, body + '\n[plev docs](../README.md)')
+        write(root, path, f'index-{home.lower()}', title, body + '\n[plev docs](../README.md)')
+    loaded = load(root)
+    for p, block in related_lists(loaded).items():
+        m, body = loaded[p]
+        new = without_related(body).rstrip() + ('\n\n' + block if block else '') + '\n'
+        if new != body:
+            (root / p[5:]).write_text(emit(m, new))
     catalog = {'project': 'plev', 'documents': []}
     for p, (m, body) in load(root).items():
         catalog['documents'].append({'path': p, **m, 'headings': headings(body)})
@@ -224,24 +278,39 @@ def check(root):
                 and f']({path[5:]})' not in changelog:
             errors.append(f'{path}: not listed under its date in docs/CHANGELOG.md')
     numbers = defaultdict(list)
-    adr_index = pages.get('docs/adr/README.md', ({}, ''))[1]
+    adr_index = pages.get(ADR_INDEX, ({}, ''))[1]
+    for path, block in related_lists(pages).items():
+        body = pages[path][1]
+        if block and block not in body or not block and RELATED in body:
+            errors.append(f'{path}: its Related list is stale: run tool/tasks/docbase.py index')
     for path, (m, body) in pages.items():
         parts = path.split('/')
-        if parts[1] == 'adr' and path != 'docs/adr/README.md':
-            n = re.match(r'docs/adr/([a-z]+)/(\d{4})-[a-z0-9-]+\.md$', path)
+        if parts[1] == 'adr' and path != ADR_INDEX:
+            n = re.match(r'docs/adr/([A-Za-z]+)/((\d{4})-[a-z0-9-]+)/([a-z0-9-]+)\.md$', path)
             if not n or n[1] not in THEMES:
-                errors.append(f'{path}: an ADR is adr/<theme>/NNNN-kebab.md, theme one of {sorted(THEMES)}')
+                errors.append(f'{path}: an ADR is adr/<Theme>/NNNN-kebab/NNNN-kebab.md, '
+                              f'the theme one of {sorted(THEMES)}')
                 continue
-            numbers[n[2]].append(path)
-            if m.get('id') != f'adr-{n[2]}':
-                errors.append(f'{path}: the id of ADR {n[2]} is adr-{n[2]}')
-            if f'{n[1]}/{Path(path).name})' not in adr_index:
-                errors.append(f'{path}: not listed in docs/adr/README.md')
-        if parts[1] in ('tasks', 'experiments') and path != f'docs/{parts[1]}/README.md':
+            if n[4] != n[2]:
+                # a page beside the record: a learning of that decision
+                if m.get('type') != 'learning' or f'adr-{n[3]}' not in m.get('relations', []):
+                    errors.append(f'{path}: a page in the folder of ADR {n[3]} is a learning '
+                                  f'that relates adr-{n[3]}')
+                continue
+            numbers[n[3]].append(path)
+            if m.get('id') != f'adr-{n[3]}':
+                errors.append(f'{path}: the id of ADR {n[3]} is adr-{n[3]}')
+            if f'({n[1]}/{n[2]}/{n[2]}.md)' not in adr_index:
+                errors.append(f'{path}: not listed in {ADR_INDEX}')
+        if parts[1] == 'Research' and path != NOTES['Research']:
+            if len(parts) != 4 or parts[2] not in RESEARCH:
+                errors.append(f'{path}: research lives in Research/<Theme>/<name>.md, '
+                              f'the theme one of {sorted(RESEARCH)}')
+        if parts[1] == 'Tasks' and path != NOTES['Tasks']:
             if len(parts) != 4:
-                errors.append(f'{path}: each one lives in its own folder, {parts[1]}/<name>/README.md')
-            elif parts[3] != 'README.md':
-                owner = pages.get('/'.join(parts[:3]) + '/README.md', ({}, ''))[0].get('id')
+                errors.append(f'{path}: each task lives in its own folder, Tasks/<name>/<name>.md')
+            elif parts[3] != f'{parts[2]}.md':
+                owner = pages.get('/'.join(parts[:3]) + f'/{parts[2]}.md', ({}, ''))[0].get('id')
                 if m.get('parent') != owner:
                     errors.append(f'{path}: a page in {"/".join(parts[:3])}/ has parent {owner}')
     errors += [f'ADR {n} used by {p}' for n, p in numbers.items() if len(p) > 1]

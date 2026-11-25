@@ -1,0 +1,1412 @@
+{
+  "nodes": [
+    {
+      "id": "modals_page",
+      "role": "region",
+      "label": "Modals"
+    },
+    {
+      "id": "modals_page.group[0]",
+      "role": "group",
+      "label": "Variations",
+      "parent": "modals_page"
+    },
+    {
+      "id": "modals_page.group[0].card[0]",
+      "role": "group",
+      "label": "Variations",
+      "description": "0 of 4",
+      "parent": "modals_page.group[0]"
+    },
+    {
+      "id": "modals_page.group[0].card[0].tile",
+      "role": "group",
+      "label": "Variations to choose",
+      "parent": "modals_page.group[0].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "modals_page.group[0].card[0].close",
+      "role": "button",
+      "label": "Close",
+      "parent": "modals_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[0].card[0].tile[0]",
+      "role": "radio",
+      "label": "Variation 1",
+      "parent": "modals_page.group[0].card[0].tile",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[0].card[0].tile:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[0].card[0].tile[1]",
+      "role": "radio",
+      "label": "Variation 2",
+      "parent": "modals_page.group[0].card[0].tile",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[0].card[0].tile:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[0].card[0].tile[2]",
+      "role": "radio",
+      "label": "Variation 3",
+      "parent": "modals_page.group[0].card[0].tile",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[0].card[0].tile:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[0].card[0].tile[3]",
+      "role": "radio",
+      "label": "Variation 4",
+      "parent": "modals_page.group[0].card[0].tile",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[0].card[0].tile:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[1]",
+      "role": "group",
+      "label": "Share",
+      "parent": "modals_page"
+    },
+    {
+      "id": "modals_page.group[1].card[0]",
+      "role": "group",
+      "label": "Cute Monster",
+      "description": "randomdash, 3 Jun, 2025",
+      "parent": "modals_page.group[1]"
+    },
+    {
+      "id": "modals_page.group[1].card[0].social[0]",
+      "role": "button",
+      "label": "Share on Threads",
+      "parent": "modals_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[1].card[0].social[1]",
+      "role": "button",
+      "label": "Share on X",
+      "parent": "modals_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[1].card[0].social[2]",
+      "role": "button",
+      "label": "Share on Instagram",
+      "parent": "modals_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[1].card[0].copy",
+      "role": "button",
+      "label": "Copy link",
+      "parent": "modals_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[1].card[1]",
+      "role": "group",
+      "label": "Sophie Bennett ®",
+      "description": "159 scenes",
+      "parent": "modals_page.group[1]"
+    },
+    {
+      "id": "modals_page.group[1].card[1].social[0]",
+      "role": "button",
+      "label": "Share on Threads",
+      "parent": "modals_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[1].card[1].social[1]",
+      "role": "button",
+      "label": "Share on X",
+      "parent": "modals_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[1].card[1].social[2]",
+      "role": "button",
+      "label": "Share on Instagram",
+      "parent": "modals_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[1].card[1].copy",
+      "role": "button",
+      "label": "Copy link",
+      "parent": "modals_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[2]",
+      "role": "group",
+      "label": "Share file",
+      "parent": "modals_page"
+    },
+    {
+      "id": "modals_page.group[2].card[0]",
+      "role": "group",
+      "label": "Share file",
+      "description": "https://research-app.co/file/k373nH",
+      "parent": "modals_page.group[2]"
+    },
+    {
+      "id": "modals_page.group[2].card[0].access",
+      "role": "group",
+      "label": "General access",
+      "parent": "modals_page.group[2].card[0]"
+    },
+    {
+      "id": "modals_page.group[2].card[0].access[0]",
+      "role": "label",
+      "label": "Only those invited",
+      "description": "4 people",
+      "parent": "modals_page.group[2].card[0].access"
+    },
+    {
+      "id": "modals_page.group[2].card[0].access[1]",
+      "role": "label",
+      "label": "Link access",
+      "description": "Only users have shared the link",
+      "parent": "modals_page.group[2].card[0].access"
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[0]",
+      "role": "group",
+      "label": "Sam Dy",
+      "description": "sam@hoffresearch.com",
+      "parent": "modals_page.group[2].card[0]"
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[1]",
+      "role": "group",
+      "label": "Ellie Joy",
+      "description": "ellie@hoffresearch.com",
+      "parent": "modals_page.group[2].card[0]"
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[2]",
+      "role": "group",
+      "label": "Hellen",
+      "description": "helen@hoffresearch.com",
+      "parent": "modals_page.group[2].card[0]",
+      "state": {
+        "owner": {
+          "kind": "bool",
+          "value": true
+        }
+      }
+    },
+    {
+      "id": "modals_page.group[2].card[0].invite",
+      "role": "text_input",
+      "label": "Invite by email or name",
+      "parent": "modals_page.group[2].card[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "modals_page.group[2].card[0].invite:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[2].card[0].invite.choice",
+      "role": "select",
+      "label": "access",
+      "parent": "modals_page.group[2].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "can view"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[2].card[0].invite.choice:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "modals_page.group[2].card[0].invite.choice:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "modals_page.group[2].card[0].invite.choice:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "can view",
+          "can edit"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[2].card[0].send",
+      "role": "button",
+      "label": "Invite",
+      "parent": "modals_page.group[2].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[0].access",
+      "role": "select",
+      "label": "What Sam Dy can do",
+      "parent": "modals_page.group[2].card[0].person[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "can view"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[2].card[0].person[0].access:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "modals_page.group[2].card[0].person[0].access:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "modals_page.group[2].card[0].person[0].access:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "can view",
+          "can edit"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[0].remove",
+      "role": "button",
+      "label": "Remove Sam Dy",
+      "parent": "modals_page.group[2].card[0].person[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[1].access",
+      "role": "select",
+      "label": "What Ellie Joy can do",
+      "parent": "modals_page.group[2].card[0].person[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "can edit"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[2].card[0].person[1].access:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "modals_page.group[2].card[0].person[1].access:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "modals_page.group[2].card[0].person[1].access:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "can view",
+          "can edit"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[1].remove",
+      "role": "button",
+      "label": "Remove Ellie Joy",
+      "parent": "modals_page.group[2].card[0].person[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[2].card[0].copy",
+      "role": "button",
+      "label": "Copy link",
+      "parent": "modals_page.group[2].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3]",
+      "role": "group",
+      "label": "Quick comment & Delete confirm",
+      "parent": "modals_page"
+    },
+    {
+      "id": "modals_page.group[3].card[0].close",
+      "role": "button",
+      "label": "Close",
+      "parent": "modals_page.group[3].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3].card[0].comments",
+      "role": "list",
+      "label": "Comments",
+      "parent": "modals_page.group[3].card[0]",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 1
+        }
+      }
+    },
+    {
+      "id": "modals_page.group[3].card[0].comments[0].reaction",
+      "role": "button",
+      "label": "2",
+      "description": "like",
+      "parent": "modals_page.group[3].card[0].comments[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3].card[0].comments[0]",
+      "role": "list_item",
+      "label": "Randomdash, 1h",
+      "description": "These draggable sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y. But by default I don't think we need these controllers, you could just rotate the object by clicking and dragging anywhere as expected on any 3D tool (theoretically).",
+      "parent": "modals_page.group[3].card[0].comments",
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3].card[0].reply",
+      "role": "text_input",
+      "label": "Reply",
+      "parent": "modals_page.group[3].card[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "modals_page.group[3].card[0].reply:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3].card[0].tools[0]",
+      "role": "button",
+      "label": "Add",
+      "parent": "modals_page.group[3].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3].card[0].tools[1]",
+      "role": "button",
+      "label": "Emoji",
+      "parent": "modals_page.group[3].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3].card[0].tools[2]",
+      "role": "button",
+      "label": "Like",
+      "parent": "modals_page.group[3].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3].card[0].tools[3]",
+      "role": "button",
+      "label": "Dislike",
+      "parent": "modals_page.group[3].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3].card[0].send",
+      "role": "button",
+      "label": "Send",
+      "parent": "modals_page.group[3].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3].card[0]",
+      "role": "group",
+      "label": "Shop House Icon",
+      "description": "3D Objects",
+      "parent": "modals_page.group[3]"
+    },
+    {
+      "id": "modals_page.group[3].card[1]",
+      "role": "group",
+      "label": "Delete this file?",
+      "description": "This action cannot be undone. Blinky is a bit nervous about it too.",
+      "parent": "modals_page.group[3]"
+    },
+    {
+      "id": "modals_page.group[3].card[1][confirm]",
+      "role": "button",
+      "label": "Yes, delete it",
+      "parent": "modals_page.group[3].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[3].card[1][cancel]",
+      "role": "button",
+      "label": "Cancel",
+      "parent": "modals_page.group[3].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4]",
+      "role": "group",
+      "label": "Export",
+      "parent": "modals_page"
+    },
+    {
+      "id": "modals_page.group[4].card[0]",
+      "role": "group",
+      "label": "Export",
+      "description": "Export Robot 2.0",
+      "parent": "modals_page.group[4]"
+    },
+    {
+      "id": "modals_page.group[4].card[0].section",
+      "role": "tab_list",
+      "label": "Export as",
+      "parent": "modals_page.group[4].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "modals_page.group[4].card[0].section[0]",
+      "role": "tab",
+      "label": "Images",
+      "parent": "modals_page.group[4].card[0].section",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].section:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].section[1]",
+      "role": "tab",
+      "label": "Video",
+      "parent": "modals_page.group[4].card[0].section",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].section:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].section[2]",
+      "role": "tab",
+      "label": "3D Object",
+      "parent": "modals_page.group[4].card[0].section",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].section:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].preview",
+      "role": "button",
+      "label": "Preview",
+      "parent": "modals_page.group[4].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.size[0]",
+      "role": "select",
+      "label": "Size 1",
+      "parent": "modals_page.group[4].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "1x"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].images.size[0]:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "modals_page.group[4].card[0].images.size[0]:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "modals_page.group[4].card[0].images.size[0]:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "1x",
+          "2x",
+          "3x"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.color[0]",
+      "role": "select",
+      "label": "Color profile 1",
+      "parent": "modals_page.group[4].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "sRGB"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].images.color[0]:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "modals_page.group[4].card[0].images.color[0]:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "modals_page.group[4].card[0].images.color[0]:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "sRGB",
+          "Adobe Color"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[0][0]",
+      "role": "tab",
+      "label": "PNG",
+      "parent": "modals_page.group[4].card[0].images.format[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].images.format[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[0][1]",
+      "role": "tab",
+      "label": "JPG",
+      "parent": "modals_page.group[4].card[0].images.format[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].images.format[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[0]",
+      "role": "tab_list",
+      "label": "Format 1",
+      "parent": "modals_page.group[4].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.remove[0]",
+      "role": "button",
+      "label": "Remove size 1",
+      "parent": "modals_page.group[4].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.size[1]",
+      "role": "select",
+      "label": "Size 2",
+      "parent": "modals_page.group[4].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "2x"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].images.size[1]:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "modals_page.group[4].card[0].images.size[1]:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "modals_page.group[4].card[0].images.size[1]:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "1x",
+          "2x",
+          "3x"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.color[1]",
+      "role": "select",
+      "label": "Color profile 2",
+      "parent": "modals_page.group[4].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "sRGB"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].images.color[1]:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "modals_page.group[4].card[0].images.color[1]:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "modals_page.group[4].card[0].images.color[1]:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "sRGB",
+          "Adobe Color"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[1][0]",
+      "role": "tab",
+      "label": "PNG",
+      "parent": "modals_page.group[4].card[0].images.format[1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].images.format[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[1][1]",
+      "role": "tab",
+      "label": "JPG",
+      "parent": "modals_page.group[4].card[0].images.format[1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[4].card[0].images.format[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[1]",
+      "role": "tab_list",
+      "label": "Format 2",
+      "parent": "modals_page.group[4].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.remove[1]",
+      "role": "button",
+      "label": "Remove size 2",
+      "parent": "modals_page.group[4].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.add",
+      "role": "button",
+      "label": "Add a size",
+      "parent": "modals_page.group[4].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.compression",
+      "role": "slider",
+      "label": "Compression",
+      "parent": "modals_page.group[4].card[0]",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 80.0
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "modals_page.group[4].card[0].images.compression:value"
+          ],
+          "param": {
+            "kind": "num",
+            "constrained": true
+          }
+        },
+        {
+          "name": "increment",
+          "reads": [
+            "modals_page.group[4].card[0].images.compression:value"
+          ]
+        },
+        {
+          "name": "decrement",
+          "reads": [
+            "modals_page.group[4].card[0].images.compression:value"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "range": [
+          0.0,
+          100.0
+        ],
+        "step": 1.0
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.export",
+      "role": "button",
+      "label": "Export Robot 2.0",
+      "parent": "modals_page.group[4].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5]",
+      "role": "group",
+      "label": "Settings",
+      "parent": "modals_page"
+    },
+    {
+      "id": "modals_page.group[5].card[0]",
+      "role": "group",
+      "label": "Settings",
+      "description": "General",
+      "parent": "modals_page.group[5]"
+    },
+    {
+      "id": "modals_page.group[5].card[0].section",
+      "role": "tab_list",
+      "label": "Settings sections",
+      "parent": "modals_page.group[5].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "modals_page.group[5].card[0].section[0]",
+      "role": "tab",
+      "label": "General",
+      "parent": "modals_page.group[5].card[0].section",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[5].card[0].section:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5].card[0].section[1]",
+      "role": "tab",
+      "label": "Profile",
+      "parent": "modals_page.group[5].card[0].section",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[5].card[0].section:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5].card[0].section[2]",
+      "role": "tab",
+      "label": "Security",
+      "parent": "modals_page.group[5].card[0].section",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[5].card[0].section:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5].card[0].section[3]",
+      "role": "tab",
+      "label": "Notifications",
+      "parent": "modals_page.group[5].card[0].section",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[5].card[0].section:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5].card[0].section[4]",
+      "role": "tab",
+      "label": "Subscription",
+      "parent": "modals_page.group[5].card[0].section",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[5].card[0].section:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.username",
+      "role": "text_input",
+      "label": "Username",
+      "parent": "modals_page.group[5].card[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "sophie"
+        },
+        "editing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "modals_page.group[5].card[0].general.username:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.username.edit",
+      "role": "button",
+      "label": "edit",
+      "parent": "modals_page.group[5].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.auto_prompt",
+      "role": "toggle",
+      "label": "Enable auto-prompt idea suggestion",
+      "parent": "modals_page.group[5].card[0]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "modals_page.group[5].card[0].general.auto_prompt:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.auto_play",
+      "role": "toggle",
+      "label": "Auto-play video on Explore",
+      "parent": "modals_page.group[5].card[0]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "modals_page.group[5].card[0].general.auto_play:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.publish",
+      "role": "toggle",
+      "label": "Publish to Explore",
+      "parent": "modals_page.group[5].card[0]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "modals_page.group[5].card[0].general.publish:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.language",
+      "role": "select",
+      "label": "Language",
+      "parent": "modals_page.group[5].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Auto detect"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "modals_page.group[5].card[0].general.language:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "modals_page.group[5].card[0].general.language:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "modals_page.group[5].card[0].general.language:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Auto detect",
+          "English",
+          "Spanish"
+        ]
+      },
+      "focusable": true
+    }
+  ]
+}

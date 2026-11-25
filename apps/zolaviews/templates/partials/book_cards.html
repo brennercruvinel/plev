@@ -1,0 +1,80 @@
+{#- Cards for a list of content paths (pages or sections), in the order given:
+    `paths`. The markup is the theme's article list (partials/article_list.html),
+    so the cards look like Ametrine's; a section shows its dates, status and
+    how many entries it holds from its [extra]. -#}
+{%- set categories = config.extra.categories | default(value=[]) -%}
+{#- a topic or status only links where the taxonomy has it (sections carry
+    topics and statuses that no page may share) -#}
+{%- set tag_taxonomy = get_taxonomy(kind="tags", lang=lang, required=false) -%}
+{%- set status_taxonomy = get_taxonomy(kind="categories", lang=lang, required=false) -%}
+{%- set tag_terms = tag_taxonomy?.items | default(value=[]) -%}
+{%- set status_terms = status_taxonomy?.items | default(value=[]) -%}
+<div class="article-list">
+  {%- for path in paths %}
+    {%- if path is ending_with(pat="_index.md") -%}
+      {%- set item = get_section(path=path, metadata_only=true) -%}
+      {%- set date = item.extra.date | default(value="") -%}
+      {%- set updated = item.extra.updated | default(value="") -%}
+      {%- set status = item.extra.status_label | default(value="") -%}
+      {%- set tags = item.extra.topics | default(value=[]) -%}
+      {%- set count = item.extra.count | default(value=0) -%}
+    {%- else -%}
+      {%- set item = get_page(path=path) -%}
+      {%- set date = item.date | default(value="") -%}
+      {%- set updated = item.updated | default(value="") -%}
+      {%- set status = item.taxonomies.categories | default(value=[]) | first | default(value="") -%}
+      {%- set tags = item.taxonomies.tags | default(value=[]) -%}
+      {%- set count = 0 -%}
+    {%- endif -%}
+    {%- set accent = item.extra.accent_color | default(value="") -%}
+    <article{% if accent %} class="has-accent-color" style="{{ <accent_color colors={accent}/> }}"{% endif %}>
+      <div>
+        <a href="{{ item.permalink | safe }}">
+          <h3>{{ item.title }}</h3>
+        </a>
+        {%- if item.description -%}
+          <div class="description">{{ item.description | markdown | safe }}</div>
+        {%- endif -%}
+        <div class="article-details">
+          <div class="items">
+            {%- if date -%}
+              <div class="item tooltip" title="{{ date | date(format=date_format_long, locale=date_locale) }}">
+                {{- <icon name="calendar"/> -}}
+                <time datetime="{{ date }}">{{ date | date(format=date_format, locale=date_locale) }}</time>
+              </div>
+            {%- endif -%}
+            {%- if updated -%}
+              <div class="item tooltip" title="{{ updated | date(format=date_format_long, locale=date_locale) }}">
+                {{- <icon name="clock-clockwise"/> -}}
+                <time datetime="{{ updated }}">{{ updated | date(format=date_format, locale=date_locale) }}</time>
+              </div>
+            {%- endif -%}
+            {%- if status -%}
+              {%- set matched = [c for c in categories if c.name == status] | first -%}
+              <div class="item">
+                {{- <icon name={matched?.icon | default(value="book-bookmark")}/> -}}
+                {%- set status_term = [t for t in status_terms if t.name == status] | first | default(value={}) -%}
+                {%- if status_term?.permalink -%}<a href="{{ status_term.permalink }}">{{ status }}</a>{%- else -%}<span>{{ status }}</span>{%- endif -%}
+              </div>
+            {%- endif -%}
+            {%- if count > 0 -%}
+              <div class="item">
+                {{- <icon name="files"/> -}}
+                <span>{{ count }}</span>
+              </div>
+            {%- endif -%}
+          </div>
+          {%- if tags | length > 0 -%}
+            <ul class="tags">
+              {%- for tag in tags %}
+                {%- set tag_url = [t for t in tag_terms if t.name == tag] | first | default(value={}) -%}
+                {%- set tag_url = tag_url?.permalink | default(value="") -%}
+                <li>{% if tag_url %}<a href="{{ tag_url }}">{{ tag }}</a>{% else %}{{ tag }}{% endif %}</li>
+              {%- endfor -%}
+            </ul>
+          {%- endif %}
+        </div>
+      </div>
+    </article>
+  {%- endfor %}
+</div>

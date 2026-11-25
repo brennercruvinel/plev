@@ -1,4 +1,4 @@
-//! bench vs lottie (spec gate, docs/ref/architecture/monster-format-v0.md): IR timelines that
+//! bench vs lottie (spec gate, docs/Research/Importing/monster-format-v0.md): IR timelines that
 //! reproduce the animation semantics of the two lightest samples in
 //! refs/anim/lottie-samples, encoded and measured against the json and
 //! its gzip -9 (the spec ruler: monster born at or below the gzip size).
@@ -29,7 +29,7 @@
 //!
 //! rulers measured in-session (gzip -9 -c file | wc -c):
 //!   ripple.json 11458 -> 1617 gz; starfish.json 24780 -> 3144 gz.
-//! run: cargo test -p motion --test bench_lottie -- --nocapture
+//! run: cargo test -p motion --test gate_bytes -- --nocapture
 
 mod dense;
 mod girl;

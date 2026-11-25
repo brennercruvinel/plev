@@ -21,6 +21,7 @@ use super::legibility::Bar;
 use super::roles::{TypeRole, TypeRun};
 use super::text_scale::TextScale;
 use super::tokens::TypographyScale;
+#[cfg(feature = "accessibility")]
 use crate::control::accessibility::preference;
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
@@ -44,12 +45,15 @@ pub enum Contrast {
 
 impl Contrast {
     /// What the system says (`preference::follow_contrast`, which this
-    /// thread then keeps); `Standard` where it cannot be read.
+    /// thread then keeps); `Standard` where it cannot be read, which is
+    /// everywhere in a build without the `accessibility` feature (the
+    /// module that reads the system is that feature's).
     pub fn from_system() -> Self {
-        match preference::follow_contrast() {
-            Some(true) => Self::More,
-            _ => Self::Standard,
+        #[cfg(feature = "accessibility")]
+        if preference::follow_contrast() == Some(true) {
+            return Self::More;
         }
+        Self::Standard
     }
 }
 

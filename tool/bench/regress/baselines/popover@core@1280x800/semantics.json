@@ -1,22 +1,473 @@
 {
   "nodes": [
     {
-      "id": "tooltip_page",
+      "id": "popover_page",
       "role": "region",
       "label": "Popover"
     },
     {
-      "id": "tooltip_page.button",
+      "id": "popover_page.group[0]",
+      "role": "group",
+      "label": "Live",
+      "parent": "popover_page"
+    },
+    {
+      "id": "popover_page.group[0].card[0]",
       "role": "button",
-      "label": "Hover me",
-      "description": "Tooltips wait 450 ms, then place themselves above the anchor, or below when there is no room.",
-      "parent": "tooltip_page",
+      "label": "100%",
+      "description": "Default, Hover, Open, Focus",
+      "parent": "popover_page.group[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
       "actions": [
         {
           "name": "activate"
         }
       ],
       "focusable": true
+    },
+    {
+      "id": "popover_page.group[1]",
+      "role": "group",
+      "label": "Triggers",
+      "parent": "popover_page"
+    },
+    {
+      "id": "popover_page.group[1].card[0]",
+      "role": "button",
+      "label": "100%",
+      "description": "Open",
+      "parent": "popover_page.group[1]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "popover_page.group[1].card[0].panel",
+      "role": "group",
+      "label": "Zoom",
+      "parent": "popover_page.group[1]"
+    },
+    {
+      "id": "popover_page.group[1].card[0].panel[0]",
+      "role": "label",
+      "label": "Zoom in",
+      "description": "⌘ +",
+      "parent": "popover_page.group[1].card[0].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[0].panel[1]",
+      "role": "label",
+      "label": "Zoom out",
+      "description": "⌘ -",
+      "parent": "popover_page.group[1].card[0].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[0].panel[2]",
+      "role": "label",
+      "label": "Zoom to 100%",
+      "description": "⌘ 0",
+      "parent": "popover_page.group[1].card[0].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[0].panel[3]",
+      "role": "label",
+      "label": "Zoom to 200%",
+      "description": "⌘ 1",
+      "parent": "popover_page.group[1].card[0].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[0].panel[4]",
+      "role": "label",
+      "label": "Zoom to fit",
+      "description": "⌘ 2",
+      "parent": "popover_page.group[1].card[0].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[1]",
+      "role": "button",
+      "label": "zoom",
+      "description": "Toolbar icon, open",
+      "parent": "popover_page.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": true
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "popover_page.group[1].card[1]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "popover_page.group[1].card[1].panel",
+      "role": "group",
+      "label": "Zoom",
+      "parent": "popover_page.group[1]"
+    },
+    {
+      "id": "popover_page.group[1].card[1].panel[0]",
+      "role": "label",
+      "label": "Zoom in",
+      "description": "⌘ +",
+      "parent": "popover_page.group[1].card[1].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[1].panel[1]",
+      "role": "label",
+      "label": "Zoom out",
+      "description": "⌘ -",
+      "parent": "popover_page.group[1].card[1].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[1].panel[2]",
+      "role": "label",
+      "label": "Zoom to 100%",
+      "description": "⌘ 0",
+      "parent": "popover_page.group[1].card[1].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[1].panel[3]",
+      "role": "label",
+      "label": "Zoom to 200%",
+      "description": "⌘ 1",
+      "parent": "popover_page.group[1].card[1].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[1].panel[4]",
+      "role": "label",
+      "label": "Zoom to fit",
+      "description": "⌘ 2",
+      "parent": "popover_page.group[1].card[1].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[2]",
+      "role": "button",
+      "label": "Export",
+      "description": "Button, open",
+      "parent": "popover_page.group[1]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "popover_page.group[1].card[2].panel",
+      "role": "group",
+      "label": "Zoom",
+      "parent": "popover_page.group[1]"
+    },
+    {
+      "id": "popover_page.group[1].card[2].panel[0]",
+      "role": "label",
+      "label": "Zoom in",
+      "description": "⌘ +",
+      "parent": "popover_page.group[1].card[2].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[2].panel[1]",
+      "role": "label",
+      "label": "Zoom out",
+      "description": "⌘ -",
+      "parent": "popover_page.group[1].card[2].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[2].panel[2]",
+      "role": "label",
+      "label": "Zoom to 100%",
+      "description": "⌘ 0",
+      "parent": "popover_page.group[1].card[2].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[2].panel[3]",
+      "role": "label",
+      "label": "Zoom to 200%",
+      "description": "⌘ 1",
+      "parent": "popover_page.group[1].card[2].panel"
+    },
+    {
+      "id": "popover_page.group[1].card[2].panel[4]",
+      "role": "label",
+      "label": "Zoom to fit",
+      "description": "⌘ 2",
+      "parent": "popover_page.group[1].card[2].panel"
+    },
+    {
+      "id": "popover_page.group[2]",
+      "role": "group",
+      "label": "Placement",
+      "parent": "popover_page"
+    },
+    {
+      "id": "popover_page.group[2].card[0]",
+      "role": "button",
+      "label": "100%",
+      "description": "Bottom end",
+      "parent": "popover_page.group[2]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "popover_page.group[2].card[0].panel",
+      "role": "group",
+      "label": "Zoom",
+      "parent": "popover_page.group[2]"
+    },
+    {
+      "id": "popover_page.group[2].card[0].panel[0]",
+      "role": "label",
+      "label": "Zoom in",
+      "description": "⌘ +",
+      "parent": "popover_page.group[2].card[0].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[0].panel[1]",
+      "role": "label",
+      "label": "Zoom out",
+      "description": "⌘ -",
+      "parent": "popover_page.group[2].card[0].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[0].panel[2]",
+      "role": "label",
+      "label": "Zoom to 100%",
+      "description": "⌘ 0",
+      "parent": "popover_page.group[2].card[0].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[0].panel[3]",
+      "role": "label",
+      "label": "Zoom to 200%",
+      "description": "⌘ 1",
+      "parent": "popover_page.group[2].card[0].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[0].panel[4]",
+      "role": "label",
+      "label": "Zoom to fit",
+      "description": "⌘ 2",
+      "parent": "popover_page.group[2].card[0].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[1]",
+      "role": "button",
+      "label": "100%",
+      "description": "Flips to the top",
+      "parent": "popover_page.group[2]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "popover_page.group[2].card[1].panel",
+      "role": "group",
+      "label": "Zoom",
+      "parent": "popover_page.group[2]"
+    },
+    {
+      "id": "popover_page.group[2].card[1].panel[0]",
+      "role": "label",
+      "label": "Zoom in",
+      "description": "⌘ +",
+      "parent": "popover_page.group[2].card[1].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[1].panel[1]",
+      "role": "label",
+      "label": "Zoom out",
+      "description": "⌘ -",
+      "parent": "popover_page.group[2].card[1].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[1].panel[2]",
+      "role": "label",
+      "label": "Zoom to 100%",
+      "description": "⌘ 0",
+      "parent": "popover_page.group[2].card[1].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[1].panel[3]",
+      "role": "label",
+      "label": "Zoom to 200%",
+      "description": "⌘ 1",
+      "parent": "popover_page.group[2].card[1].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[1].panel[4]",
+      "role": "label",
+      "label": "Zoom to fit",
+      "description": "⌘ 2",
+      "parent": "popover_page.group[2].card[1].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[2]",
+      "role": "button",
+      "label": "100%",
+      "description": "Shifts in at the start",
+      "parent": "popover_page.group[2]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "popover_page.group[2].card[2].panel",
+      "role": "group",
+      "label": "Zoom",
+      "parent": "popover_page.group[2]"
+    },
+    {
+      "id": "popover_page.group[2].card[2].panel[0]",
+      "role": "label",
+      "label": "Zoom in",
+      "description": "⌘ +",
+      "parent": "popover_page.group[2].card[2].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[2].panel[1]",
+      "role": "label",
+      "label": "Zoom out",
+      "description": "⌘ -",
+      "parent": "popover_page.group[2].card[2].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[2].panel[2]",
+      "role": "label",
+      "label": "Zoom to 100%",
+      "description": "⌘ 0",
+      "parent": "popover_page.group[2].card[2].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[2].panel[3]",
+      "role": "label",
+      "label": "Zoom to 200%",
+      "description": "⌘ 1",
+      "parent": "popover_page.group[2].card[2].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[2].panel[4]",
+      "role": "label",
+      "label": "Zoom to fit",
+      "description": "⌘ 2",
+      "parent": "popover_page.group[2].card[2].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[3]",
+      "role": "button",
+      "label": "100%",
+      "description": "Shifts in at the end",
+      "parent": "popover_page.group[2]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "popover_page.group[2].card[3].panel",
+      "role": "group",
+      "label": "Zoom",
+      "parent": "popover_page.group[2]"
+    },
+    {
+      "id": "popover_page.group[2].card[3].panel[0]",
+      "role": "label",
+      "label": "Zoom in",
+      "description": "⌘ +",
+      "parent": "popover_page.group[2].card[3].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[3].panel[1]",
+      "role": "label",
+      "label": "Zoom out",
+      "description": "⌘ -",
+      "parent": "popover_page.group[2].card[3].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[3].panel[2]",
+      "role": "label",
+      "label": "Zoom to 100%",
+      "description": "⌘ 0",
+      "parent": "popover_page.group[2].card[3].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[3].panel[3]",
+      "role": "label",
+      "label": "Zoom to 200%",
+      "description": "⌘ 1",
+      "parent": "popover_page.group[2].card[3].panel"
+    },
+    {
+      "id": "popover_page.group[2].card[3].panel[4]",
+      "role": "label",
+      "label": "Zoom to fit",
+      "description": "⌘ 2",
+      "parent": "popover_page.group[2].card[3].panel"
     }
   ]
 }

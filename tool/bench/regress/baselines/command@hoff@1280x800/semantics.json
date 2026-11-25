@@ -1,0 +1,727 @@
+{
+  "nodes": [
+    {
+      "id": "command_page",
+      "role": "region",
+      "label": "Command"
+    },
+    {
+      "id": "command_page.group[0]",
+      "role": "group",
+      "label": "Command",
+      "parent": "command_page"
+    },
+    {
+      "id": "command_page.group[0].card[0]",
+      "role": "text_input",
+      "label": "Type a command or search...",
+      "parent": "command_page.group[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "command_page.group[0].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[0].card[0].action",
+      "role": "button",
+      "label": "search",
+      "parent": "command_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[0].card[0].list",
+      "role": "list",
+      "label": "commands",
+      "parent": "command_page.group[0]",
+      "state": {
+        "ran": {
+          "kind": "text",
+          "value": ""
+        },
+        "count": {
+          "kind": "int",
+          "value": 6
+        }
+      }
+    },
+    {
+      "id": "command_page.group[0].card[0].list[0]",
+      "role": "list_item",
+      "label": "New file",
+      "description": "⌘ N",
+      "parent": "command_page.group[0].card[0].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[0].card[0].list:ran"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[0].card[0].list[1]",
+      "role": "list_item",
+      "label": "Open folder",
+      "description": "⌘ O",
+      "parent": "command_page.group[0].card[0].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[0].card[0].list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[0].list[2]",
+      "role": "list_item",
+      "label": "Save",
+      "description": "⌘ S",
+      "parent": "command_page.group[0].card[0].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[0].card[0].list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[0].list[3]",
+      "role": "list_item",
+      "label": "Home",
+      "parent": "command_page.group[0].card[0].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[0].card[0].list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[0].list[4]",
+      "role": "list_item",
+      "label": "Settings",
+      "description": "⌘ ,",
+      "parent": "command_page.group[0].card[0].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[0].card[0].list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[0].list[5]",
+      "role": "list_item",
+      "label": "Terminal",
+      "description": "⌃ `",
+      "parent": "command_page.group[0].card[0].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[0].card[0].list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[0].card[1]",
+      "role": "text_input",
+      "label": "Type a command or search...",
+      "parent": "command_page.group[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "s"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "command_page.group[0].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[0].card[1].action",
+      "role": "button",
+      "label": "search",
+      "parent": "command_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[0].card[1].list",
+      "role": "list",
+      "label": "commands",
+      "parent": "command_page.group[0]",
+      "state": {
+        "ran": {
+          "kind": "text",
+          "value": ""
+        },
+        "count": {
+          "kind": "int",
+          "value": 6
+        }
+      }
+    },
+    {
+      "id": "command_page.group[0].card[1].list[2]",
+      "role": "list_item",
+      "label": "Save",
+      "description": "⌘ S",
+      "parent": "command_page.group[0].card[1].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[0].card[1].list:ran"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[0].card[1].list[4]",
+      "role": "list_item",
+      "label": "Settings",
+      "description": "⌘ ,",
+      "parent": "command_page.group[0].card[1].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[0].card[1].list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[1]",
+      "role": "group",
+      "label": "Empty, Disabled",
+      "parent": "command_page"
+    },
+    {
+      "id": "command_page.group[1].card[0]",
+      "role": "text_input",
+      "label": "Type a command or search...",
+      "parent": "command_page.group[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "zebra"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "command_page.group[1].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[1].card[0].action",
+      "role": "button",
+      "label": "search",
+      "parent": "command_page.group[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[1].card[0].list",
+      "role": "list",
+      "label": "commands",
+      "parent": "command_page.group[1]",
+      "state": {
+        "ran": {
+          "kind": "text",
+          "value": ""
+        },
+        "count": {
+          "kind": "int",
+          "value": 6
+        }
+      }
+    },
+    {
+      "id": "command_page.group[1].card[1]",
+      "role": "text_input",
+      "label": "Type a command or search...",
+      "parent": "command_page.group[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "command_page.group[1].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[1].card[1].action",
+      "role": "button",
+      "label": "search",
+      "parent": "command_page.group[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[1].card[1].list",
+      "role": "list",
+      "label": "commands",
+      "parent": "command_page.group[1]",
+      "state": {
+        "ran": {
+          "kind": "text",
+          "value": ""
+        },
+        "count": {
+          "kind": "int",
+          "value": 6
+        }
+      },
+      "enabled": false
+    },
+    {
+      "id": "command_page.group[1].card[1].list[0]",
+      "role": "list_item",
+      "label": "New file",
+      "description": "⌘ N",
+      "parent": "command_page.group[1].card[1].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[1].card[1].list:ran"
+          ]
+        }
+      ],
+      "enabled": false
+    },
+    {
+      "id": "command_page.group[1].card[1].list[1]",
+      "role": "list_item",
+      "label": "Open folder",
+      "description": "⌘ O",
+      "parent": "command_page.group[1].card[1].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[1].card[1].list:ran"
+          ]
+        }
+      ],
+      "enabled": false
+    },
+    {
+      "id": "command_page.group[1].card[1].list[2]",
+      "role": "list_item",
+      "label": "Save",
+      "description": "⌘ S",
+      "parent": "command_page.group[1].card[1].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[1].card[1].list:ran"
+          ]
+        }
+      ],
+      "enabled": false
+    },
+    {
+      "id": "command_page.group[1].card[1].list[3]",
+      "role": "list_item",
+      "label": "Home",
+      "parent": "command_page.group[1].card[1].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[1].card[1].list:ran"
+          ]
+        }
+      ],
+      "enabled": false
+    },
+    {
+      "id": "command_page.group[1].card[1].list[4]",
+      "role": "list_item",
+      "label": "Settings",
+      "description": "⌘ ,",
+      "parent": "command_page.group[1].card[1].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[1].card[1].list:ran"
+          ]
+        }
+      ],
+      "enabled": false
+    },
+    {
+      "id": "command_page.group[1].card[1].list[5]",
+      "role": "list_item",
+      "label": "Terminal",
+      "description": "⌃ `",
+      "parent": "command_page.group[1].card[1].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[1].card[1].list:ran"
+          ]
+        }
+      ],
+      "enabled": false
+    },
+    {
+      "id": "command_page.group[2]",
+      "role": "group",
+      "label": "Dialog",
+      "parent": "command_page"
+    },
+    {
+      "id": "command_page.group[2].card[0].trigger",
+      "role": "button",
+      "label": "Command palette",
+      "description": "⌘ K",
+      "parent": "command_page.group[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[2].card[1]",
+      "role": "dialog",
+      "label": "Command palette",
+      "parent": "command_page.group[2]"
+    },
+    {
+      "id": "command_page.group[2].card[1].palette",
+      "role": "text_input",
+      "label": "Type a command or search...",
+      "parent": "command_page.group[2].card[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "command_page.group[2].card[1].palette:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.action",
+      "role": "button",
+      "label": "search",
+      "parent": "command_page.group[2].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list",
+      "role": "list",
+      "label": "commands",
+      "parent": "command_page.group[2].card[1]",
+      "state": {
+        "ran": {
+          "kind": "text",
+          "value": ""
+        },
+        "count": {
+          "kind": "int",
+          "value": 6
+        }
+      }
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[0]",
+      "role": "list_item",
+      "label": "New file",
+      "description": "⌘ N",
+      "parent": "command_page.group[2].card[1].palette.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[2].card[1].palette.list:ran"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[1]",
+      "role": "list_item",
+      "label": "Open folder",
+      "description": "⌘ O",
+      "parent": "command_page.group[2].card[1].palette.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[2].card[1].palette.list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[2]",
+      "role": "list_item",
+      "label": "Save",
+      "description": "⌘ S",
+      "parent": "command_page.group[2].card[1].palette.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[2].card[1].palette.list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[3]",
+      "role": "list_item",
+      "label": "Home",
+      "parent": "command_page.group[2].card[1].palette.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[2].card[1].palette.list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[4]",
+      "role": "list_item",
+      "label": "Settings",
+      "description": "⌘ ,",
+      "parent": "command_page.group[2].card[1].palette.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[2].card[1].palette.list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[2].card[1].palette.list[5]",
+      "role": "list_item",
+      "label": "Terminal",
+      "description": "⌃ `",
+      "parent": "command_page.group[2].card[1].palette.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[2].card[1].palette.list:ran"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "command_page.group[3]",
+      "role": "group",
+      "label": "Content",
+      "parent": "command_page"
+    },
+    {
+      "id": "command_page.group[3].card[0]",
+      "role": "text_input",
+      "label": "Search the workspace...",
+      "parent": "command_page.group[3]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "command_page.group[3].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[3].card[0].action",
+      "role": "button",
+      "label": "search",
+      "parent": "command_page.group[3]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[3].card[0].list",
+      "role": "list",
+      "label": "commands",
+      "parent": "command_page.group[3]",
+      "state": {
+        "ran": {
+          "kind": "text",
+          "value": ""
+        },
+        "count": {
+          "kind": "int",
+          "value": 2
+        }
+      }
+    },
+    {
+      "id": "command_page.group[3].card[0].list[0]",
+      "role": "list_item",
+      "label": "Open the quarterly report of the molecular biology laboratory",
+      "description": "⌘ 1",
+      "parent": "command_page.group[3].card[0].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[3].card[0].list:ran"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "command_page.group[3].card[0].list[1]",
+      "role": "list_item",
+      "label": "Settings",
+      "parent": "command_page.group[3].card[0].list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "command_page.group[3].card[0].list:ran"
+          ]
+        }
+      ]
+    }
+  ]
+}

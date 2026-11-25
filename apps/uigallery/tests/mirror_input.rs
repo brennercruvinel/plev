@@ -19,7 +19,7 @@
 //! like the port.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
-mod support;
+use crate::support;
 
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver};

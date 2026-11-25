@@ -6,7 +6,7 @@
 //! presence of every known-lossy construct.
 //!
 //! To regenerate the gpui golden after an intentional emitter change:
-//! UPDATE_GOLDEN=1 cargo test -p import --test golden
+//! UPDATE_GOLDEN=1 cargo test -p import --test suite golden::
 
 use std::fs;
 use std::path::PathBuf;
@@ -68,7 +68,7 @@ fn gpui_output() -> import::Transpiled {
 }
 
 #[test]
-#[ignore = "diagnostic: cargo test -p import --test golden -- --ignored --nocapture"]
+#[ignore = "diagnostic: cargo test -p import --test suite golden:: -- --ignored --nocapture"]
 fn dump_droplists() {
     if let Some(r) = react_output() {
         eprintln!("react mapped={} dropped={}", r.mapped, r.dropped.len());

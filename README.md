@@ -8,6 +8,11 @@ no simulador do iOS e comparada com o desktop byte a byte. No navegador, 79 das 
 são idênticas; as outras três mostram conteúdo diferente de propósito,
 porque o navegador não tem Claude nem git.
 
+Comecei isso há uns seis anos, bem antes dos LLMs, quando decidi aprender
+Rust do jeito honesto: construindo algo real. O algo real era um app
+educativo para a minha filha, cem por cento em Rust, e ele precisava de uma
+engine que não existia. O plev é a engine por baixo desse sonho. 
+
 A scene é reconstruída a cada frame, o compositor redesenha só as layers que
 mudaram, e tudo termina numa surface sRGB. Há glass, backdrop blur, analytic
 shadows e layout que acompanha o conteúdo. O texto passa por shaping de
@@ -26,12 +31,6 @@ desde então é recusado, com o nome de quem mudou. Uma tela pode ser gerada a
 partir de um intent, como uma IR verificada, e uma sessão gravada abre no
 inspector ou roda de novo como teste.
 
-## Por que isso existe
-
-Comecei isso há uns seis anos, bem antes dos LLMs, quando decidi aprender
-Rust do jeito honesto: construindo algo real. O algo real era um app
-educativo para a minha filha, cem por cento em Rust, e ele precisava de uma
-engine que não existia. O plev é a engine por baixo desse sonho.
 
 O plev não compete com o [Flutter](https://flutter.dev), o
 [egui](https://github.com/emilk/egui), o [Dioxus](https://dioxuslabs.com) ou
@@ -163,6 +162,57 @@ cargo run -p idestudio
 cargo run -p idestudio -- ../urna
 ```
 
+### O dev mode
+
+A gallery tem um dev mode do próprio engine, sem dependência externa: o que
+cada frame fez, medido pelo engine e mostrado num painel dentro da janela.
+Ele só existe quando você pede:
+
+```
+PLEV_DEV=1 cargo run -p uigallery        # a engrenagem no canto inferior direito
+PLEV_DEV=gpu cargo run -p uigallery      # o painel já aberto numa aba
+```
+
+Clique na engrenagem, ou aperte F12, para abrir e fechar. No navegador o
+pedido vai no endereço: `?dev=1` ou `?dev=gpu`. Sem o pedido nada é
+desenhado nem medido.
+
+| Aba | O que mostra |
+|---|---|
+| Frame | para onde foi o tempo do frame, fase por fase, e os **insights**: o que passou do orçamento de 16,6 ms, o que foi redesenhado à toa, o que o heap e o log dizem |
+| GPU | cada render pass com o layer que desenhou e o tempo medido pela própria GPU |
+| Zones | as zonas de CPU numa linha do tempo, com tabela e histograma da zona escolhida |
+| Plots | o que cada frame contou, em gráficos, e os valores que o seu código der |
+| Memory | o heap bloco a bloco e o que o engine guarda na GPU |
+| Log | o que o código disse e o que o processo logou, por nível |
+| Inspect | os controles da página em árvore, e qualquer coisa que o frame desenha: aponte com o seletor e clique |
+
+A linha logo abaixo das abas fica em qualquer uma delas: tempo do frame
+contra o orçamento, CPU, GPU, draw calls, layers, heap e memória. À direita
+você escolhe o frame mostrado (`Live`, `Slowest`, ou um clique numa barra
+do histórico), move o painel para o lado e fecha. A borda do painel arrasta
+para redimensionar.
+
+No seu código, três macros alimentam o painel e custam uma leitura atômica
+quando ele está desligado:
+
+```rust
+engine::zone!("scene build");            // uma zona nomeada, até o fim do bloco
+engine::plot!("controls bound", count);  // um valor por frame, sob um nome
+engine::message!("page {name} staged");  // uma linha no log
+```
+
+Para uma imagem sem abrir janela:
+
+```
+cargo run -p uigallery -- --render Todo --dev frame --out frame.png
+```
+
+O desenho inteiro está em
+[docs/Tasks/task-105-profiler-panel-in-the-gallery](docs/Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)
+e a decisão no
+[ADR 0093](docs/adr/Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md).
+
 ### No navegador
 
 Cada comando imprime o endereço a abrir. Uma porta já ocupada é pulada para
@@ -213,9 +263,23 @@ tool/tasks/runcheck.sh
 tool/tasks/runcheck.sh arcade lottie
 ```
 
+O `builddir.sh` cuida do peso do build: `size` diz quanto pesa cada diretório,
+`trim` remove o que o workspace gravou quando o `target/` passa do limite (as
+dependências ficam) e `seed` dá a outro checkout um diretório já aquecido.
+
+```
+tool/tasks/builddir.sh size
+tool/tasks/builddir.sh trim --yes
+tool/tasks/builddir.sh seed target/agents/<task>
+```
+
+Os testes de integração de um crate são um executável só, `tests/suite.rs`,
+com um módulo por arquivo. Os testes de um arquivo:
+`cargo test -p engine --test suite capture::`.
+
 As ferramentas além dessas (uma página para PNG, o custo de um frame, o agent
 port, o mirror, as sessões gravadas, os importers, o modelo de linguagem)
-estão em [docs/ref/operations/run-the-tools.md](docs/ref/operations/run-the-tools.md). Uma build de
+estão em [docs/Research/Workflows/run-the-tools.md](docs/Research/Workflows/run-the-tools.md). Uma build de
 debug faz hot reload: salve um `.wgsl`, uma string ou uma cor e a janela
 aberta mostra a mudança.
 
@@ -226,7 +290,7 @@ quatro casas, conforme o que ela é.
 
 | Casa | Onde | O quê |
 |---|---|---|
-| Libraries | `rust/` | `engine` (compose, control, drawing, runtime, styling e o design system em `engine::widgets`; o inventário está em [docs/ref/architecture/component-catalog.md](docs/ref/architecture/component-catalog.md)), `accord` (o contrato semântico), `plevir` (a IR do plev e seu verifier), `screen` (surfaces materializadas a partir da IR), `offers` (os proposers), `claude` (o Claude como proposer), `socket` (o agent port e a CLI do plev), `record` (o flight recorder), `replay` (a leitura de uma sessão gravada, plev-inspect), `motion` (o codec .monster), `import` (Lottie, SVG, React, HTML, Figma e gpui para dentro), `editor` (o core de edição em rope), `gitdrv` (git), `markup` + `macros` (a markup DSL e as proc-macros), `unions` (sem código: um só feature set para toda build, mantido pelo cargo hakari), `llmrun` (workspace próprio) |
+| Libraries | `rust/` | `engine` (compose, control, drawing, runtime, styling e o design system em `engine::widgets`; o inventário está em [docs/Research/Structure/component-catalog.md](docs/Research/Structure/component-catalog.md)), `accord` (o contrato semântico), `plevir` (a IR do plev e seu verifier), `screen` (surfaces materializadas a partir da IR), `offers` (os proposers), `claude` (o Claude como proposer), `socket` (o agent port e a CLI do plev), `record` (o flight recorder), `replay` (a leitura de uma sessão gravada, plev-inspect), `motion` (o codec .monster), `import` (Lottie, SVG, React, HTML, Figma e gpui para dentro), `editor` (o core de edição em rope), `gitdrv` (git), `markup` + `macros` (a markup DSL e as proc-macros), `unions` (sem código: um só feature set para toda build, mantido pelo cargo hakari), `llmrun` (workspace próprio) |
 | Apps | `apps/` | `uigallery` (a gallery do design system: desktop, web, Android, iOS), `idestudio` (o cliente git), `agenteval` (o lab do experimento), `inspector` (a janela do session inspector), `mirroring` (uma página espelhada pelo scene socket), `urnadbapp` (o explorer de `.urna`, workspace próprio) |
 | Demos | `demo/` | uma crate por demo: arcade, camera, commit, graphs, inputs, intent, layers, lottie, mobile, mockup, player, primes, shapes, ticker |
 | Tooling | `tool/` | `bench/measure` e `bench/regress` (as tabelas de custo e a regressão estrutural), `tasks` (os scripts), `tests` (os testes de arquitetura) |
@@ -261,21 +325,18 @@ construindo uma raw key em vez de passar pelo caminho único do TextStyle.
 ## Docs
 
 - [docs/ATLAS.toml](docs/ATLAS.toml): a arquitetura num arquivo só. Tabelas para as máquinas, prosa para as pessoas, o diagrama do frame flow no fim.
-- [docs/](docs/README.md): o acervo, com o [changelog](docs/CHANGELOG.md) por data, as tasks, os ADRs em [docs/adr/](docs/adr/README.md), as pesquisas e os aprendizados.
-- [docs/ref/operations/code-against-the-plev-engine.md](docs/ref/operations/code-against-the-plev-engine.md): o manual de operação, para ler antes de tocar em código de UI ou de rendering. Seus vizinhos em [docs/ref/operations/](docs/ref/operations/): validação de pixels, o target web, orquestração de agentes.
-- [docs/research/generative-runtime-program.md](docs/research/generative-runtime-program.md): para onde o plev vai, de engine de UI na GPU a generative interaction runtime, com o grafo de tarefas e o estado de cada uma. A tese está em [docs/research/generative-runtime-thesis.md](docs/research/generative-runtime-thesis.md) e as regras que todo agente segue em [docs/ref/operations/generative-runtime-guidelines.md](docs/ref/operations/generative-runtime-guidelines.md).
+- [docs/](docs/README.md): o acervo, com o [changelog](docs/CHANGELOG.md) por data, as [tasks](docs/Tasks/Tasks.md) (uma pasta por task), as decisões em [docs/adr/](docs/adr/adr.md) (uma pasta por ADR, com os aprendizados ao lado) e o que sabemos em [docs/Research/](docs/Research/Research.md), pelos mesmos temas dos ADRs, com os experimentos em `Research/Exploring`. Toda página termina com uma lista Related de links comuns, então Obsidian, Quartz, Zola e o GitHub desenham o mesmo grafo.
+- Ler o acervo como site: [apps/zolaviews](apps/zolaviews/README.md) (`node plev/book.mjs --serve`, Zola) ou [apps/quartzweb](apps/quartzweb/README.md) (`npx quartz build --serve`, em `localhost:8080`); ou abrir `docs/` como vault no Obsidian.
+- [docs/Research/Workflows/code-against-the-plev-engine.md](docs/Research/Workflows/code-against-the-plev-engine.md): o manual de operação, para ler antes de tocar em código de UI ou de rendering. Seus vizinhos em [docs/Research/Workflows/](docs/Research/Workflows/): validação de pixels, o target web, orquestração de agentes.
+- [docs/Research/Synthesis/generative-runtime-program.md](docs/Research/Synthesis/generative-runtime-program.md): para onde o plev vai, de engine de UI na GPU a generative interaction runtime, com o grafo de tarefas e o estado de cada uma. A tese está em [docs/Research/Synthesis/generative-runtime-thesis.md](docs/Research/Synthesis/generative-runtime-thesis.md) e as regras que todo agente segue em [docs/Research/Workflows/generative-runtime-guidelines.md](docs/Research/Workflows/generative-runtime-guidelines.md).
 - [docs/CHANGELOG.md](docs/CHANGELOG.md): o que mudou, do mais novo para o mais antigo, uma seção por data.
-- [docs/TERMS.toml](docs/TERMS.toml): os nomes da árvore, antigos e novos, crate por crate e módulo por módulo.
-- [.devops/check/](.devops/check/): os contratos das ferramentas (lychee, nextest, typos).
+- [docs/TERMS.toml](docs/TERMS.toml): os nomes da árvore, antigos e novos, crate por crate e módulo por módulo, e onde mora hoje cada caminho antigo do acervo.
+- [.config/](.config/): os contratos das ferramentas (hakari, lychee, nextest, typos).
 
 ## Licença
 
 MIT, veja [LICENSE](LICENSE).
 
-Feito simples, mas significativo.
+Made it simple, but significant (∂μFμν = Jν)
 
-Mantido por Brenner Cruvinel (brenner@hoffresearch.com).
-Toda contribuição é bem-vinda.
-(∂μfμν = jν)
-
-Brenner Cruvinel
+Brenner Cruvinel (brenner@hoffresearch.com)

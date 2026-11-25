@@ -13,7 +13,7 @@
 //! `theme.control`, `theme.shadows`...). Non-HOFF palettes derive an
 //! equivalent recipe, so every widget renders under every theme.
 //!
-//! Categories (docs/ref/architecture/component-catalog.md):
+//! Categories (docs/Research/Structure/component-catalog.md):
 //! - [`buttons`]: button, icon button, chip, badge
 //! - [`header`]: the kit's top bars and its logo (task-104 front F)
 //! - [`form`]: text field, checkbox, switch, slider, select

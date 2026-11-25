@@ -11,6 +11,13 @@
 //! `--semantics file.json` writes the page's semantic projection in the
 //! form `plev observe` serves; then it exits.
 
+/// The heap, counted for the dev mode's Memory view: one atomic load per
+/// call until a launch with the dev mode turns the counters on.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+#[global_allocator]
+static HEAP: engine::runtime::perf::heap::Counting =
+    engine::runtime::perf::heap::Counting::system();
+
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -46,6 +53,7 @@ mod cli {
 
     use engine::drawing::gpu::RenderConfig;
     use engine::drawing::headless::{Renderer, Viewport};
+    use engine::runtime::dev::{Dock, Tab};
 
     pub const USAGE: &str = "\
 usage:
@@ -54,7 +62,7 @@ usage:
             [--svg-report <file.txt>] [--source]
             [--theme <name>] [--width <px>] [--height <px>] [--scale <s>] [--scroll <px>]
             [--pinned] [--palette] [--reduced-motion] [--text-scale <f>]
-            [--pseudo-locale] [--more-contrast]
+            [--pseudo-locale] [--more-contrast] [--dev <view>] [--dev-side]
                                         one frame of a page, no window: as png, as svg (every
                                         approximation reported on stderr, and to --svg-report
                                         when given), and the page's semantic projection as json
@@ -73,6 +81,11 @@ usage:
                                         about 1.4 times as long (accented, each word grown).
                                         --more-contrast draws it as the system's \"increase
                                         contrast\" asks (the theme adapted, Contrast::More).
+                                        --dev <view> draws the dev mode's panel under the page,
+                                        open on Frame, GPU, Zones, Plots, Memory, Log or
+                                        Inspect; --dev-side docks it beside the page
+                                        (in the window: PLEV_DEV=1 for its gear, PLEV_DEV=<view>
+                                        for the panel open on a view, F12 to open and close it).
 defaults: --theme core --width 1200 --height 800 --scale 1 (the window's
 launch size); width and height are logical pixels, the PNG is width*scale
 by height*scale and the SVG's viewBox is the logical size. page titles are
@@ -110,6 +123,10 @@ the sidebar's (\"Data Table\").";
         pub text_scale: f32,
         pub pseudo_locale: bool,
         pub more_contrast: bool,
+        /// The dev mode's panel open on this view, over the page.
+        pub dev: Option<Tab>,
+        /// The panel beside the page, not under it.
+        pub dev_side: bool,
     }
 
     pub fn parse(args: &[String]) -> Result<Mode, String> {
@@ -123,6 +140,7 @@ the sidebar's (\"Data Table\").";
         let mut text_scale = 1.0;
         let mut pseudo_locale = false;
         let mut more_contrast = false;
+        let (mut dev, mut dev_side) = (None, false);
         let mut theme = DEFAULT_THEME.to_string();
         let (mut width, mut height, mut scale) = (DEFAULT_WIDTH, DEFAULT_HEIGHT, 1.0);
         let mut scroll = None;
@@ -148,6 +166,8 @@ the sidebar's (\"Data Table\").";
                 "--text-scale" => text_scale = positive(flag, &value()?)?,
                 "--pseudo-locale" => pseudo_locale = true,
                 "--more-contrast" => more_contrast = true,
+                "--dev" => dev = Some(view(flag, &value()?)?),
+                "--dev-side" => dev_side = true,
                 "--theme" => theme = value()?,
                 "--width" => width = positive(flag, &value()?)?,
                 "--height" => height = positive(flag, &value()?)?,
@@ -194,7 +214,16 @@ the sidebar's (\"Data Table\").";
             text_scale,
             pseudo_locale,
             more_contrast,
+            dev,
+            dev_side,
         }))
+    }
+
+    fn view(flag: &str, raw: &str) -> Result<Tab, String> {
+        Tab::parse(raw).ok_or_else(|| {
+            let names: Vec<&str> = Tab::ALL.iter().map(|tab| tab.name()).collect();
+            format!("{flag} takes one of {}, got '{raw}'", names.join(", "))
+        })
     }
 
     fn positive(flag: &str, raw: &str) -> Result<f32, String> {
@@ -243,8 +272,20 @@ the sidebar's (\"Data Table\").";
             prefs.text_scale.factor()
         );
         if r.out.is_some() || r.svg.is_some() {
-            let mut renderer = Renderer::new(viewport, RenderConfig::default())?;
-            let frame = staged.render(&mut renderer)?;
+            // the dev mode reads the GPU's own times: its device asks for
+            // the timestamps, which no other render does
+            let config = RenderConfig {
+                gpu_timestamps: r.dev.is_some(),
+                ..RenderConfig::default()
+            };
+            let mut renderer = Renderer::new(viewport, config)?;
+            let frame = match r.dev {
+                Some(tab) => {
+                    let dock = if r.dev_side { Dock::Side } else { Dock::Bottom };
+                    staged.render_dev(&mut renderer, tab, dock)?
+                }
+                None => staged.render(&mut renderer)?,
+            };
             if let Some(out) = &r.out {
                 frame.write_png(out)?;
                 println!(
@@ -410,6 +451,16 @@ the sidebar's (\"Data Table\").";
         fn more_contrast_is_a_flag_and_off_by_default() {
             assert!(!request("--render Button --out b.png").more_contrast);
             assert!(request("--render Button --out b.png --more-contrast").more_contrast);
+        }
+
+        #[test]
+        fn the_dev_panel_opens_on_a_view_by_name_under_the_page_unless_asked_beside() {
+            assert!(request("--render Todo --out t.png").dev.is_none());
+            let r = request("--render Todo --out t.png --dev memory");
+            assert_eq!(r.dev, Some(Tab::Memory));
+            assert!(!r.dev_side);
+            assert!(request("--render Todo --out t.png --dev GPU --dev-side").dev_side);
+            assert!(parse(&args("--render Todo --out t.png --dev nope")).is_err());
         }
 
         #[test]

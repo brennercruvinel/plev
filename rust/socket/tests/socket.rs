@@ -10,7 +10,7 @@
 
 #![cfg(unix)]
 
-mod support;
+use crate::support;
 
 use std::io::{BufRead, BufReader, Read, Write};
 use std::os::unix::fs::{FileTypeExt, PermissionsExt};

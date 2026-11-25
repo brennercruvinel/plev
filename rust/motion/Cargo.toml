@@ -1,4 +1,4 @@
-# monster: binary animation codec for plev (docs/ref/architecture/monster-format-v0.md).
+# monster: binary animation codec for plev (docs/Research/Importing/monster-format-v0.md).
 [package]
 name = "motion"
 version.workspace = true
@@ -7,6 +7,11 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 description = "Binary animation codec for plev (h264-for-vectors): keyframe snapshots plus discovered deltas"
+# the integration tests are one executable, tests/suite.rs, a module per file
+# (task-106): cargo links every file under tests/ as an executable of its
+# own, each with the whole crate inside. a target listed apart at the end of
+# this file is one that needs a process to itself.
+autotests = false
 
 [features]
 # Reserved for the rhai script sidecar (spec decision 8): playback of
@@ -38,3 +43,14 @@ workspace = true
 [[bench]]
 name = "codec"
 harness = false
+
+[[test]]
+name = "suite"
+path = "tests/suite.rs"
+
+# apart for its shape, not for a process of its own: gate_bytes was already
+# one executable, a folder whose modules name each other by `crate::`. as a
+# module of the suite those paths would have to change.
+[[test]]
+name = "gate_bytes"
+path = "tests/gate_bytes/main.rs"

@@ -1,0 +1,243 @@
+{
+  "nodes": [
+    {
+      "id": "progress_page",
+      "role": "region",
+      "label": "Progress"
+    },
+    {
+      "id": "progress_page.group[0]",
+      "role": "group",
+      "label": "Value",
+      "parent": "progress_page"
+    },
+    {
+      "id": "progress_page.group[0].card[0]",
+      "role": "group",
+      "label": "Empty",
+      "parent": "progress_page.group[0]"
+    },
+    {
+      "id": "progress_page.group[0].card[0].bar",
+      "role": "progress_bar",
+      "label": "Empty",
+      "parent": "progress_page.group[0].card[0]",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.0
+        }
+      },
+      "constraints": {
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "progress_page.group[0].card[1]",
+      "role": "group",
+      "label": "Part way",
+      "parent": "progress_page.group[0]"
+    },
+    {
+      "id": "progress_page.group[0].card[1].bar",
+      "role": "progress_bar",
+      "label": "Part way",
+      "parent": "progress_page.group[0].card[1]",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.4000000059604645
+        }
+      },
+      "constraints": {
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "progress_page.group[0].card[2]",
+      "role": "group",
+      "label": "Full",
+      "parent": "progress_page.group[0]"
+    },
+    {
+      "id": "progress_page.group[0].card[2].bar",
+      "role": "progress_bar",
+      "label": "Full",
+      "parent": "progress_page.group[0].card[2]",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 1.0
+        }
+      },
+      "constraints": {
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "progress_page.group[1]",
+      "role": "group",
+      "label": "Intent",
+      "parent": "progress_page"
+    },
+    {
+      "id": "progress_page.group[1].card[0]",
+      "role": "group",
+      "label": "Neutral",
+      "parent": "progress_page.group[1]"
+    },
+    {
+      "id": "progress_page.group[1].card[0].bar",
+      "role": "progress_bar",
+      "label": "Neutral",
+      "parent": "progress_page.group[1].card[0]",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.6499999761581421
+        }
+      },
+      "constraints": {
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "progress_page.group[1].card[1]",
+      "role": "group",
+      "label": "Info",
+      "parent": "progress_page.group[1]"
+    },
+    {
+      "id": "progress_page.group[1].card[1].bar",
+      "role": "progress_bar",
+      "label": "Info",
+      "parent": "progress_page.group[1].card[1]",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.6499999761581421
+        }
+      },
+      "constraints": {
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "progress_page.group[1].card[2]",
+      "role": "group",
+      "label": "Success",
+      "parent": "progress_page.group[1]"
+    },
+    {
+      "id": "progress_page.group[1].card[2].bar",
+      "role": "progress_bar",
+      "label": "Success",
+      "parent": "progress_page.group[1].card[2]",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 1.0
+        }
+      },
+      "constraints": {
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "progress_page.group[1].card[3]",
+      "role": "group",
+      "label": "Error",
+      "parent": "progress_page.group[1]"
+    },
+    {
+      "id": "progress_page.group[1].card[3].bar",
+      "role": "progress_bar",
+      "label": "Error",
+      "parent": "progress_page.group[1].card[3]",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.3499999940395355
+        }
+      },
+      "constraints": {
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "progress_page.group[2]",
+      "role": "group",
+      "label": "Width",
+      "parent": "progress_page"
+    },
+    {
+      "id": "progress_page.group[2].card[0]",
+      "role": "group",
+      "label": "Narrowest",
+      "parent": "progress_page.group[2]"
+    },
+    {
+      "id": "progress_page.group[2].card[0].bar",
+      "role": "progress_bar",
+      "label": "Narrowest",
+      "parent": "progress_page.group[2].card[0]",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.4000000059604645
+        }
+      },
+      "constraints": {
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    },
+    {
+      "id": "progress_page.group[2].card[1]",
+      "role": "group",
+      "label": "Whole card",
+      "parent": "progress_page.group[2]"
+    },
+    {
+      "id": "progress_page.group[2].card[1].bar",
+      "role": "progress_bar",
+      "label": "Whole card",
+      "parent": "progress_page.group[2].card[1]",
+      "state": {
+        "value": {
+          "kind": "num",
+          "value": 0.4000000059604645
+        }
+      },
+      "constraints": {
+        "range": [
+          0.0,
+          1.0
+        ]
+      }
+    }
+  ]
+}

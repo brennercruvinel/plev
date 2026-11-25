@@ -15,11 +15,12 @@ description = "urnaui — desktop (and web) explorer for .urna vector databases:
 # build it with --manifest-path apps/urnadbapp/Cargo.toml or from this dir.
 [workspace]
 
-# lib: rlib for the desktop/web bin; cdylib is the android `.so` (GameActivity
-# loads it and calls `android_main`); staticlib is the iOS `.a` linked by the
-# Xcode app (which calls `urnaui_ios_main`). Same shape as uigallery.
-[lib]
-crate-type = ["lib", "cdylib", "staticlib"]
+# lib: a plain rlib for the desktop/web bin. a mobile build asks for its crate
+# type on the command line, as uigallery's does (tool/tasks/mobileapp.sh):
+# `cargo rustc --lib --crate-type cdylib` is the android `.so` (GameActivity
+# loads it and calls `android_main`), `--crate-type staticlib` the iOS `.a`
+# linked by the Xcode app (which calls `urnaui_ios_main`). listed here, both
+# were linked on every desktop build (task-106).
 
 [[bin]]
 name = "urnadbapp"

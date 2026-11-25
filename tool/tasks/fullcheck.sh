@@ -14,8 +14,20 @@ if ! command -v rustup >/dev/null 2>&1; then
     echo "         CI (.github/workflows/gatecheck.yml) or install rustup." >&2
 fi
 
+# the tests commit in temp repositories under those repositories' own
+# config. a git identity the session exports (an agent's GIT_AUTHOR_NAME, a
+# signing key in GIT_CONFIG_*) comes before any config for git, so it would
+# author and sign those commits; the gate runs without it.
+unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL GIT_CONFIG_COUNT
+
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
+# the engine without its default features (no accessibility, no hot reload),
+# the shape rust/llmrun's `plev` feature builds it in. every member of this
+# workspace takes the defaults, so the runs above never compile that shape:
+# code that read a gated module without its cfg went unseen from 2026-11-01
+# until task-106.
+cargo clippy -p engine --no-default-features -- -D warnings
 cargo fmt --check
 
 # wasm cross-platform guard. Skippable only when the std for the target is
@@ -49,7 +61,7 @@ python3 tool/tasks/docbase.py check
 
 # docs links: every link into the repository resolves (lychee, offline).
 if command -v lychee >/dev/null 2>&1; then
-    lychee --no-progress --config .devops/check/lychee.toml --offline .
+    lychee --no-progress --config .config/lychee.toml --offline .
 else
     echo "warning: skipping the docs links — lychee not installed (brew install lychee)." >&2
     echo "         the leg runs in CI." >&2
@@ -61,11 +73,13 @@ fi
 # (.github/workflows/gatecheck.yml) is the verification.
 #
 # urnadbapp is its own cargo workspace. with CARGO_TARGET_DIR set (the
-# agents' build dirs), both workspaces would write one target dir, and the
-# engine, whose cdylib/staticlib crate types keep its file name free of a
-# hash, would land in the same `libengine.rlib` built against another
-# `accord` ("multiple different versions of crate `accord`"). the leg gets
-# its own subdirectory then; without CARGO_TARGET_DIR it uses
+# agents' build dirs), both workspaces would write one target dir. that
+# broke once: the engine was a cdylib and staticlib too, which kept its file
+# name free of a hash, so both landed in the same `libengine.rlib`, one built
+# against another `accord` ("multiple different versions of crate
+# `accord`"). the engine is a plain rlib since task-106 and its name carries
+# the hash; sharing the directory has not been measured since, so the leg
+# keeps its own subdirectory. without CARGO_TARGET_DIR it uses
 # apps/urnadbapp/target.
 if [ -f ../urna/rust/format/Cargo.toml ]; then
     (
