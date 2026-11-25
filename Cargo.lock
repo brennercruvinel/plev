@@ -2413,6 +2413,7 @@ dependencies = [
  "log",
  "serde",
  "serde_json",
+ "unions",
  "wasm-bindgen",
  "web-sys",
  "winit",

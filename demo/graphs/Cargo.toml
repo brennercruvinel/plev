@@ -21,11 +21,12 @@ name = "graphs-web"
 path = "src/bin/web.rs"
 
 [dependencies]
-engine = { workspace = true, default-features = false }
+engine.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 log.workspace = true
 winit.workspace = true
+unions.workspace = true
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 env_logger.workspace = true
