@@ -12,8 +12,10 @@ repository.workspace = true
 publish = false
 description = "plev: a gpu-first compositing engine (wgpu, winit, cosmic-text, taffy)"
 
-[lib]
-crate-type = ["cdylib", "staticlib", "rlib"]
+# a plain library: the apps are the ones that become a mobile `.so` or `.a`
+# (tool/tasks/mobileapp.sh asks for that crate type when it builds one). as a
+# cdylib and staticlib of its own the engine linked a 196 MB archive on every
+# desktop build, and its rlib lost the hash in its file name (task-106).
 
 [lints]
 workspace = true

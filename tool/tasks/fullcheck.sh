@@ -61,11 +61,13 @@ fi
 # (.github/workflows/gatecheck.yml) is the verification.
 #
 # urnadbapp is its own cargo workspace. with CARGO_TARGET_DIR set (the
-# agents' build dirs), both workspaces would write one target dir, and the
-# engine, whose cdylib/staticlib crate types keep its file name free of a
-# hash, would land in the same `libengine.rlib` built against another
-# `accord` ("multiple different versions of crate `accord`"). the leg gets
-# its own subdirectory then; without CARGO_TARGET_DIR it uses
+# agents' build dirs), both workspaces would write one target dir. that
+# broke once: the engine was a cdylib and staticlib too, which kept its file
+# name free of a hash, so both landed in the same `libengine.rlib`, one built
+# against another `accord` ("multiple different versions of crate
+# `accord`"). the engine is a plain rlib since task-106 and its name carries
+# the hash; sharing the directory has not been measured since, so the leg
+# keeps its own subdirectory. without CARGO_TARGET_DIR it uses
 # apps/urnadbapp/target.
 if [ -f ../urna/rust/format/Cargo.toml ]; then
     (
