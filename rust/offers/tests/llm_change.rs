@@ -10,7 +10,7 @@
 
 // shared with the other test binaries: this one reads less of it.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use std::collections::VecDeque;
 
