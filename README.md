@@ -338,6 +338,14 @@ construindo uma raw key em vez de passar pelo caminho único do TextStyle.
 
 MIT, veja [LICENSE](LICENSE).
 
+<details>
+    
+----
+
+Copyright [Hoff Research](https://hoffresearch.com)
+
 Made it simple, but significant (∂μFμν = Jν)
 
-Brenner Cruvinel (brenner@hoffresearch.com)
+Author: Brenner Cruvinel
+
+</details>
