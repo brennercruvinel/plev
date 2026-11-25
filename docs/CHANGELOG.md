@@ -78,7 +78,7 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
   build finds its library where cargo wrote it and the Android build
   clears an old engine `.so`; the web build of `graphs` packages to the
   end. The branch point (task-105) entered `main` and the task's pull
-  request points there; the gate is green at `aac7fb94` on one macOS
+  request was merged after it; the gate is green at `aac7fb94` on one macOS
   machine, with CI and the real mobile builds not run. The task's
   decisions are records of their own, ADRs 0087 to 0092, with what five
   large Rust repositories do beside them; ADR 0069 carries the corrected

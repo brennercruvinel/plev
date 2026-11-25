@@ -9826,7 +9826,7 @@
    "title": "task-106: what a build directory weighs, and a warm start for a new checkout",
    "project": "plev",
    "type": "task",
-   "status": "in-progress",
+   "status": "done",
    "date": "2026-11-24",
    "date_basis": "text",
    "recorded": "2026-11-24",

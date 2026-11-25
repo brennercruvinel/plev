@@ -3,7 +3,7 @@ id: task-106
 title: "task-106: what a build directory weighs, and a warm start for a new checkout"
 project: plev
 type: task
-status: in-progress
+status: done
 date: 2026-11-24
 date_basis: text
 recorded: 2026-11-24
@@ -148,7 +148,7 @@ A new checkout, through `builddir.sh seed`: the seed took 5 s and no disk, and `
 
 - `.design`, `.devops` and `.secops` are gone from the root for good, the owner's decision. The task first restored them, reading their deletion as an accident because the tree's own test, the gate, CI, the readme and the atlas still named them; that was undone. What `.devops/check` held (the lychee, nextest and typos contracts) is in `.config`, beside hakari's, and every reference points there. nextest finds its file there with no flag.
 
-- The branch point is in `main`: pull request 184, the one commit of task-105 this task was built on (`f7695626`), was merged on 2026-11-25, and pull request 190 points at `main` since. Its diff is the task's 38 commits and nothing else, 125 files.
+- The branch point is in `main`: pull request 184, the one commit of task-105 this task was built on (`f7695626`), was merged on 2026-11-25, and pull request 190 pointed at `main` from then on, its diff the task's commits and nothing else, 125 files. The owner merged it the same day (`8a069959`), with what CI and the mobile builds did not cover listed in it. The records and the corrections of the audit that followed are a second pull request, 192.
 - The web build of `graphs` packages to the end with the engine it now shares with the other members: `tool/tasks/webtarget.sh graphs build --release` compiles the wasm release build, wasm-bindgen 0.2.123 (the lockfile's) writes the JavaScript and a 5.6 MB wasm, wasm-opt (binaryen `version_131`) takes the wasm to 4.7 MB, and `demo/graphs/dist` is replaced. A first try stopped at wasm-opt, whose download timed out five times; the second, an hour later, fetched it in a second.
 - The decisions of the task are records: ADRs 0087 (one test executable per crate), 0088 (plain libraries), 0089 (the build directories), 0090 (the toolchain), 0092 (one engine) and, proposed, 0091 (the tool contracts in `.config`); what the five repositories compared with do is a research page. They are in the list at the end of this page.
 - ADR 0069 carries a correction for `text_mid`: 24.56 and 49.13 levels where its table says 25.5 and 51.
