@@ -48,6 +48,9 @@ harness = false
 name = "suite"
 path = "tests/suite.rs"
 
+# apart for its shape, not for a process of its own: gate_bytes was already
+# one executable, a folder whose modules name each other by `crate::`. as a
+# module of the suite those paths would have to change.
 [[test]]
 name = "gate_bytes"
 path = "tests/gate_bytes/main.rs"

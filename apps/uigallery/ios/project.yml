@@ -1,11 +1,13 @@
 # xcodegen spec for the plev uigallery iOS app.
 #
 # The app is a thin shell: `Sources/main.m` calls `uigallery_ios_main`, exported
-# by the Rust staticlib (libuigallery.a, crate-type "staticlib"). winit drives
-# UIApplicationMain from inside that call. Build the staticlib first with
-#   cargo build -p uigallery --lib --target <triple>
-# then point LIBRARY_SEARCH_PATHS at target/<triple>/<profile> (passed by the
-# build script, tool/tasks/mobileapp.sh). Regenerate with `xcodegen generate`
+# by the Rust staticlib (libuigallery.a). winit drives UIApplicationMain from
+# inside that call. The lib is a plain rlib in its manifest, so the staticlib
+# is asked for on the command line; build it first with
+#   cargo rustc -p uigallery --lib --target <triple> --crate-type staticlib
+# then point LIBRARY_SEARCH_PATHS at <cargo's target directory>/<triple>/<profile>
+# (passed by the build script, tool/tasks/mobileapp.sh, which asks cargo where
+# that directory is). Regenerate with `xcodegen generate`
 # in this directory. The Info.plist xcodegen writes goes under build/, next to
 # the rest of the build output, so it never overwrites the tracked Info.plist.
 name: UIGallery
@@ -46,7 +48,8 @@ targets:
         ONLY_ACTIVE_ARCH: YES
         # The Rust staticlib already bundles all Rust deps; only system
         # frameworks remain. `mobileapp.sh ios` appends the absolute path to
-        # libuigallery.a (linking it by name would pick the cdylib .dylib).
+        # libuigallery.a, so the link never depends on what else is named
+        # libuigallery in that folder.
         OTHER_LDFLAGS:
           - $(inherited)
           - -lc++

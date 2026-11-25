@@ -62,6 +62,9 @@ workspace = true
 name = "suite"
 path = "tests/suite.rs"
 
+# apart for its shape, not for a process of its own: rerun was already one
+# executable, a folder whose modules name each other by `crate::`. as a
+# module of the suite those paths would have to change.
 [[test]]
 name = "rerun"
 path = "tests/rerun/main.rs"
