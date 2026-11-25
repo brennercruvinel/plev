@@ -78,4 +78,5 @@ lines 29 to 33).
 - [ADR 0083: feature unification reduces duplicate compilations](../../adr/Workflows/0083-feature-unification/0083-feature-unification.md)
 - [ADR 0084: each web target has one command and a port range](../../adr/Workflows/0084-web-targets-and-ports/0084-web-targets-and-ports.md)
 - [task-103: runcheck, every executable in the repository runs](../task-103-runcheck-every-executable-runs/task-103-runcheck-every-executable-runs.md)
+- [task-106: what a build directory weighs, and a warm start for a new checkout](../task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md)
 <!-- /related -->

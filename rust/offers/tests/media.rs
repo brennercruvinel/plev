@@ -10,7 +10,7 @@
 
 // shared with the other tests of the crate: this binary uses a part of it.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::Snapshot;
 use offers::{Part, ProposeError, Proposer, Rules, propose_verified};

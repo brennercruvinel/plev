@@ -5,7 +5,7 @@
 //! `done`, state of another node, as the ide's `commit.submit` reads
 //! `changes:staged`.
 
-mod support;
+use crate::support;
 
 use accord::{Acted, Actor, Rejection, RequestId, Revision, SemId, Stage};
 use socket::{ConnId, Host, Reply, Server, ServerMsg, StageReply, decode_client};

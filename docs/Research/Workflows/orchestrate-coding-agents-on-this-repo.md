@@ -11,7 +11,7 @@ topics: [agents, process, git, workspace]
 relations: [learning-general, adr-index, operations-autonomy, operations-generative-runtime-guidelines, operations-validate-visuals-by-pixel, generative-runtime-program, task-57, task-60, task-62, task-84]
 source: docs/ref/orchestrate-coding-agents-on-this-repo.md
 source_revision: ec0a224c
-revised: 2026-10-31
+revised: 2026-11-24
 review: reviewed
 ---
 
@@ -138,6 +138,16 @@ guidelines win and this file gets fixed.
   why it matters: the disk filled in wave 4 (ENOSPC mid-gate) with three
   agents each compiling 10 to 17 GB; check `df -h /` before dispatching
   in parallel.
+- a new build directory starts warm (task-106): from the agent's worktree,
+  `tool/tasks/builddir.sh seed <repo>/target/agents/<task-id>` clones the
+  main checkout's `target/debug` copy on write and removes from the copy
+  what the workspace's own crates compiled, the part the rule above is
+  about. the dependencies stay and cost no disk until one changes: a new
+  worktree built `arcade` with 6 crates in 12 s, against 192 crates and 87 s
+  from an empty directory. the directory is still that checkout's alone.
+  a clone needs the same volume and a filesystem with copy on write: where
+  it cannot clone, seed refuses and says what a whole copy would cost
+  (`--copy` takes it anyway).
 - kill a process by its exact pid, never by pattern. with parallel agents
   every worktree runs the same `tool/tasks/fullcheck.sh` and the same tools, so
   `pkill -f "tool/tasks/fullcheck.sh"` kills a neighbour's work too; it happened in
@@ -153,7 +163,11 @@ guidelines win and this file gets fixed.
   the space comes back only when the Trash is emptied. a clean of the whole
   `target/` also takes `target/fonts-noto` (the sources of
   `tool/tasks/subsetter.py`) and `target/determinism/` (pixel captures): move
-  what must survive out first.
+  what must survive out first. `tool/tasks/builddir.sh trim` is the
+  ceiling (task-106): over its limit it removes only what the workspace's
+  crates wrote, about nine tenths of a directory, and those two folders
+  and the dependencies stay; `builddir.sh size` says what each directory
+  weighs.
 - offline: agents build with `--offline`. before a dependency moves, the
   orchestrator checks `cargo fetch --offline --target <t>` for every
   target. when `~/.cargo/registry/{cache,src}` is gone, no offline build
@@ -191,6 +205,7 @@ worked before this program existed:
 
 - [ADR 0085: integration into main is a pull request merged by merge commit](../../adr/Workflows/0085-integration-by-merge-commit/0085-integration-by-merge-commit.md)
 - [what the autonomous cycle taught about the way of working](autonomous-cycle-learnings.md)
+- [task-106: what a build directory weighs, and a warm start for a new checkout](../../Tasks/task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md)
 - [task-57: semantic contract (crate `sem`)](../../Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
 - [task-60: accessibility as a projection of the contract](../../Tasks/task-60-accessibility-projection/task-60-accessibility-projection.md)
 - [task-62: proof in the ide: stale-state rejection and human-agent handoff](../../Tasks/task-62-ide-human-agent-proof/task-62-ide-human-agent-proof.md)

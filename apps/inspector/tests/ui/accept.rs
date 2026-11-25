@@ -115,14 +115,15 @@ fn the_commit_scenario_in_the_inspector() -> Fallible {
     while view.scroll(x, y, step) {
         drawn.extend(texts(&draw(&mut view)));
     }
+    // a row wider than the panel wraps, and the panel draws every character
+    // in order over the rows it takes. since the code face is JetBrains Mono
+    // (task-104g) the delta's row is 470 px in a column of 454, and the sha's
+    // row is cut inside the sha: the drawn text is read without its breaks.
+    let drawn: String = drawn.iter().flat_map(|t| t.split_whitespace()).collect();
     let delta = drawn
-        .iter()
-        .position(|t| t.contains("changes:staged: removed src/session.rs"))
+        .find("changes:staged:removedsrc/session.rs")
         .ok_or("the refusal's delta is drawn")?;
-    let sha = drawn
-        .iter()
-        .position(|t| t.contains(SHA))
-        .ok_or("the sha is drawn")?;
+    let sha = drawn.find(SHA).ok_or("the sha is drawn")?;
     assert!(delta < sha, "the refusal before the commit");
     Ok(())
 }

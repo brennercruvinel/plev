@@ -6,7 +6,7 @@
 
 // shared with the other surface tests: this binary uses the app and ids.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{Role, Snapshot, SnapshotBuilder, Value};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};

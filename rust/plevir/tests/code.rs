@@ -7,7 +7,7 @@
 
 // the validator for the keywords the schema uses (no schema dependency).
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use std::path::PathBuf;
 

@@ -2,7 +2,7 @@
 //! pointer and the reason it is refused with. every IR here is `base()`
 //! broken in one place, so each test names exactly what it breaks.
 
-mod support;
+use crate::support;
 
 use accord::Actor;
 use plevir::{GenerationPolicy, Ir, Rule, verify};

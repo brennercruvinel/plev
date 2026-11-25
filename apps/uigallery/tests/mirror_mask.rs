@@ -14,7 +14,7 @@
 //! Desktop only, like the port; skips without a GPU adapter.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
-mod support;
+use crate::support;
 
 use accord::Request;
 use engine::drawing::gpu::RenderConfig;

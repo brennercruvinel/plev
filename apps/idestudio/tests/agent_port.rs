@@ -21,7 +21,7 @@
 
 // shared with human_agent.rs: this binary uses the rig and a few helpers.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};

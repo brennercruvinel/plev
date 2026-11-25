@@ -65,6 +65,11 @@
     },
     {
      "level": 2,
+     "title": "2026-11-24",
+     "anchor": "2026-11-24"
+    },
+    {
+     "level": 2,
      "title": "2026-11-12",
      "anchor": "2026-11-12"
     },
@@ -8208,7 +8213,7 @@
    ],
    "source": "docs/ref/orchestrate-coding-agents-on-this-repo.md",
    "source_revision": "ec0a224c",
-   "revised": "2026-10-31",
+   "revised": "2026-11-24",
    "review": "reviewed",
    "headings": [
     {
@@ -9602,7 +9607,7 @@
    "title": "task-104: the 35 empty or borrowed gallery tabs become kit components",
    "project": "plev",
    "type": "task",
-   "status": "in-review",
+   "status": "in-progress",
    "date": "2026-10-31",
    "date_basis": "text",
    "recorded": "2026-10-31",
@@ -9726,6 +9731,98 @@
      "level": 2,
      "title": "What the first try taught",
      "anchor": "what-the-first-try-taught"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/Tasks/task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md",
+   "id": "task-106",
+   "title": "task-106: what a build directory weighs, and a warm start for a new checkout",
+   "project": "plev",
+   "type": "task",
+   "status": "in-progress",
+   "date": "2026-11-24",
+   "date_basis": "text",
+   "recorded": "2026-11-24",
+   "topics": [
+    "workspace",
+    "performance",
+    "process",
+    "agents"
+   ],
+   "relations": [
+    "task-102",
+    "operations-orchestrate-coding-agents-on-this-repo"
+   ],
+   "source": "https://github.com/brennercruvinel/plev/issues/185",
+   "source_revision": "f7695626",
+   "revised": "2026-11-25",
+   "review": "pending",
+   "headings": [
+    {
+     "level": 1,
+     "title": "task-106: what a build directory weighs, and a warm start for a new checkout",
+     "anchor": "task-106-what-a-build-directory-weighs-and-a-warm-start-for-a-new-checkout"
+    },
+    {
+     "level": 2,
+     "title": "What weighed",
+     "anchor": "what-weighed"
+    },
+    {
+     "level": 2,
+     "title": "What changed",
+     "anchor": "what-changed"
+    },
+    {
+     "level": 2,
+     "title": "One file's tests",
+     "anchor": "one-files-tests"
+    },
+    {
+     "level": 2,
+     "title": "What a shared process showed",
+     "anchor": "what-a-shared-process-showed"
+    },
+    {
+     "level": 2,
+     "title": "The same tests, before and after",
+     "anchor": "the-same-tests-before-and-after"
+    },
+    {
+     "level": 2,
+     "title": "The eighteen that failed on the branch point",
+     "anchor": "the-eighteen-that-failed-on-the-branch-point"
+    },
+    {
+     "level": 2,
+     "title": "Measured after",
+     "anchor": "measured-after"
+    },
+    {
+     "level": 2,
+     "title": "What was decided against",
+     "anchor": "what-was-decided-against"
+    },
+    {
+     "level": 2,
+     "title": "What was not verified",
+     "anchor": "what-was-not-verified"
+    },
+    {
+     "level": 2,
+     "title": "Open",
+     "anchor": "open"
+    },
+    {
+     "level": 2,
+     "title": "Closed in the task",
+     "anchor": "closed-in-the-task"
     },
     {
      "level": 2,

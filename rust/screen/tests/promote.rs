@@ -8,7 +8,7 @@
 // shared with the other surface tests: this binary uses the fixtures and
 // the page.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{ActionName, Actor, Request, Snapshot, SnapshotBuilder};
 use plevir::Op;

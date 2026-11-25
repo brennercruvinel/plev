@@ -5,7 +5,7 @@
 //! engine::drawing::headless when the machine has a GPU. then the semantic track
 //! under a busy toy app. a measurement, not a check: run it in release,
 //!
-//!     cargo test -p uigallery --release --test record_cost -- --ignored --nocapture
+//!     cargo test -p uigallery --release --test suite record_cost:: -- --ignored --nocapture
 //!
 //! the quick check that the harness itself works runs with the suite.
 

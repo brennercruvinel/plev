@@ -213,6 +213,20 @@ tool/tasks/runcheck.sh
 tool/tasks/runcheck.sh arcade lottie
 ```
 
+O `builddir.sh` cuida do peso do build: `size` diz quanto pesa cada diretório,
+`trim` remove o que o workspace gravou quando o `target/` passa do limite (as
+dependências ficam) e `seed` dá a outro checkout um diretório já aquecido.
+
+```
+tool/tasks/builddir.sh size
+tool/tasks/builddir.sh trim --yes
+tool/tasks/builddir.sh seed target/agents/<task>
+```
+
+Os testes de integração de um crate são um executável só, `tests/suite.rs`,
+com um módulo por arquivo. Os testes de um arquivo:
+`cargo test -p engine --test suite capture::`.
+
 As ferramentas além dessas (uma página para PNG, o custo de um frame, o agent
 port, o mirror, as sessões gravadas, os importers, o modelo de linguagem)
 estão em [docs/Research/Workflows/run-the-tools.md](docs/Research/Workflows/run-the-tools.md). Uma build de
@@ -267,7 +281,7 @@ construindo uma raw key em vez de passar pelo caminho único do TextStyle.
 - [docs/Research/Synthesis/generative-runtime-program.md](docs/Research/Synthesis/generative-runtime-program.md): para onde o plev vai, de engine de UI na GPU a generative interaction runtime, com o grafo de tarefas e o estado de cada uma. A tese está em [docs/Research/Synthesis/generative-runtime-thesis.md](docs/Research/Synthesis/generative-runtime-thesis.md) e as regras que todo agente segue em [docs/Research/Workflows/generative-runtime-guidelines.md](docs/Research/Workflows/generative-runtime-guidelines.md).
 - [docs/CHANGELOG.md](docs/CHANGELOG.md): o que mudou, do mais novo para o mais antigo, uma seção por data.
 - [docs/TERMS.toml](docs/TERMS.toml): os nomes da árvore, antigos e novos, crate por crate e módulo por módulo, e onde mora hoje cada caminho antigo do acervo.
-- [.devops/check/](.devops/check/): os contratos das ferramentas (lychee, nextest, typos).
+- [.config/](.config/): os contratos das ferramentas (hakari, lychee, nextest, typos).
 
 ## Licença
 

@@ -9,7 +9,7 @@
 //! by hand.
 //!
 //! The file is a golden. This test fails when the projection moves away
-//! from it; `UIR_BLESS=1 cargo test -p uigallery --test uir_fixture` writes
+//! from it; `UIR_BLESS=1 cargo test -p uigallery --test suite plevir_fixture::` writes
 //! it again, and the uir tests then say whether the IR fixture still
 //! verifies. Desktop only, like the headless staging it uses.
 //!
@@ -74,6 +74,6 @@ fn golden(rel: &str, text: &str) {
     assert!(
         kept == text,
         "the projection moved away from {rel}; regenerate it with \
-         UIR_BLESS=1 cargo test -p uigallery --test plevir_fixture, then run cargo test -p plevir"
+         UIR_BLESS=1 cargo test -p uigallery --test suite plevir_fixture::, then run cargo test -p plevir"
     );
 }
