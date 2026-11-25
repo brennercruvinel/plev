@@ -9,7 +9,7 @@
 //! projection, never a second declaration by hand.
 //!
 //! The file is a golden. This test fails when the projection moves away
-//! from it; `UIR_BLESS=1 cargo test -p idestudio --test uir_fixture` writes it
+//! from it; `UIR_BLESS=1 cargo test -p idestudio --test suite plevir_fixture::` writes it
 //! again, and the uir tests then say whether the IR fixtures still verify.
 
 // shared with the other ide tests: this binary uses the rig and a helper.
@@ -116,6 +116,6 @@ fn golden(text: &str) {
     assert!(
         kept == text,
         "the workbench projection moved away from {FIXTURE}; regenerate it with \
-         UIR_BLESS=1 cargo test -p idestudio --test plevir_fixture, then run cargo test -p plevir"
+         UIR_BLESS=1 cargo test -p idestudio --test suite plevir_fixture::, then run cargo test -p plevir"
     );
 }

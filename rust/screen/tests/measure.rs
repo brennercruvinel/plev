@@ -7,7 +7,7 @@
 //! in a running app; the glyphs are new to the atlas, as on a first frame.
 //!
 //! A measurement, not a check. Run by hand, debug as the gate builds it:
-//! `cargo test -p screen --test measure -- --ignored --nocapture`. With
+//! `cargo test -p screen --test suite measure:: -- --ignored --nocapture`. With
 //! `SURFACE_FRAMES=<dir>` it also writes each fixture's first frame there
 //! as a png, to look at.
 

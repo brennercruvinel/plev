@@ -29,7 +29,7 @@
 //!
 //! rulers measured in-session (gzip -9 -c file | wc -c):
 //!   ripple.json 11458 -> 1617 gz; starfish.json 24780 -> 3144 gz.
-//! run: cargo test -p motion --test bench_lottie -- --nocapture
+//! run: cargo test -p motion --test gate_bytes -- --nocapture
 
 mod dense;
 mod girl;

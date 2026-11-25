@@ -463,7 +463,7 @@ fn the_html_and_figma_ir_materialize_and_draw() {
 }
 
 /// The frames, written for a person to look at:
-/// `cargo test -p import --test pixels -- --ignored`, then the pngs in the
+/// `cargo test -p import --test suite pixels:: -- --ignored`, then the pngs in the
 /// test's target tmp dir (the separator, the react note card, and the two
 /// phase 2 sources: the html note card and the figma screen).
 #[test]

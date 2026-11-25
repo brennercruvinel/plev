@@ -9,7 +9,7 @@
 //! PNG of the engine's assets through `image`.
 //!
 //! ```text
-//! cargo test -p engine --test asset_cost -- --ignored --nocapture
+//! cargo test -p engine --test suite asset_cost:: -- --ignored --nocapture
 //! ```
 //!
 //! The numbers are the debug profile's (the workspace at opt-level 0, its
@@ -266,7 +266,7 @@ fn images() {
 }
 
 #[test]
-#[ignore = "a measurement: cargo test -p engine --test asset_cost -- --ignored --nocapture"]
+#[ignore = "a measurement: cargo test -p engine --test suite asset_cost:: -- --ignored --nocapture"]
 fn what_the_runtime_parses_validates_and_decodes() {
     fonts();
     renderer();
