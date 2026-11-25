@@ -9607,7 +9607,7 @@
    "title": "task-104: the 35 empty or borrowed gallery tabs become kit components",
    "project": "plev",
    "type": "task",
-   "status": "in-review",
+   "status": "in-progress",
    "date": "2026-10-31",
    "date_basis": "text",
    "recorded": "2026-10-31",
@@ -9796,6 +9796,11 @@
     },
     {
      "level": 2,
+     "title": "The eighteen that failed on the branch point",
+     "anchor": "the-eighteen-that-failed-on-the-branch-point"
+    },
+    {
+     "level": 2,
      "title": "Measured after",
      "anchor": "measured-after"
     },
@@ -9813,6 +9818,11 @@
      "level": 2,
      "title": "Open",
      "anchor": "open"
+    },
+    {
+     "level": 2,
+     "title": "Closed in the task",
+     "anchor": "closed-in-the-task"
     },
     {
      "level": 2,

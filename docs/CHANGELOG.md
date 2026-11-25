@@ -80,6 +80,9 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
   passing), and `tool/tasks/builddir.sh` weighs, trims and seeds the
   build directories. `cargo test --workspace --no-run` in an empty
   directory went from 186 test executables and 8.1 GB to 88 and 5.0 GB.
+  The 18 tests that failed on the branch point, unseen while no workflow
+  ran, were each traced to the commit that left them behind and pass; the
+  toolchain is pinned to 1.99.1.
 
 ## 2026-11-12
 

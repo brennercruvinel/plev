@@ -83,7 +83,28 @@ Counted crate by crate, integration tests only, the old layout against the new:
 | gitdrv | 2 to 1 | 22 | 0 | 2 |
 | agenteval | 2 to 1 | 11 | 0 | 0 |
 
-The counts are the same on both sides, and so are the names of the tests that fail. The failures are not this task's: they fail on the branch point, before any test moved (goldens that moved in `engine`, `plevir`, `import`, `screen`, `uigallery` and `idestudio`).
+The counts are the same on both sides, and so are the names of the tests that fail. The failures were not this task's: they failed on the branch point, before any test moved. The next section is what became of them.
+
+## The eighteen that failed on the branch point
+
+`cargo test --workspace` on the branch point had 18 failing tests, and no workflow had run on the repository since 2026-10-16 to show them. Each was traced to the commit that left it behind before anything was changed, and no golden was written again without that. None was a regression in what the engine draws; one shows a real defect on screen, noted below.
+
+| tests | left behind by | what was done |
+|---|---|---|
+| `plevir` schema file, `idestudio` workbench fixture | `540e218d` (2026-10-27): `unions` asks `serde_json` for `preserve_order`, so a map prints in the order of insertion | the two tests sort the keys of what they print; the kept files are byte for byte what they were |
+| `import` html and react reports, the `text_mid` tolerance | `08e608a1` (task-104m): the theme settles `text_dim` to AA, the gap to `text_mid` went from 51 levels to 49.13 | the tolerance reads 24.56 where it read 25.5, one line in each golden and the constant |
+| `inspector` and `replay` dependency lists | `540e218d`: every member got the `unions` line | the lists name `unions`, which holds no code |
+| `inspector` commit scenario | `2ca6ded9` (task-104g): the code face is JetBrains Mono, the row wraps | the test reads the drawn text across its rows |
+| `tool/tests` root layout | `205fc5f8` and `f7695626` deleted `.devops`, `.secops` and `.design` | the eight files are restored from `540e218d`; the gate's link check runs again (4056 links, none broken) |
+| `tool/tests` crate homes | an empty untracked directory on one machine | the test lists what git tracks, as the rest of its file does |
+| `engine` text audit | `2ca6ded9`: 82644 more bytes of fonts | the golden's first line, the only one that differed |
+| `screen` slider tests (3) | `19fcf1d3` (task-104e): the slider maps its travel by the thumb | the test helpers use the thumb's width |
+| `uigallery` mirror, record, view_source | `259859a0` and `48464cd3` (task-104d, 104h): the Card has no photo, the sidebar peeks | the image leg is the Attachment page, the test pins the sidebar, the text is the Tooltip page's title |
+| `uigallery` scene_codec | `9b0cc681` (task-104b): the first image decoded from a PNG lands in a second slot of the store | an image node is compared by its pixels, not by its handle |
+
+A nineteenth, `screen`'s caret test, failed or passed by the machine's speed: `84987d83` (task-104m) fades a text field's edge on the wall clock, and the helper that waits for transitions gave up after 600 simulated frames, a few milliseconds. The helper also asks for two seconds of real time now.
+
+After these, on the task's branch: `cargo test --workspace` gives 4116 passed, none failed, 29 ignored; clippy, fmt, the wasm check, hakari, the docs checker and the link check are clean.
 
 ## Measured after
 
@@ -117,9 +138,16 @@ A new checkout, through `builddir.sh seed`: the seed took 5 s and no disk, and `
 
 ## Open
 
-- Pinning the toolchain to an exact version (`rust-toolchain.toml` says `stable`): each new stable leaves a whole older copy in every build directory. It needs the exact toolchain downloaded by rustup, a decision that was not taken in this task.
-- `apps/urnadbapp` inside the root workspace would remove a build directory whole. It path-depends on a sibling checkout, so it needs that dependency fetched another way first.
-- `human_agent`'s commit author in `idestudio` is the session's when `GIT_AUTHOR_NAME` is exported, not the temp repository's; the test is not hermetic.
+- The inspector at 1280x800 draws the commit's sha cut over two rows since the code face changed (`2ca6ded9`), and `value_column` in its panel takes the first space after a label, so a two-word label never finds its value column. Seen, not changed.
+- `apps/urnadbapp` still builds into a directory of its own (4.0 GB). Sharing the root's, or joining the workspace, is [issue 191](https://github.com/brennercruvinel/plev/issues/191).
+- ADR 0069 still states 25.5 and 51 levels for `text_mid`; the theme makes them 24.56 and 49.13 since task-104m.
+- The engine's image store keeps an image decoded from a PNG and the same pixels given raw in two slots.
+- Whether `.design`, `.devops` and `.secops` were deleted on purpose the history does not say. They are restored because the tree's own test, the gate, CI, the readme and the atlas still name them.
+
+## Closed in the task
+
+- The toolchain is pinned: `rust-toolchain.toml` names 1.99.1, the compiler `stable` already was, and every CI job runs `rustup toolchain install`, which reads the same file. The CI change is not verified: no workflow has run on the repository since 2026-10-16.
+- `human_agent`'s commit author in `idestudio` followed `GIT_AUTHOR_NAME` when a session exported it. The test compares with the author git gave the commit, and the gate drops the identity variables before its tests.
 
 <!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
 ## Related
