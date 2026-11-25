@@ -435,6 +435,185 @@ fn a_node_chosen_draws_what_it_is_and_never_the_panel_itself() {
     );
 }
 
+/// What the dev mode's layer says in `c`: the words of its text nodes.
+fn said(c: &Compositor, dev: &DevMode) -> Vec<String> {
+    use crate::drawing::compositor::SceneNode;
+    c.layer(dev.layer.unwrap())
+        .unwrap()
+        .nodes()
+        .iter()
+        .filter_map(|node| match node {
+            SceneNode::Text { key, .. } => Some(key.text.to_string()),
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+fn a_node_chosen_is_followed_where_the_next_frame_draws_it_and_never_swapped() {
+    use crate::drawing::compositor::{SceneNode, TextNodeKey};
+    let _lock = test_lock();
+    let mut c = page();
+    let mut dev = open(Tab::Inspect);
+    // the icon beside the button, a rect like the button's ground
+    dev.pick_at(&c, 410.0, 110.0);
+    let icon = dev.inspect.picked().cloned().expect("the icon");
+    assert_eq!(icon.rect(&c), Some(Rect::new(400.0, 100.0, 24.0, 24.0)));
+    assert_eq!(dev.picked_owner(), None, "it sits in no control");
+
+    // the next frame draws a rect more before it, and the icon lower:
+    // its place in the layer now holds another rect
+    c.begin_frame();
+    let fill = |x, y, w, h| SceneNode::Rect {
+        x,
+        y,
+        w,
+        h,
+        color: [1.0; 4],
+    };
+    c.push(fill(0.0, 0.0, 1280.0, 400.0));
+    c.push(fill(0.0, 0.0, 300.0, 8.0));
+    c.push(fill(100.0, 100.0, 120.0, 40.0));
+    c.push(fill(400.0, 160.0, 24.0, 24.0));
+    assert_eq!(
+        icon.rect(&c),
+        Some(Rect::new(400.0, 160.0, 24.0, 24.0)),
+        "the icon where it is now, not the rect that took its place"
+    );
+
+    // a frame without it: gone, and the view says so
+    c.begin_frame();
+    c.push(fill(0.0, 0.0, 1280.0, 400.0));
+    c.push(SceneNode::Text {
+        key: TextNodeKey::new("Save", 14.0, 20.0, None),
+        x: 140.0,
+        y: 110.0,
+        color: [0.0, 0.0, 0.0, 1.0],
+    });
+    assert_eq!(icon.rect(&c), None);
+    dev.draw(&mut c, &Theme::dark(), WINDOW, &recorder(2), None);
+    assert!(
+        said(&c, &dev)
+            .iter()
+            .any(|line| line.starts_with("The frame no longer draws it")),
+        "{:?}",
+        said(&c, &dev)
+    );
+}
+
+#[test]
+fn a_node_keeps_the_control_it_sat_in_and_rings_what_its_clip_shows() {
+    use crate::drawing::compositor::SceneNode;
+    let _lock = test_lock();
+    let mut c = Compositor::new();
+    c.begin_frame();
+    let fill = |x, y, w, h| SceneNode::Rect {
+        x,
+        y,
+        w,
+        h,
+        color: [1.0; 4],
+    };
+    // a row in a list that scrolled: half of it is under the list's clip,
+    // and its middle is outside the clip
+    let row = SemId::parse("list.row").unwrap();
+    c.push(SceneNode::PushClip {
+        x: 0.0,
+        y: 0.0,
+        w: 400.0,
+        h: 100.0,
+    });
+    c.bind(&row, [0.0, 80.0, 400.0, 200.0]);
+    c.push(fill(20.0, 90.0, 40.0, 120.0));
+    c.push(SceneNode::PopClip);
+    let mut dev = open(Tab::Inspect);
+    dev.pick_at(&c, 30.0, 95.0);
+    assert_eq!(dev.picked_kind(), Some("Rect"));
+    assert_eq!(
+        dev.picked_owner().map(SemId::as_str),
+        Some("list.row"),
+        "the row it was chosen in, though its middle is clipped away"
+    );
+    let chosen = dev.inspect.picked().unwrap();
+    assert_eq!(
+        chosen.rect(&c),
+        Some(Rect::new(20.0, 90.0, 40.0, 10.0)),
+        "what shows of it, not what the clip hides"
+    );
+}
+
+#[test]
+fn a_node_drawn_over_a_control_is_chosen_and_not_the_control_under_it() {
+    use crate::drawing::compositor::SceneNode;
+    let _lock = test_lock();
+    let mut c = page();
+    // a scrim over the whole page, bound to nothing
+    c.push(SceneNode::Rect {
+        x: 0.0,
+        y: 0.0,
+        w: 1280.0,
+        h: 400.0,
+        color: [0.0, 0.0, 0.0, 0.5],
+    });
+    let mut dev = open(Tab::Inspect);
+    dev.pick_at(&c, 104.0, 104.0);
+    assert_eq!(dev.picked_kind(), Some("Rect"), "the scrim is on top");
+    assert_eq!(dev.picked(), None, "not the button under it");
+    assert_eq!(dev.picked_owner(), None, "and the scrim is no part of it");
+
+    // a control that draws nothing where the pointer is, over a ground
+    // drawn before it: the control, not the ground under it
+    let mut c = Compositor::new();
+    c.begin_frame();
+    c.push(SceneNode::Rect {
+        x: 0.0,
+        y: 0.0,
+        w: 1280.0,
+        h: 400.0,
+        color: [1.0; 4],
+    });
+    c.bind(
+        &SemId::parse("page.row").unwrap(),
+        [100.0, 100.0, 300.0, 40.0],
+    );
+    dev.pick_at(&c, 250.0, 120.0);
+    assert_eq!(dev.picked().map(SemId::as_str), Some("page.row"));
+}
+
+#[test]
+fn an_open_line_taller_than_the_panel_is_cut_to_it() {
+    use crate::drawing::compositor::SceneNode;
+    let _lock = test_lock();
+    let mut kept = recorder(1);
+    let mut long = report(1);
+    long.messages[0].text = "a line of the log that says a great deal ".repeat(200);
+    kept.push(long, Vec::new(), false);
+    let mut dev = open(Tab::Log);
+    let mut c = Compositor::new();
+    dev.draw(&mut c, &Theme::dark(), WINDOW, &kept, None);
+    press(&mut dev, &Act::Line(1));
+    c.begin_frame();
+    dev.draw(&mut c, &Theme::dark(), WINDOW, &kept, None);
+    let nodes = c.layer(dev.layer.unwrap()).unwrap().nodes();
+    let cut = nodes
+        .windows(2)
+        .find_map(|pair| match pair {
+            [
+                SceneNode::PushClip { y, h, .. },
+                SceneNode::Text { key, .. },
+            ] if key.text.len() > 4000 => Some(y + h),
+            _ => None,
+        })
+        .expect("the open line's text is drawn inside a clip");
+    assert!(cut <= WINDOW.1, "cut at the panel's end: {cut}");
+    assert!(
+        said(&c, &dev)
+            .iter()
+            .any(|line| line.contains("more lines")),
+        "it says how much of it is under the edge"
+    );
+}
+
 #[test]
 fn a_press_on_a_line_of_the_log_opens_it_whole_and_another_closes_it() {
     let _lock = test_lock();
@@ -500,6 +679,32 @@ fn a_parent_of_the_tree_folds_the_lines_under_it() {
         Some(&snapshot),
     );
     assert_eq!(lines(&dev), 1, "the two under it are folded away");
+    assert!(
+        said(&c, &dev).iter().any(|line| line == "3 projected"),
+        "folding hides lines, it projects no fewer controls: {:?}",
+        said(&c, &dev)
+    );
+    // a control chosen under a folded one is shown: its parent unfolds
+    dev.pick(Some(id("list.two")));
+    c.begin_frame();
+    dev.draw(
+        &mut c,
+        &Theme::dark(),
+        WINDOW,
+        &recorder(1),
+        Some(&snapshot),
+    );
+    assert_eq!(lines(&dev), 3, "the parent of the one chosen opened");
+    press(&mut dev, &Act::Fold(id("list")));
+    c.begin_frame();
+    dev.draw(
+        &mut c,
+        &Theme::dark(),
+        WINDOW,
+        &recorder(1),
+        Some(&snapshot),
+    );
+    assert_eq!(lines(&dev), 1);
     press(&mut dev, &Act::Fold(id("list")));
     c.begin_frame();
     dev.draw(

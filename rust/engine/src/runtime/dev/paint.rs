@@ -212,9 +212,26 @@ impl Painter<'_> {
         self.wrapped_height(s, w, style)
     }
 
-    /// How tall `s` is in lines no wider than `w`.
+    /// How tall `s` is in lines no wider than `w`; nothing where there
+    /// is no width to wrap in, as [`Painter::text_wrapped`] draws nothing.
     pub fn wrapped_height(&self, s: &str, w: f32, style: &TextStyle) -> f32 {
+        if w <= 0.0 || s.is_empty() {
+            return 0.0;
+        }
         TextMeasurer::measure_styled(s, style, Some(w)).1
+    }
+
+    /// Draw `draw` cut to `r`: nothing of it shows outside.
+    pub fn clipped(&mut self, r: Rect, draw: impl FnOnce(&mut Self)) {
+        let clip = SceneNode::PushClip {
+            x: r.x,
+            y: r.y,
+            w: r.w.max(0.0),
+            h: r.h.max(0.0),
+        };
+        self.c.push_to_layer(self.layer, clip);
+        draw(self);
+        self.c.push_to_layer(self.layer, SceneNode::PopClip);
     }
 
     /// `s` ending at `right`, on one line at `y`.

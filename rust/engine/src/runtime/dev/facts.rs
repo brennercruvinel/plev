@@ -238,6 +238,15 @@ pub(super) fn node(
     }
     if let Some(bounds) = node.bounds() {
         place(&mut out, bounds);
+        // what its clip leaves of it, when that is not all of it
+        match c.node_rect(layer, index) {
+            Some(shows) if shows != bounds => out.push(fact(
+                "shows",
+                format!("{:.0} × {:.0} inside its clip", shows[2], shows[3]),
+            )),
+            Some(_) => {}
+            None => out.push(fact("shows", "none of it: outside its clip")),
+        }
     }
     let of = c.layer(layer).map_or(0, |l| l.nodes().len());
     out.push(fact("node", format!("{} of {of} in its layer", index + 1)));

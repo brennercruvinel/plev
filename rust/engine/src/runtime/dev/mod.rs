@@ -47,6 +47,7 @@ mod log;
 mod memory;
 mod paint;
 mod plots;
+mod target;
 #[cfg(test)]
 mod tests;
 mod zones;
@@ -333,31 +334,37 @@ impl DevMode {
 
     /// Choose the control `id` in the Inspect view, as a press on it would.
     pub fn pick(&mut self, id: Option<SemId>) {
-        self.inspect.pick(id.map(inspect::Target::Control));
+        self.inspect.pick(id.map(target::Target::Control));
     }
 
     /// The control the Inspect view shows; `None` while it shows a scene
     /// node or nothing.
     pub fn picked(&self) -> Option<&SemId> {
         match self.inspect.picked() {
-            Some(inspect::Target::Control(id)) => Some(id),
+            Some(target::Target::Control(id)) => Some(id),
             _ => None,
         }
+    }
+
+    /// The control the Inspect view shows, or the one the scene node it
+    /// shows sat in when chosen; `None` for a node in no control.
+    pub fn picked_owner(&self) -> Option<&SemId> {
+        self.inspect.picked()?.owner()
     }
 
     /// Choose what the frame `c` has at `(x, y)`, as a press of the armed
     /// picker there would: the control bound there or the scene node
     /// drawn there, whichever is the more particular.
     pub fn pick_at(&mut self, c: &Compositor, x: f32, y: f32) {
-        self.inspect.pick(inspect::Target::at(c, x, y, self.layer));
+        self.inspect.pick(target::Target::at(c, x, y, self.layer));
     }
 
     /// What the Inspect view shows, in a word: `"Control"`, or the kind
     /// of the scene node chosen (`"Path"`, `"Text"`, ...).
     pub fn picked_kind(&self) -> Option<&'static str> {
         match self.inspect.picked()? {
-            inspect::Target::Control(_) => Some("Control"),
-            inspect::Target::Node { kind, .. } => Some(kind),
+            target::Target::Control(_) => Some("Control"),
+            target::Target::Node { kind, .. } => Some(kind),
         }
     }
 
@@ -443,7 +450,7 @@ impl DevMode {
                     took.changed = true;
                 }
                 let under = picking
-                    .then(|| inspect::Target::at(c, x, y, self.layer))
+                    .then(|| target::Target::at(c, x, y, self.layer))
                     .flatten();
                 took.changed |= self.inspect.hover(under);
             }
@@ -510,7 +517,7 @@ impl DevMode {
             Act::Level(level) => self.log.filter(level),
             Act::ClearLog => self.log.clear(),
             Act::Line(number) => self.log.open(number),
-            Act::Control(id) => self.inspect.pick(Some(inspect::Target::Control(id))),
+            Act::Control(id) => self.inspect.pick(Some(target::Target::Control(id))),
             Act::Fold(id) => self.inspect.fold(id),
         }
     }

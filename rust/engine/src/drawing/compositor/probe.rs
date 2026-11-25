@@ -12,6 +12,13 @@
 //! the box of a path's vertices, a text's measure at its position. A
 //! shadow takes no part: it is the dress of the rect that casts it, and a
 //! point beside a card is not on the card.
+//!
+//! A frame is built again every time, so a node has no name that lasts: a
+//! tool that keeps one across frames keeps its mark ([`SceneNode::mark`],
+//! what it is apart from where it is) and finds it again with
+//! [`Compositor::node_marked`].
+
+use std::hash::{Hash, Hasher};
 
 use super::clip::{ClipRect, intersect_rects};
 use super::{Compositor, LayerId, SceneNode};
@@ -86,6 +93,102 @@ impl SceneNode {
             SceneNode::PushClip { .. } | SceneNode::PopClip => None,
         }
     }
+
+    /// What the node is apart from where it is: its kind, its size and
+    /// its paint (a text's words and type, a path's mesh), hashed. Two
+    /// frames that draw the same thing give it the same mark, moved or
+    /// not; two things drawn alike (the same icon twice) share one.
+    pub fn mark(&self) -> u64 {
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        self.kind().hash(&mut h);
+        let mut bits = |values: &[f32]| {
+            for v in values {
+                v.to_bits().hash(&mut h);
+            }
+        };
+        match self {
+            SceneNode::Text { key, color, .. } => {
+                bits(color);
+                key.hash(&mut h);
+            }
+            SceneNode::Path { data } => {
+                bits(&data.vertices.first().map_or([0.0; 4], |v| v.color));
+                (data.hash, data.vertices.len(), data.indices.len()).hash(&mut h);
+            }
+            SceneNode::Image {
+                image, w, h: tall, ..
+            } => {
+                bits(&[*w, *tall]);
+                image.hash(&mut h);
+            }
+            SceneNode::Rect {
+                w, h: tall, color, ..
+            } => {
+                bits(&[*w, *tall]);
+                bits(color);
+            }
+            SceneNode::RoundedRect {
+                w,
+                h: tall,
+                color,
+                corner_radius,
+                ..
+            } => {
+                bits(&[*w, *tall, *corner_radius]);
+                bits(color);
+            }
+            SceneNode::GradientRect {
+                w,
+                h: tall,
+                color,
+                color2,
+                ..
+            } => {
+                bits(&[*w, *tall]);
+                bits(color);
+                bits(color2);
+            }
+            SceneNode::BackdropBlur { w, h: tall, .. } | SceneNode::Shadow { w, h: tall, .. } => {
+                bits(&[*w, *tall]);
+            }
+            SceneNode::PushClip { .. } | SceneNode::PopClip => {}
+        }
+        h.finish()
+    }
+}
+
+/// What shows of each node of `layer` that draws, in push order: its
+/// bounds inside the clip open at its push. A shadow and a clip are left
+/// out.
+fn shown(layer: &super::Layer) -> impl Iterator<Item = (usize, [f32; 4])> + '_ {
+    let mut clips: Vec<ClipRect> = Vec::new();
+    layer
+        .nodes()
+        .iter()
+        .enumerate()
+        .filter_map(move |(index, node)| match node {
+            SceneNode::PushClip { x, y, w, h } => {
+                let clip = [*x, *y, *w, *h];
+                clips.push(
+                    clips
+                        .last()
+                        .map_or(clip, |open| intersect_rects(*open, clip)),
+                );
+                None
+            }
+            SceneNode::PopClip => {
+                clips.pop();
+                None
+            }
+            SceneNode::Shadow { .. } => None,
+            node => {
+                let bounds = node.bounds()?;
+                let rect = clips
+                    .last()
+                    .map_or(bounds, |clip| intersect_rects(bounds, *clip));
+                Some((index, rect))
+            }
+        })
 }
 
 fn holds(r: [f32; 4], x: f32, y: f32) -> bool {
@@ -108,39 +211,14 @@ impl Compositor {
             .collect();
         layers.sort_by_key(|(rank, l)| std::cmp::Reverse((l.z_order, *rank)));
         for (_, layer) in layers {
-            let mut clips: Vec<ClipRect> = Vec::new();
-            let mut found = None;
-            for (index, node) in layer.nodes().iter().enumerate() {
-                match node {
-                    SceneNode::PushClip { x, y, w, h } => {
-                        let clip = [*x, *y, *w, *h];
-                        clips.push(
-                            clips
-                                .last()
-                                .map_or(clip, |open| intersect_rects(*open, clip)),
-                        );
-                    }
-                    SceneNode::PopClip => {
-                        clips.pop();
-                    }
-                    SceneNode::Shadow { .. } => {}
-                    node => {
-                        let Some(bounds) = node.bounds() else {
-                            continue;
-                        };
-                        let rect = clips
-                            .last()
-                            .map_or(bounds, |clip| intersect_rects(bounds, *clip));
-                        if holds(rect, x, y) {
-                            found = Some(NodeAt {
-                                layer: layer.id,
-                                index,
-                                rect,
-                            });
-                        }
-                    }
-                }
-            }
+            let found = shown(layer)
+                .filter(|(_, rect)| holds(*rect, x, y))
+                .last()
+                .map(|(index, rect)| NodeAt {
+                    layer: layer.id,
+                    index,
+                    rect,
+                });
             if found.is_some() {
                 return found;
             }
@@ -152,6 +230,35 @@ impl Compositor {
     /// one; `None` once the frame no longer has it.
     pub fn node(&self, layer: LayerId, index: usize) -> Option<&SceneNode> {
         self.layer(layer)?.nodes().get(index)
+    }
+
+    /// What shows of the node at `index` of `layer`: its bounds inside
+    /// the clip it was drawn under, as [`Compositor::node_at`] found it.
+    /// `None` for a node that draws nothing, or none of it inside its
+    /// clip.
+    pub fn node_rect(&self, layer: LayerId, index: usize) -> Option<[f32; 4]> {
+        shown(self.layer(layer)?)
+            .find(|(at, _)| *at == index)
+            .map(|(_, rect)| rect)
+            .filter(|rect| rect[2] > 0.0 && rect[3] > 0.0)
+    }
+
+    /// Where the node of `layer` with `mark` is in this frame, for a
+    /// tool that chose it at `index` of an earlier one: `index` itself
+    /// while the node there still has the mark, the nearest place that
+    /// has it otherwise (nodes pushed before it moved it), `None` once
+    /// the frame draws no such node.
+    pub fn node_marked(&self, layer: LayerId, index: usize, mark: u64) -> Option<usize> {
+        let nodes = self.layer(layer)?.nodes();
+        if nodes.get(index).is_some_and(|node| node.mark() == mark) {
+            return Some(index);
+        }
+        nodes
+            .iter()
+            .enumerate()
+            .filter(|(_, node)| node.mark() == mark)
+            .map(|(at, _)| at)
+            .min_by_key(|at| at.abs_diff(index))
     }
 }
 
@@ -230,6 +337,52 @@ mod tests {
         let inside = c.node_at(10.0, 10.0, None).expect("inside the clip");
         assert_eq!(inside.rect, [0.0, 0.0, 50.0, 50.0], "what shows of it");
         assert_eq!(c.node_at(100.0, 100.0, None), None, "clipped away there");
+    }
+
+    #[test]
+    fn a_node_keeps_its_mark_where_it_moves_and_is_found_again_by_it() {
+        let mut c = Compositor::new();
+        c.push(rect(0.0, 0.0, 200.0, 200.0));
+        c.push(rect(50.0, 50.0, 20.0, 20.0));
+        let mark = c.node(LayerId::DEFAULT, 1).unwrap().mark();
+        assert_eq!(c.node_marked(LayerId::DEFAULT, 1, mark), Some(1));
+
+        // the next frame draws one more thing before it, and it moved
+        c.begin_frame();
+        c.push(rect(0.0, 0.0, 200.0, 200.0));
+        c.push(rect(0.0, 0.0, 90.0, 10.0));
+        c.push(rect(50.0, 80.0, 20.0, 20.0));
+        assert_ne!(c.node(LayerId::DEFAULT, 1).unwrap().mark(), mark);
+        assert_eq!(c.node_marked(LayerId::DEFAULT, 1, mark), Some(2));
+
+        // and the one after no longer draws it
+        c.begin_frame();
+        c.push(rect(0.0, 0.0, 200.0, 200.0));
+        assert_eq!(c.node_marked(LayerId::DEFAULT, 1, mark), None);
+    }
+
+    #[test]
+    fn what_shows_of_a_node_is_its_bounds_inside_its_clip() {
+        let mut c = Compositor::new();
+        c.push(SceneNode::PushClip {
+            x: 0.0,
+            y: 0.0,
+            w: 50.0,
+            h: 50.0,
+        });
+        c.push(rect(0.0, 30.0, 200.0, 200.0));
+        c.push(rect(0.0, 80.0, 10.0, 10.0));
+        c.push(SceneNode::PopClip);
+        assert_eq!(
+            c.node_rect(LayerId::DEFAULT, 1),
+            Some([0.0, 30.0, 50.0, 20.0])
+        );
+        assert_eq!(c.node_rect(LayerId::DEFAULT, 2), None, "all of it clipped");
+        assert_eq!(
+            c.node_rect(LayerId::DEFAULT, 0),
+            None,
+            "a clip draws nothing"
+        );
     }
 
     #[test]

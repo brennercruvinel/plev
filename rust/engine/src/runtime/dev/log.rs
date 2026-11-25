@@ -288,7 +288,20 @@ impl LogView {
                 &caption,
             );
             if open {
-                p.text_wrapped(&message.text, text_x, text_y, text_w, ink, &caption);
+                // a line taller than the panel is cut to it, and says how
+                // much of it is under the edge
+                let whole = height(p, number, &message.text);
+                p.clipped(place, |p| {
+                    p.text_wrapped(&message.text, text_x, text_y, text_w, ink, &caption);
+                });
+                if whole > h {
+                    let under = ((whole - h) / p.line()).ceil() as usize;
+                    let note = format!("{under} more lines · drag the panel's edge");
+                    let w = p.width(&note, &num) + gap * 2.0;
+                    let at = Rect::new(area.right() - w, place.bottom() - row, w, row);
+                    p.chip(at, p.theme.colors.bg_panel.0);
+                    p.text_in(&note, at, p.mid(), &num);
+                }
             } else {
                 p.text(&message.text, text_x, text_y, text_w, ink, &caption);
             }

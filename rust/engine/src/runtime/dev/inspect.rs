@@ -13,7 +13,10 @@
 //! is the bound control there (`Compositor::hit`) or the scene node there
 //! (`Compositor::node_at`: an icon, a line of text, a card's ground),
 //! whichever is the more particular: the node when it is smaller than the
-//! control it sits in, the control when the node is its whole ground.
+//! control it sits in, the control when the node is its whole ground. A
+//! node drawn over a control it is no part of (a scrim, a card on top) is
+//! the node. What is chosen, and how a node chosen is found again in the
+//! next frame, is `target`.
 //!
 //! At the right, the thing chosen (`facts`): a control's identity, state
 //! and actions, the code that projected it, its place and what its layer
@@ -27,7 +30,7 @@ use accord::{Node, SemId, Snapshot};
 use super::Act;
 use super::facts::{self, Fact};
 use super::paint::{Painter, alpha};
-use crate::drawing::compositor::{Compositor, LayerId};
+use super::target::Target;
 use crate::runtime::perf::FrameReport;
 use crate::widgets::prelude::Rect;
 
@@ -42,25 +45,6 @@ const NOTCH_PX: f32 = 20.0;
 /// The fold mark's side, and the room it takes before a line's words.
 const FOLD: f32 = 10.0;
 const FOLD_ROOM: f32 = 14.0;
-/// A node at least this much of the control it sits in is that control's
-/// own ground: the control is what the pointer is on.
-const GROUND_SHARE: f32 = 0.9;
-
-/// What the pointer is on, or what is chosen.
-#[derive(Clone, Debug, PartialEq)]
-pub(super) enum Target {
-    /// A control the page bound to an id.
-    Control(SemId),
-    /// A scene node, by its place in its layer and what it was when
-    /// chosen: the frame is built again every time, and a node there of
-    /// another kind is not the one chosen.
-    Node {
-        layer: LayerId,
-        index: usize,
-        kind: &'static str,
-    },
-}
-
 /// A line of the tree.
 struct Line {
     depth: usize,
@@ -83,70 +67,6 @@ pub(super) struct Inspect {
     reveal: bool,
     /// The controls whose lines under them are folded away.
     folded: HashSet<SemId>,
-}
-
-fn rect([x, y, w, h]: [f32; 4]) -> Rect {
-    Rect::new(x, y, w, h)
-}
-
-impl Target {
-    /// What is at `(x, y)` of the frame `c`, the layer `skip` left out.
-    pub fn at(c: &Compositor, x: f32, y: f32, skip: Option<LayerId>) -> Option<Target> {
-        let control = c
-            .hit(x, y)
-            .and_then(|id| Some((id, c.binding(id)?.visible_rect()?)));
-        let node = c.node_at(x, y, skip).and_then(|at| {
-            let kind = c.node(at.layer, at.index)?.kind();
-            Some((at, kind))
-        });
-        let area = |r: [f32; 4]| r[2] * r[3];
-        match (control, node) {
-            (Some((id, bound)), Some((at, _))) if area(at.rect) >= area(bound) * GROUND_SHARE => {
-                Some(Target::Control(id.clone()))
-            }
-            (_, Some((at, kind))) => Some(Target::Node {
-                layer: at.layer,
-                index: at.index,
-                kind,
-            }),
-            (Some((id, _)), None) => Some(Target::Control(id.clone())),
-            (None, None) => None,
-        }
-    }
-
-    /// Where it shows in the frame `c`; `None` once the frame no longer
-    /// has it.
-    fn rect(&self, c: &Compositor) -> Option<Rect> {
-        match self {
-            Target::Control(id) => c.binding(id)?.visible_rect().map(rect),
-            Target::Node { layer, index, kind } => c
-                .node(*layer, *index)
-                .filter(|node| node.kind() == *kind)
-                .and_then(|node| node.bounds())
-                .map(rect),
-        }
-    }
-
-    /// The control it is, or the one bound where it sits.
-    fn owner(&self, c: &Compositor) -> Option<SemId> {
-        match self {
-            Target::Control(id) => Some(id.clone()),
-            Target::Node { .. } => {
-                let (x, y) = self.rect(c)?.center();
-                c.hit(x, y).cloned()
-            }
-        }
-    }
-
-    /// What it is, in a word: a control's role, a node's kind.
-    fn word(&self, snapshot: Option<&Snapshot>) -> String {
-        match self {
-            Target::Control(id) => snapshot
-                .and_then(|s| s.get(id))
-                .map_or_else(|| "Control".to_owned(), |n| format!("{:?}", n.role)),
-            Target::Node { kind, .. } => (*kind).to_owned(),
-        }
-    }
 }
 
 impl Inspect {
@@ -247,24 +167,34 @@ impl Inspect {
         let (caption, strong, mono) = (p.caption(), p.strong(), p.mono());
         let gap = p.gap();
         let row = p.row() + 2.0;
+        // the control chosen, or the one the node chosen sits in
+        let owner = self.picked.as_ref().and_then(Target::owner).cloned();
+        let direct = matches!(self.picked, Some(Target::Control(_)));
+        // a control to bring into the lines shows: nothing over it folded
+        let reveal = std::mem::take(&mut self.reveal);
+        if reveal && let (Some(snapshot), Some(owner)) = (snapshot, &owner) {
+            let mut over = snapshot.get(owner).and_then(|node| node.parent.clone());
+            while let Some(id) = over {
+                self.folded.remove(&id);
+                over = snapshot.get(&id).and_then(|node| node.parent.clone());
+            }
+        }
         let lines = lines(p, snapshot, &self.folded);
-        let note = match (snapshot.is_some(), lines.len()) {
-            (true, n) => format!("{n} projected"),
-            (false, n) => format!("{n} bound · no projection"),
-        };
         if lines.is_empty() {
             // a page that gives nothing an id still draws: what its frame
             // holds, layer by layer, and the picker chooses any of it
             scene(p, area);
             return;
         }
+        // every control there is, folded away or not
+        let note = match snapshot {
+            Some(snapshot) => format!("{} projected", snapshot.len()),
+            None => format!("{} bound · no projection", lines.len()),
+        };
         let top = p.title("Controls", &note, area);
-        // the control chosen, or the one the node chosen sits in
-        let owner = self.picked.as_ref().and_then(|target| target.owner(p.c));
-        let direct = matches!(self.picked, Some(Target::Control(_)));
         let room = (((area.bottom() - top) / row).floor() as usize).max(1);
         let last_first = lines.len().saturating_sub(room);
-        if std::mem::take(&mut self.reveal)
+        if reveal
             && let Some(at) = lines.iter().position(|l| Some(&l.id) == owner.as_ref())
             && !(self.first..self.first + room).contains(&at)
         {
@@ -365,18 +295,19 @@ impl Inspect {
                 facts::control_name(id, snapshot),
                 facts::control(id, p.c, snapshot, shown, dev),
             ),
-            Target::Node { layer, index, kind } => {
-                let node = p.c.node(*layer, *index).filter(|n| n.kind() == *kind);
-                match node {
-                    Some(node) => {
-                        let owner = target.owner(p.c);
-                        let lines =
-                            facts::node(node, *layer, *index, p.c, owner.as_ref(), shown, dev);
+            Target::Node { kind, owner, .. } => {
+                let found = target
+                    .place(p.c)
+                    .and_then(|(layer, at)| Some((layer, at, p.c.node(layer, at)?)));
+                match found {
+                    Some((layer, at, node)) => {
+                        let lines = facts::node(node, layer, at, p.c, owner.as_ref(), shown, dev);
                         (format!("{kind} node"), lines)
                     }
                     None => {
                         let y = p.title(&format!("{kind} node"), note, area);
-                        let gone = "The frame no longer draws it there: the page was built again.";
+                        let gone =
+                            "The frame no longer draws it: the page was built again without it.";
                         p.text(gone, area.x, y, area.w, p.mid(), &caption);
                         return;
                     }
@@ -384,7 +315,13 @@ impl Inspect {
             }
         };
         let mut y = p.title(&name, note, area);
-        let label_w = p.width("border width", &caption) + gap * 2.0;
+        // the labels' column: as wide as the widest label shown
+        let label_w = lines
+            .iter()
+            .map(|line| p.width(line.label, &caption))
+            .fold(0.0, f32::max)
+            .min(area.w / 2.0)
+            + gap * 2.0;
         let swatch = (p.line() - 4.0).round();
         for line in lines {
             if y + row > area.bottom() {
@@ -445,7 +382,7 @@ impl Inspect {
         };
         // a node also shows the control it sits in, fainter around it
         let owner = match &target {
-            Target::Node { .. } => target.owner(p.c),
+            Target::Node { owner, .. } => owner.clone(),
             Target::Control(_) => None,
         };
         if let Some(around) = owner

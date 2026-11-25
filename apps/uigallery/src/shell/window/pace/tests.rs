@@ -279,12 +279,13 @@ mod dev {
         let before = app.view.semantics();
         press(&mut app, id, (x + w / 2.0, y + h / 2.0));
         // the control itself, or what it draws under the pointer (its
-        // label, its mark), whichever is the more particular
+        // label, its mark), whichever is the more particular: either way
+        // the control the choice is, or sits in, is the one pressed
         let chosen = app.dev.picked_kind().expect("the press chose something");
-        assert!(
-            chosen != "Control" || app.dev.picked() == Some(&target),
-            "the control under the press, not another: {:?}",
-            app.dev.picked()
+        assert_eq!(
+            app.dev.picked_owner(),
+            Some(&target),
+            "the control under the press, or a {chosen} node of it"
         );
         assert_eq!(
             app.view.semantics(),
