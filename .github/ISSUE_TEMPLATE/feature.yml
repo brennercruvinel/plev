@@ -1,0 +1,43 @@
+name: Feature request
+description: A new capability, or an improvement to one that exists.
+type: Feature
+labels: [enhancement, needs-triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: The need behind the request, in your own words. What is hard or impossible today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like to see
+      description: How it could look or behave. A sketch, a snippet or a reference from another project is welcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Other ways you considered, or how you work around it today.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Where you think it belongs, if you know.
+      multiple: true
+      options:
+        - Rendering
+        - Text
+        - Layout
+        - Widgets
+        - Input
+        - Semantics and the agent port
+        - Synthesis (plev IR)
+        - Recording and .monster
+        - Importing
+        - Apps and demos
+        - Dev tools
+        - Tooling and build
