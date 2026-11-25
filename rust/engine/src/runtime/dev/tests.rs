@@ -1,14 +1,18 @@
-//! The dev mode without a GPU: its views by name, the page's share of the
-//! window, the head's two layouts, what a press chooses, and every view
-//! drawing from the frames a recorder keeps.
+//! The dev mode without a GPU: its views by name and icon, the page's
+//! share of the window, what a press on each place does, the frame the
+//! panel waits for, every view drawing from the frames a recorder keeps,
+//! and the findings read from a frame.
 //!
-//! A dev mode that exists turns the heap's counters on, a switch of the
-//! process: every test that makes one holds `zones::test_lock`.
+//! A dev mode that exists turns the heap's counters on and holds the
+//! marks, switches of the process: every test that makes one holds
+//! `zones::test_lock`.
 
+use super::insights::Severity;
 use super::*;
 use crate::runtime::perf::stages::{Stage, StageCost, StageFrame};
 use crate::runtime::perf::zones::{ThreadZones, ZoneFrame, ZoneRecord, test_lock};
-use crate::runtime::perf::{MemoryStats, Message, PlotPoint};
+use crate::runtime::perf::{GpuReading, LayerReport, MemoryStats, Message, PlotPoint};
+use crate::widgets::icons;
 
 const WINDOW: (f32, f32) = (1280.0, 800.0);
 
@@ -21,16 +25,17 @@ fn zone(name: &'static str, start_ns: u64, nanos: u64, depth: u32) -> ZoneRecord
     }
 }
 
-/// A frame with two stages, two zones, a plot and a message.
-fn report(index: u64) -> FrameReport {
+/// A frame whose scene build took `scene_ns`, with two zones, a plot and
+/// a message.
+fn report_of(index: u64, scene_ns: u64) -> FrameReport {
     let cost = |nanos| StageCost {
         calls: 1,
         items: 4,
         nanos,
     };
     let stages = StageFrame::from_costs(&[
-        (Stage::Frame, cost(2_000_000)),
-        (Stage::SceneBuild, cost(1_000_000)),
+        (Stage::Frame, cost(scene_ns * 2)),
+        (Stage::SceneBuild, cost(scene_ns)),
     ]);
     let zones = ZoneFrame {
         threads: vec![ThreadZones {
@@ -50,15 +55,20 @@ fn report(index: u64) -> FrameReport {
         MemoryStats::default(),
     );
     report.plots = vec![PlotPoint {
-        name: "scene nodes",
+        name: "controls bound",
         value: 12.0 + index as f64,
     }];
     report.messages = vec![Message {
         at_ns: 500_000,
         thread: "main".to_owned(),
+        level: Level::Info,
         text: format!("frame {index} said this"),
     }];
     report
+}
+
+fn report(index: u64) -> FrameReport {
+    report_of(index, 1_000_000)
 }
 
 fn recorder(frames: u64) -> Recorder {
@@ -88,13 +98,49 @@ fn drawn(dev: &mut DevMode, recorder: &Recorder) -> usize {
         .map_or(0, |l| l.nodes().len())
 }
 
+/// Where the last frame drawn offered `act`.
+fn place(dev: &DevMode, act: &Act) -> Rect {
+    dev.regions
+        .iter()
+        .rev()
+        .find(|(_, offered)| offered == act)
+        .map(|(rect, _)| *rect)
+        .unwrap_or_else(|| panic!("no place for {act:?}"))
+}
+
+/// A press and its release in the middle of where `act` is offered.
+fn press(dev: &mut DevMode, act: &Act) -> Took {
+    let (x, y) = place(dev, act).center();
+    let c = Compositor::new();
+    let took = dev.event(&WidgetEvent::MouseDown { x, y }, WINDOW.0, WINDOW.1, &c);
+    let up = dev.event(&WidgetEvent::MouseUp { x, y }, WINDOW.0, WINDOW.1, &c);
+    assert!(up.taken, "the release of a press taken is not the page's");
+    took
+}
+
 #[test]
-fn every_view_has_a_name_that_parses_back() {
+fn every_view_has_a_name_that_parses_back_and_an_icon_that_is_there() {
     for tab in Tab::ALL {
         assert_eq!(Tab::parse(&tab.name().to_uppercase()), Some(tab));
+        assert!(icons::has_icon(tab.icon()), "{tab:?}: {}", tab.icon());
     }
     assert_eq!(Tab::ALL.len(), TABS);
     assert_eq!(Tab::parse("nope"), None);
+    // what the head, the log and the findings draw with
+    for name in [
+        "settings",
+        "mouse-pointer-2",
+        "panel-right",
+        "panel-bottom",
+        "x",
+        "trash",
+        "info",
+        "alert-triangle",
+        "circle-x",
+        "circle-check",
+    ] {
+        assert!(icons::has_icon(name), "{name}");
+    }
 }
 
 #[test]
@@ -120,8 +166,32 @@ fn a_dev_mode_that_is_not_there_draws_nothing_and_takes_nothing() {
     dev.draw(&mut c, &Theme::dark(), WINDOW, &recorder(2), None);
     assert_eq!(c.layers().len(), layers);
     let press = WidgetEvent::MouseDown { x: 640.0, y: 780.0 };
-    let took = dev.event(&press, WINDOW.0, WINDOW.1, &Theme::dark(), &c);
+    let took = dev.event(&press, WINDOW.0, WINDOW.1, &c);
     assert!(!took.taken && !took.changed && !took.resized);
+}
+
+#[test]
+fn the_gear_sits_at_the_pages_lower_right_and_a_press_opens_the_panel() {
+    let _lock = test_lock();
+    let mut dev = DevMode::new(true);
+    let _ = drawn(&mut dev, &Recorder::new());
+    let gear = place(&dev, &Act::Open);
+    assert_eq!(gear, dev.gear(WINDOW.0, WINDOW.1));
+    assert!(gear.w <= 32.0 && gear.h <= 32.0, "a small button: {gear:?}");
+    assert!(gear.x > WINDOW.0 * 0.9 && gear.y > WINDOW.1 * 0.9);
+    // a press beside it is the page's
+    let c = Compositor::new();
+    let beside = WidgetEvent::MouseDown { x: 640.0, y: 400.0 };
+    assert!(!dev.event(&beside, WINDOW.0, WINDOW.1, &c).taken);
+
+    let took = press(&mut dev, &Act::Open);
+    assert!(took.taken && took.changed && took.resized);
+    assert!(dev.is_open());
+    // open, the gear is gone and the close is there
+    let _ = drawn(&mut dev, &recorder(2));
+    assert!(dev.regions.iter().all(|(_, act)| *act != Act::Open));
+    let took = press(&mut dev, &Act::Close);
+    assert!(took.resized && !dev.is_open());
 }
 
 #[test]
@@ -141,44 +211,152 @@ fn every_view_draws_from_the_frames_kept() {
 }
 
 #[test]
-fn a_narrow_panel_puts_the_views_on_a_line_of_their_own() {
+fn a_press_on_a_tab_shows_its_view_and_a_narrow_panel_keeps_every_tab() {
     let _lock = test_lock();
-    let theme = Theme::dark();
+    let kept = recorder(3);
     let mut dev = open(Tab::Frame);
-    let wide = dev.layout(1280.0, 800.0, &theme);
-    assert_eq!(wide.tabs[0].y, wide.dock.y, "one line when both fit");
+    let _ = drawn(&mut dev, &kept);
+    let wide = place(&dev, &Act::Tab(Tab::Log));
+    let took = press(&mut dev, &Act::Tab(Tab::Log));
+    assert!(took.changed && !took.resized);
+    assert_eq!(dev.tab(), Tab::Log);
+
+    // docked at the side of a narrow window the names go, the tabs stay,
+    // and what stands beside them takes a line of its own
     dev.set_dock(Dock::Side);
-    let narrow = dev.layout(600.0, 800.0, &theme);
+    for window in [760.0, 480.0] {
+        let mut c = Compositor::new();
+        dev.draw(&mut c, &Theme::dark(), (window, 800.0), &kept, None);
+        let panel = window / 2.0;
+        for tab in Tab::ALL {
+            let at = place(&dev, &Act::Tab(tab));
+            assert!(
+                at.x >= panel && at.right() <= window,
+                "{tab:?} in a panel {panel} wide: {at:?}"
+            );
+        }
+        let close = place(&dev, &Act::Close);
+        assert!(close.x >= panel && close.right() <= window);
+        let narrow = place(&dev, &Act::Tab(Tab::Frame));
+        assert!(narrow.w < wide.w, "a tab not shown keeps its icon only");
+        assert!(
+            close.y > narrow.y,
+            "the close goes under the tabs: {close:?} {narrow:?}"
+        );
+    }
+}
+
+#[test]
+fn the_head_chooses_the_frame_shown_and_the_dock() {
+    let _lock = test_lock();
+    let kept = recorder(3);
+    let mut dev = open(Tab::Frame);
+    let _ = drawn(&mut dev, &kept);
+    assert_eq!(dev.follow(), Follow::Latest);
+    press(&mut dev, &Act::Follow(Follow::Slowest));
+    assert_eq!(dev.follow(), Follow::Slowest);
+    // a bar of the history shows its frame, and Live goes back
+    let _ = drawn(&mut dev, &kept);
+    press(&mut dev, &Act::Follow(Follow::Frame(1)));
+    assert_eq!(dev.follow(), Follow::Frame(1));
+    let _ = drawn(&mut dev, &kept);
+    press(&mut dev, &Act::Follow(Follow::Latest));
+    assert_eq!(dev.follow(), Follow::Latest);
+
+    let took = press(&mut dev, &Act::Dock);
+    assert!(took.resized);
+    assert_eq!(dev.dock(), Dock::Side);
+}
+
+#[test]
+fn a_drag_of_the_panels_edge_gives_it_more_or_less_of_the_window() {
+    let _lock = test_lock();
+    let mut dev = open(Tab::Frame);
+    let _ = drawn(&mut dev, &recorder(2));
+    let c = Compositor::new();
+    let event = |dev: &mut DevMode, ev| dev.event(&ev, WINDOW.0, WINDOW.1, &c);
+    let down = event(&mut dev, WidgetEvent::MouseDown { x: 640.0, y: 400.0 });
+    assert!(down.taken, "the edge is where the page ends");
+    let moved = event(&mut dev, WidgetEvent::MouseMove { x: 640.0, y: 200.0 });
+    assert!(moved.resized && moved.taken);
+    assert_eq!(dev.page_size(WINDOW.0, WINDOW.1), (1280.0, 200.0));
+    // never the whole window, never nothing
+    event(&mut dev, WidgetEvent::MouseMove { x: 640.0, y: 0.0 });
+    assert_eq!(dev.page_size(WINDOW.0, WINDOW.1).1, 160.0);
+    event(&mut dev, WidgetEvent::MouseMove { x: 640.0, y: 800.0 });
+    assert_eq!(dev.page_size(WINDOW.0, WINDOW.1).1, 640.0);
+    assert!(event(&mut dev, WidgetEvent::MouseUp { x: 640.0, y: 800.0 }).taken);
+    let after = event(&mut dev, WidgetEvent::MouseMove { x: 640.0, y: 300.0 });
+    assert!(!after.resized, "released, the edge stays");
+}
+
+#[test]
+fn the_pointer_over_a_place_asks_for_a_frame_once() {
+    let _lock = test_lock();
+    let mut dev = open(Tab::Frame);
+    let _ = drawn(&mut dev, &recorder(2));
+    let c = Compositor::new();
+    let (x, y) = place(&dev, &Act::Tab(Tab::Gpu)).center();
+    let over = WidgetEvent::MouseMove { x, y };
+    assert!(dev.event(&over, WINDOW.0, WINDOW.1, &c).changed);
+    let again = WidgetEvent::MouseMove { x: x + 1.0, y };
+    let took = dev.event(&again, WINDOW.0, WINDOW.1, &c);
     assert!(
-        narrow.tabs[0].y > narrow.dock.bottom(),
-        "the views go under"
+        took.taken && !took.changed,
+        "the same place: nothing to draw"
     );
-    assert!(narrow.body.y > narrow.tabs[0].bottom());
-    assert!(narrow.body.y > wide.body.y - wide.panel.unwrap().y);
 }
 
 #[test]
 fn a_press_on_a_row_of_the_zones_table_chooses_that_zone() {
     let _lock = test_lock();
-    let theme = Theme::dark();
     let kept = recorder(4);
     let mut dev = open(Tab::Zones);
-    let mut c = Compositor::new();
-    dev.draw(&mut c, &theme, WINDOW, &kept, None);
+    let _ = drawn(&mut dev, &kept);
     assert_eq!(dev.zone, None, "the heaviest zone until one is chosen");
-    let rows = dev.zone_rows.clone();
-    assert_eq!(rows.len(), 2);
-    let (row, name) = rows[1];
-    let (x, y) = row.center();
-    let took = dev.event(
-        &WidgetEvent::MouseDown { x, y },
-        WINDOW.0,
-        WINDOW.1,
-        &theme,
-        &c,
-    );
+    let took = press(&mut dev, &Act::Zone("frame"));
     assert!(took.taken && took.changed);
-    assert_eq!(dev.zone, Some(name));
+    assert_eq!(dev.zone, Some("frame"));
+}
+
+#[test]
+fn the_log_filters_to_a_level_and_clears_what_was_said() {
+    let _lock = test_lock();
+    let mut kept = recorder(3);
+    let mut warned = report(3);
+    warned.messages[0].level = Level::Warn;
+    kept.push(warned, Vec::new(), false);
+    let mut dev = open(Tab::Log);
+    let _ = drawn(&mut dev, &kept);
+    assert_eq!(dev.log.listed, 4, "a line a frame");
+    press(&mut dev, &Act::Level(Some(Level::Warn)));
+    let _ = drawn(&mut dev, &kept);
+    assert_eq!(dev.log.listed, 1, "the warning alone");
+    press(&mut dev, &Act::Level(None));
+    press(&mut dev, &Act::ClearLog);
+    let _ = drawn(&mut dev, &kept);
+    assert_eq!(dev.log.listed, 0, "nothing said since the clear");
+    // a line said after the clear shows
+    kept.push(report(4), Vec::new(), false);
+    let _ = drawn(&mut dev, &kept);
+    assert_eq!(dev.log.listed, 1);
+}
+
+#[test]
+fn the_picker_arms_the_pointer_and_a_press_on_the_page_is_not_the_pages() {
+    let _lock = test_lock();
+    let mut dev = open(Tab::Frame);
+    let _ = drawn(&mut dev, &recorder(2));
+    press(&mut dev, &Act::Pick);
+    assert_eq!(dev.tab(), Tab::Inspect, "picking opens the view it fills");
+    let c = Compositor::new();
+    let on_page = WidgetEvent::MouseDown { x: 300.0, y: 100.0 };
+    let took = dev.event(&on_page, WINDOW.0, WINDOW.1, &c);
+    assert!(took.taken, "the press chooses, it does not reach the page");
+    let up = WidgetEvent::MouseUp { x: 300.0, y: 100.0 };
+    assert!(dev.event(&up, WINDOW.0, WINDOW.1, &c).taken);
+    // one press, then the page has its pointer back
+    assert!(!dev.event(&on_page, WINDOW.0, WINDOW.1, &c).taken);
 }
 
 #[test]
@@ -207,4 +385,98 @@ fn the_panel_asks_for_a_frame_until_it_has_shown_the_latest() {
         !dev.wants_frame(&recorder(3)),
         "a closed panel asks nothing"
     );
+}
+
+#[test]
+fn the_panel_asks_for_the_frame_that_shows_the_gpu_time_it_waited_for() {
+    let _lock = test_lock();
+    let reading = |frame| GpuReading {
+        frame,
+        span: Some(1_000),
+        ..GpuReading::default()
+    };
+    let mut kept = Recorder::new();
+    kept.set_on(true);
+    kept.push(report(0), Vec::new(), true);
+    let mut dev = open(Tab::Gpu);
+    let _ = drawn(&mut dev, &kept);
+    assert!(dev.wants_frame(&kept), "frame 0 waits for its timestamps");
+    // the tool's frame reads them back: what the panel drew is now stale
+    kept.mark_tool();
+    kept.push(report(1), vec![reading(0)], true);
+    assert!(
+        dev.wants_frame(&kept),
+        "the time came in after the panel was drawn"
+    );
+    let _ = drawn(&mut dev, &kept);
+    assert!(!dev.wants_frame(&kept), "shown whole: nothing more to ask");
+    kept.set_on(false);
+}
+
+/// The findings about the latest frame of `kept`, as the Frame view
+/// reads them.
+fn found(kept: &Recorder) -> Vec<insights::Insight> {
+    let shown = kept.latest().expect("a frame");
+    insights::of(kept, shown, LayerId(u32::MAX))
+}
+
+#[test]
+fn the_findings_open_with_the_frame_against_the_budget() {
+    let mut inside = Recorder::new();
+    inside.push(report_of(0, 1_000_000), Vec::new(), false);
+    let first = &found(&inside)[0];
+    assert!(first.title.starts_with("Inside the budget"), "{first:?}");
+    assert!(found(&inside).iter().all(|i| i.severity != Severity::Bad));
+
+    let mut over = Recorder::new();
+    over.push(report_of(0, 40_000_000), Vec::new(), false);
+    let first = &found(&over)[0];
+    assert_eq!(first.severity, Severity::Bad, "the worst is first");
+    assert!(first.title.starts_with("Over budget"), "{first:?}");
+    assert!(first.detail.starts_with("scene is 100%"), "{first:?}");
+}
+
+#[test]
+fn the_findings_say_what_was_drawn_for_nothing_and_what_the_log_holds() {
+    let layer = |id, redrawn, nodes| LayerReport {
+        id: LayerId(id),
+        z_order: id as i32,
+        visible: true,
+        opacity: 1.0,
+        redrawn,
+        nodes,
+        glyphs: 0,
+        draws: 0,
+        effects: 0,
+    };
+    let mut frame = report(0);
+    frame.layers = vec![layer(0, true, 12), layer(1, true, 0), layer(2, true, 0)];
+    frame.messages[0].level = Level::Warn;
+    let mut kept = Recorder::new();
+    kept.push(frame, Vec::new(), false);
+    let all = found(&kept);
+    let hollow = all
+        .iter()
+        .find(|i| i.title.contains("hold nothing"))
+        .expect("two layers redrawn with no node");
+    assert_eq!((hollow.severity, hollow.tab), (Severity::Warn, Tab::Gpu));
+    assert!(hollow.title.starts_with("2 "), "{hollow:?}");
+    let log = all
+        .iter()
+        .find(|i| i.tab == Tab::Log)
+        .expect("a warning was said");
+    assert_eq!(log.title, "1 warning in the log");
+    assert_eq!(log.detail, "frame 0 said this");
+
+    // nothing redrawn is said too, as what it is: the engine at rest
+    let mut idle = report(1);
+    idle.layers = vec![layer(0, false, 12), layer(1, false, 0)];
+    let mut kept = Recorder::new();
+    kept.push(idle, Vec::new(), false);
+    let rest = found(&kept);
+    let reused = rest
+        .iter()
+        .find(|i| i.title == "Nothing redrawn")
+        .expect("every layer reused");
+    assert_eq!(reused.severity, Severity::Good);
 }

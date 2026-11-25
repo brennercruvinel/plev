@@ -75,6 +75,11 @@ impl App {
                 if self.print_key(&key_event.logical_key) {
                     return;
                 }
+                // F12 opens and closes the dev mode's panel, in a launch
+                // that has one.
+                if key_event.logical_key == Key::Named(NamedKey::F12) && self.dev_key(id) {
+                    return;
+                }
                 // The platform's window keys close the window or quit;
                 // Escape never does (below).
                 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]

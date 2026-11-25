@@ -72,6 +72,17 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
 
 ## 2026-11-25
 
+- the dev mode reads as a tool
+  ([task-105](Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)):
+  a gear at the page's lower right corner in place of the "Dev" button,
+  a strip of small tabs with icons, the frame's vital numbers on one line
+  under them, and the edge of the panel dragged to size it; `PLEV_DEV`
+  takes a view's name to open on it, and F12 opens and closes the panel.
+  The Frame view says what its numbers mean (the insights); the Log view
+  keeps its lines after their frames, by level, with what `log::warn!`
+  and `log::error!` say; the Inspect view shows the page's controls as a
+  tree. A frame shows once its GPU time is in, which a window never
+  showed at rest before.
 - task-106 after its review: `.design`, `.devops` and `.secops` are gone
   from the root and the lychee, nextest and typos contracts live in
   `.config`; `builddir.sh seed` refuses where it cannot clone; the iOS

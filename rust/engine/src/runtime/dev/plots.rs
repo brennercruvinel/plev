@@ -18,6 +18,8 @@ use crate::widgets::prelude::Rect;
 const CELL_LINES_MOST: f32 = 12.0;
 /// The charts a line of them holds at most.
 const COLUMNS_MOST: usize = 4;
+/// The lines a chart cell is at most tall.
+const CELL_LINES_TALL: f32 = 8.0;
 /// The lines a chart cell needs at least.
 const CELL_LINES_LEAST: f32 = 4.0;
 
@@ -129,8 +131,7 @@ pub(super) fn draw(
     let caption = p.caption();
     let kept = frames(recorder);
     if kept.is_empty() {
-        let waiting = "Waiting for a frame.";
-        p.text(waiting, body.x, body.y, body.w, p.mid(), &caption);
+        p.empty(body, "chart-line", "Waiting for a frame.");
         return;
     }
     let marked = shown.and_then(|shown| kept.iter().position(|f| f.index == shown.index));
@@ -138,13 +139,16 @@ pub(super) fn draw(
     all.extend(said(p, &kept));
 
     let (gap, row) = (p.gap(), p.row());
-    let between = gap * 2.0;
+    let between = gap * 3.0;
     let least_w = p.width("layers redrawn  000.00 ms", &caption) + between;
     let columns = (((body.w + between) / (least_w + between)).floor() as usize)
         .clamp(1, all.len().min(COLUMNS_MOST));
     let rows = all.len().div_ceil(columns);
     let cell_w = (body.w - between * (columns - 1) as f32) / columns as f32;
-    let cell_h = (body.h / rows as f32).clamp(row * CELL_LINES_LEAST, row * CELL_LINES_MOST);
+    let cell_h = (body.h / rows as f32).clamp(
+        row * CELL_LINES_LEAST,
+        row * CELL_LINES_MOST.min(CELL_LINES_TALL),
+    );
     for (i, series) in all.iter().enumerate() {
         let x = body.x + (i % columns) as f32 * (cell_w + between);
         let y = body.y + (i / columns) as f32 * cell_h;
@@ -164,7 +168,7 @@ pub(super) fn draw(
             .fold(f64::NEG_INFINITY, f64::max);
         let range = format!("{} to {}", say(series.unit, low), say(series.unit, high));
         p.plot(
-            Rect::new(x, y, cell_w, cell_h - gap),
+            Rect::new(x, y, cell_w, cell_h - gap * 1.5),
             &series.name,
             &say(series.unit, value),
             &range,

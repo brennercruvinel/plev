@@ -39,10 +39,10 @@ pub use gpu_time::{GpuPass, GpuReading};
 pub use heap::{HeapFrame, HeapTotals};
 pub use histogram::Histogram;
 pub use hud::PerfHud;
-pub use marks::{MarkFrame, Message, PlotPoint};
+pub use marks::{Level, MarkFrame, Message, PlotPoint, Tee};
 pub use memory::{MemoryStats, process_rss_bytes};
 pub use pipeline::{Phase, PhaseCost, Pipeline};
-pub use report::{FrameReport, LayerReport, Recorder};
+pub use report::{FrameReport, LayerReport, LogLine, Recorder};
 pub use samples::RollingWindow;
 pub use zones::{ThreadZones, ZoneFrame, ZoneRecord, ZoneStat};
 
