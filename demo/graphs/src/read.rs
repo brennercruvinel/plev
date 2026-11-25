@@ -269,7 +269,14 @@ pub fn elk(text: &str) -> Result<Graph, String> {
         }
     }
     for n in &root.children {
-        walk(n, None, &mut nodes, &mut groups, &mut node_ids, &mut group_ids);
+        walk(
+            n,
+            None,
+            &mut nodes,
+            &mut groups,
+            &mut node_ids,
+            &mut group_ids,
+        );
     }
     let mut edges = Vec::with_capacity(root.edges.len());
     for e in &root.edges {
@@ -280,9 +287,14 @@ pub fn elk(text: &str) -> Result<Graph, String> {
             node_ids.iter().position(|n| n == s),
             node_ids.iter().position(|n| n == t),
         ) else {
-            return Err(format!("elk json: an edge between missing nodes: {s} -> {t}"));
+            return Err(format!(
+                "elk json: an edge between missing nodes: {s} -> {t}"
+            ));
         };
-        let head = e.properties.get("appearance.marker-end").map(String::as_str);
+        let head = e
+            .properties
+            .get("appearance.marker-end")
+            .map(String::as_str);
         edges.push(Edge {
             directed: head.is_some_and(|h| h != "none"),
             kind: usize::from(e.properties.contains_key("appearance.stroke-dasharray")),
@@ -320,8 +332,15 @@ mod elk_tests {
         assert_eq!(g.nodes.len(), 9);
         assert_eq!(g.edges.len(), 10);
         assert!(g.groups.is_empty());
-        assert!(g.edges.iter().all(|e| e.directed), "a digraph: every edge has a head");
-        assert_eq!(g.edges.iter().filter(|e| e.kind == 1).count(), 3, "three dashed edges");
+        assert!(
+            g.edges.iter().all(|e| e.directed),
+            "a digraph: every edge has a head"
+        );
+        assert_eq!(
+            g.edges.iter().filter(|e| e.kind == 1).count(),
+            3,
+            "three dashed edges"
+        );
         assert_eq!(g.nodes[0].label, "Client");
     }
 
@@ -333,6 +352,10 @@ mod elk_tests {
         assert_eq!(g.edges.len(), 16);
         let data = g.groups.iter().find(|k| k.label == "Data").unwrap();
         assert_eq!(data.nodes.len(), 4);
-        assert_eq!(g.nodes.iter().filter(|n| n.kind == 2).count(), 2, "two cylinders");
+        assert_eq!(
+            g.nodes.iter().filter(|n| n.kind == 2).count(),
+            2,
+            "two cylinders"
+        );
     }
 }
