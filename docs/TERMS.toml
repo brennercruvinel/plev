@@ -552,6 +552,20 @@ prime = { now = "primes", at = "demo/primes" }
 ".devops/check/typos.toml" = ".config/typos.toml"
 ".devops, .secops, .design" = "removed from the root in 2026-11 (docs/adr/Structure/0091-tool-contracts-live-in-config)"
 
+[dev]
+# the dev mode (task-105, docs/adr/Workflows/0093-the-dev-mode-is-the-engines-own).
+# its first try, a Puffin and Tracy POC, and its second, a panel of the
+# kit's buttons, left names in the pages of 2026-11 that are not in the
+# tree. a name of then = what it is now
+"features profiler, tracy (uigallery, engine)" = "removed; PLEV_DEV=1, or ?dev=1 in the browser, gives a launch its dev mode"
+"engine::runtime::perf::profiler" = "removed; one frame is engine::runtime::perf::report::FrameReport"
+"engine::cpu_scope!" = "engine::zone!"
+"uigallery shell::window::profiler" = "engine::runtime::dev (DevMode), mounted by apps/uigallery/src/shell"
+"the Dev button" = "the gear at the page's lower right corner, or F12"
+"DevMode::from_env" = "DevMode::from_launch"
+"Latest (the frame a view follows)" = "Live: Recorder::settled, the latest frame that has its GPU time"
+"Inspect: pick a control" = "the picker of the panel's strip: a control or a scene node (Compositor::hit, Compositor::node_at)"
+
 [tests]
 # since task-106 the files under a crate's tests/ are modules of one test
 # target, `suite` (docs/adr/Workflows/0087-a-crates-integration-tests-are-one-executable).

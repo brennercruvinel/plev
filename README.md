@@ -163,6 +163,57 @@ cargo run -p idestudio
 cargo run -p idestudio -- ../urna
 ```
 
+### O dev mode
+
+A gallery tem um dev mode do próprio engine, sem dependência externa: o que
+cada frame fez, medido pelo engine e mostrado num painel dentro da janela.
+Ele só existe quando você pede:
+
+```
+PLEV_DEV=1 cargo run -p uigallery        # a engrenagem no canto inferior direito
+PLEV_DEV=gpu cargo run -p uigallery      # o painel já aberto numa aba
+```
+
+Clique na engrenagem, ou aperte F12, para abrir e fechar. No navegador o
+pedido vai no endereço: `?dev=1` ou `?dev=gpu`. Sem o pedido nada é
+desenhado nem medido.
+
+| Aba | O que mostra |
+|---|---|
+| Frame | para onde foi o tempo do frame, fase por fase, e os **insights**: o que passou do orçamento de 16,6 ms, o que foi redesenhado à toa, o que o heap e o log dizem |
+| GPU | cada render pass com o layer que desenhou e o tempo medido pela própria GPU |
+| Zones | as zonas de CPU numa linha do tempo, com tabela e histograma da zona escolhida |
+| Plots | o que cada frame contou, em gráficos, e os valores que o seu código der |
+| Memory | o heap bloco a bloco e o que o engine guarda na GPU |
+| Log | o que o código disse e o que o processo logou, por nível |
+| Inspect | os controles da página em árvore, e qualquer coisa que o frame desenha: aponte com o seletor e clique |
+
+A linha logo abaixo das abas fica em qualquer uma delas: tempo do frame
+contra o orçamento, CPU, GPU, draw calls, layers, heap e memória. À direita
+você escolhe o frame mostrado (`Live`, `Slowest`, ou um clique numa barra
+do histórico), move o painel para o lado e fecha. A borda do painel arrasta
+para redimensionar.
+
+No seu código, três macros alimentam o painel e custam uma leitura atômica
+quando ele está desligado:
+
+```rust
+engine::zone!("scene build");            // uma zona nomeada, até o fim do bloco
+engine::plot!("controls bound", count);  // um valor por frame, sob um nome
+engine::message!("page {name} staged");  // uma linha no log
+```
+
+Para uma imagem sem abrir janela:
+
+```
+cargo run -p uigallery -- --render Todo --dev frame --out frame.png
+```
+
+O desenho inteiro está em
+[docs/Tasks/task-105-profiler-panel-in-the-gallery](docs/Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)
+e a decisão no
+[ADR 0093](docs/adr/Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md).
+
 ### No navegador
 
 Cada comando imprime o endereço a abrir. Uma porta já ocupada é pulada para

@@ -3,6 +3,7 @@ mod clip;
 pub(crate) mod drawing;
 mod layer;
 mod memory;
+mod probe;
 mod scene;
 mod sequence;
 mod stats;
@@ -20,6 +21,7 @@ pub use clip::{
 };
 pub use drawing::{GradientRectParams, RoundedRectParams, ShadowParams};
 pub use layer::{Layer, LayerEffect, LayerId};
+pub use probe::NodeAt;
 pub use scene::{SceneNode, TextNodeKey};
 pub use sequence::{DrawCommand, DrawKind};
 pub use stats::RenderStats;

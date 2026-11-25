@@ -29,12 +29,14 @@
 //! `UserEvent::GpuReady` on the event loop proxy. On desktop and mobile
 //! GPU init blocks inside `resumed` instead.
 
+mod devmode;
 pub mod system;
 pub mod window;
 
 use crate::views::ShowcaseView;
 use engine::compose::animation::FrameClock;
 use engine::drawing::gpu::GpuContext;
+use engine::runtime::perf::stages::{self, Stage};
 #[cfg(test)]
 use engine::runtime::window::WindowHost;
 use engine::runtime::window::Windows;
@@ -223,7 +225,7 @@ impl App {
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             focus: None,
             links: None,
-            dev: engine::runtime::dev::DevMode::from_env(),
+            dev: engine::runtime::dev::DevMode::from_launch(),
             #[cfg(all(
                 debug_assertions,
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
@@ -343,50 +345,15 @@ impl App {
     /// when a frame is needed.
     fn pointer(&mut self, id: WindowId, event: &WidgetEvent) -> bool {
         if let Some(changed) = self.dev_event(id, event) {
-            changed
-        } else if self.is_page_window(id) {
+            return changed;
+        }
+        // the page's own handling is the frame's input stage: one event
+        let _input = stages::span(Stage::Input).items(1);
+        if self.is_page_window(id) {
             self.view.detached_event(event)
         } else {
             self.view.handle_event(event)
         }
-    }
-
-    /// F12 in the main window: the dev mode's panel opens or closes, as a
-    /// press on its gear or its close does, and the page takes its new
-    /// share. `false` in a launch without a dev mode: the key is the
-    /// page's.
-    fn dev_key(&mut self, id: WindowId) -> bool {
-        if !self.dev.is_available() || Some(id) != self.main {
-            return false;
-        }
-        self.dev.set_open(!self.dev.is_open());
-        self.viewport_changed(id);
-        true
-    }
-
-    /// A pointer event in the main window for the dev mode first; `Some`
-    /// with whether a frame is needed when it kept the event from the
-    /// page. A panel that opened, closed or moved resizes the page.
-    fn dev_event(&mut self, id: WindowId, event: &WidgetEvent) -> Option<bool> {
-        if !self.dev.is_available() || Some(id) != self.main {
-            return None;
-        }
-        let host = self.windows.get_mut(id)?;
-        let (w, h) = host.logical_size();
-        let took = self.dev.event(event, w, h, host.compositor());
-        // a frame the panel asks for on its own account (the pointer over
-        // one of its places, a press on one) is the tool's, not the app's:
-        // it stays out of the history the panel shows
-        if took.taken && took.changed {
-            host.dev_mut().mark_tool();
-        }
-        if took.resized {
-            self.viewport_changed(id);
-        }
-        if took.changed {
-            self.invalidate_in(id);
-        }
-        took.taken.then_some(took.changed)
     }
 
     /// What agents asked through the port, served on this thread; a frame

@@ -278,16 +278,58 @@ mod dev {
             .expect("the Todo page binds its controls");
         let before = app.view.semantics();
         press(&mut app, id, (x + w / 2.0, y + h / 2.0));
+        // the control itself, or what it draws under the pointer (its
+        // label, its mark), whichever is the more particular: either way
+        // the control the choice is, or sits in, is the one pressed
+        let chosen = app.dev.picked_kind().expect("the press chose something");
         assert_eq!(
-            app.dev.picked(),
+            app.dev.picked_owner(),
             Some(&target),
-            "the press chose what was under it"
+            "the control under the press, or a {chosen} node of it"
         );
         assert_eq!(
             app.view.semantics(),
             before,
             "the press did not reach the page"
         );
+    }
+
+    #[test]
+    fn the_picker_chooses_an_icon_of_a_page_that_gives_it_no_id() {
+        let Some((mut app, id)) = windowed(true) else {
+            return;
+        };
+        app.view.jump_to_page("Icons");
+        frame(&mut app, id);
+        press_gear(&mut app, id);
+        frame(&mut app, id);
+        let (_, page_h) = app.dev.page_size(WINDOW.0 as f32, WINDOW.1 as f32);
+        press(&mut app, id, (16.0, page_h + 16.0));
+        frame(&mut app, id);
+
+        // an icon the page draws in its half of the window, at no id:
+        // nothing is bound where it is
+        let host = app.windows.get(id).unwrap();
+        let c = host.compositor();
+        let [x, y, w, h] = c
+            .layers()
+            .iter()
+            .filter(|layer| layer.z_order == 0)
+            .flat_map(|layer| layer.nodes())
+            .filter(|node| node.kind() == "Path")
+            .filter_map(|node| node.bounds())
+            .find(|[x, y, w, h]| {
+                let at = (x + w / 2.0, y + h / 2.0);
+                *y > 160.0 && y + h < page_h - 8.0 && c.hit(at.0, at.1).is_none()
+            })
+            .expect("the Icons page draws its icons as paths");
+        press(&mut app, id, (x + w / 2.0, y + h / 2.0));
+        assert_eq!(
+            app.dev.picked_kind(),
+            Some("Path"),
+            "the icon under the press is what was chosen"
+        );
+        assert_eq!(app.dev.picked(), None, "it is no control");
     }
 
     #[test]

@@ -351,3 +351,4 @@ how work is done: hot reload, regression, determinism, lint.
 - [0089](Workflows/0089-a-build-directory-belongs-to-one-checkout/0089-a-build-directory-belongs-to-one-checkout.md) a build directory belongs to one checkout, starts from a clone and has a ceiling
 - [0090](Workflows/0090-the-toolchain-is-one-exact-version/0090-the-toolchain-is-one-exact-version.md) the toolchain is one exact version, read from one file
 - [0092](Workflows/0092-every-member-builds-one-engine/0092-every-member-builds-one-engine.md) every member builds one engine, and the gate builds the other shape
+- [0093](Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md) the dev mode is the engine's own: one report a frame, shown once it is whole, in a panel that offers its places as it draws

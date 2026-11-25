@@ -20,8 +20,9 @@
 //! - Plots: what each frame counted, and the values code gave, as charts.
 //! - Memory: the heap block by block, and what the engine holds on the GPU.
 //! - Log: the lines code said and the process logged, by level.
-//! - Inspect: the page's controls as a tree, and one of them from its
-//!   meaning to its cost; the pointer picks one on the page.
+//! - Inspect: the page's controls as a tree, and one thing of the page
+//!   from its meaning to its cost; the pointer picks anything the frame
+//!   draws, a control or a scene node.
 //!
 //! Nothing here measures: the clocks are `perf::stages`, `perf::zones`
 //! and `perf::gpu_time`, the counters `perf::marks` and `perf::heap`. The
@@ -35,15 +36,18 @@
 //! against those places. So a view has no widget to keep in step with
 //! what it drew, and the pointer over any of them is one comparison.
 
+mod facts;
 mod frame;
 mod gpu;
 mod head;
 mod insights;
 mod inspect;
+mod kept;
 mod log;
 mod memory;
 mod paint;
 mod plots;
+mod target;
 #[cfg(test)]
 mod tests;
 mod zones;
@@ -51,15 +55,20 @@ mod zones;
 use accord::{SemId, Snapshot};
 
 use crate::drawing::compositor::{Compositor, LayerId};
-use crate::runtime::perf::{FrameReport, Level, Recorder, heap, marks};
+use crate::runtime::perf::{Level, Recorder, heap, marks};
 use crate::styling::theme::Theme;
 use crate::widgets::prelude::{Rect, WidgetEvent};
+use kept::{frames, gpu_span, whole};
 use paint::Painter;
 
 /// The environment variable that gives a launch its dev mode: `1` for the
 /// gear alone, a view's name (`gpu`, `zones`, ...) for the panel open on
-/// that view.
+/// that view. In the browser, which has no environment, the page's query
+/// says the same under [`QUERY`] (`?dev=1`, `?dev=gpu`).
 pub const ENV: &str = "PLEV_DEV";
+
+/// The key of the page's query that stands in for [`ENV`] in the browser.
+pub const QUERY: &str = "dev";
 
 /// A view of the panel.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -160,8 +169,14 @@ pub(crate) enum Act {
     /// A level of the Log view; `None` for every line.
     Level(Option<Level>),
     ClearLog,
-    /// A control in the Inspect view's tree.
-    Node(SemId),
+    /// A line of the Log view, by its number in everything said: open it
+    /// whole, or close it.
+    Line(u64),
+    /// A control: a line of the Inspect view's tree, or the control a
+    /// node chosen sits in.
+    Control(SemId),
+    /// Fold the lines under a control of the tree, or show them again.
+    Fold(SemId),
 }
 
 /// What a pointer event did here: `taken` keeps it from the page,
@@ -173,9 +188,6 @@ pub struct Took {
     pub resized: bool,
 }
 
-/// The frames a chart covers, at most.
-const FRAMES_MOST: usize = 120;
-
 /// The least and the most of the window the panel takes.
 const SHARE_LEAST: f32 = 0.2;
 const SHARE_MOST: f32 = 0.8;
@@ -185,29 +197,6 @@ const GEAR: f32 = 28.0;
 const GEAR_MARGIN: f32 = 14.0;
 /// How far either side of the panel's edge a drag takes hold.
 const GRIP: f32 = 3.0;
-
-/// The frames a chart covers, oldest first: the latest the app drew for
-/// itself, the dev mode's own left out.
-pub(super) fn frames(recorder: &Recorder) -> Vec<&FrameReport> {
-    let mut kept: Vec<&FrameReport> = recorder
-        .history()
-        .rev()
-        .filter(|frame| !frame.tool)
-        .take(FRAMES_MOST)
-        .collect();
-    kept.reverse();
-    kept
-}
-
-/// The GPU's time over the frame, from the frame's own timestamps.
-pub(super) fn gpu_span(frame: &FrameReport) -> Option<u64> {
-    frame.gpu.as_ref().and_then(|gpu| gpu.span)
-}
-
-/// A frame's whole time: its CPU phases and the GPU's span.
-pub(super) fn whole(frame: &FrameReport) -> u64 {
-    frame.pipeline.cpu_nanos + gpu_span(frame).unwrap_or(0)
-}
 
 /// Where the page, the gear and the panel go in a window.
 struct Layout {
@@ -276,11 +265,22 @@ impl DevMode {
         }
     }
 
-    /// The dev mode of this launch: there with [`ENV`] set to `1`, and
-    /// open on a view with [`ENV`] set to the view's name.
-    pub fn from_env() -> Self {
+    /// The dev mode of this launch: what [`ENV`] asks on the desktop,
+    /// what the page's query asks under [`QUERY`] in the browser.
+    pub fn from_launch() -> Self {
+        #[cfg(not(target_arch = "wasm32"))]
         let value = std::env::var(ENV).unwrap_or_default();
-        let tab = Tab::parse(&value);
+        #[cfg(target_arch = "wasm32")]
+        let value = crate::runtime::window::launch_args(&[QUERY])
+            .pop()
+            .unwrap_or_default();
+        Self::from_request(&value)
+    }
+
+    /// The dev mode a launch asks for with `value`: there with `1`, open
+    /// on a view with the view's name, absent with anything else.
+    pub fn from_request(value: &str) -> Self {
+        let tab = Tab::parse(value);
         let mut dev = Self::new(value == "1" || tab.is_some());
         if let Some(tab) = tab {
             dev.open = true;
@@ -334,12 +334,38 @@ impl DevMode {
 
     /// Choose the control `id` in the Inspect view, as a press on it would.
     pub fn pick(&mut self, id: Option<SemId>) {
-        self.inspect.pick(id);
+        self.inspect.pick(id.map(target::Target::Control));
     }
 
-    /// The control the Inspect view shows.
+    /// The control the Inspect view shows; `None` while it shows a scene
+    /// node or nothing.
     pub fn picked(&self) -> Option<&SemId> {
-        self.inspect.picked()
+        match self.inspect.picked() {
+            Some(target::Target::Control(id)) => Some(id),
+            _ => None,
+        }
+    }
+
+    /// The control the Inspect view shows, or the one the scene node it
+    /// shows sat in when chosen; `None` for a node in no control.
+    pub fn picked_owner(&self) -> Option<&SemId> {
+        self.inspect.picked()?.owner()
+    }
+
+    /// Choose what the frame `c` has at `(x, y)`, as a press of the armed
+    /// picker there would: the control bound there or the scene node
+    /// drawn there, whichever is the more particular.
+    pub fn pick_at(&mut self, c: &Compositor, x: f32, y: f32) {
+        self.inspect.pick(target::Target::at(c, x, y, self.layer));
+    }
+
+    /// What the Inspect view shows, in a word: `"Control"`, or the kind
+    /// of the scene node chosen (`"Path"`, `"Text"`, ...).
+    pub fn picked_kind(&self) -> Option<&'static str> {
+        match self.inspect.picked()? {
+            target::Target::Control(_) => Some("Control"),
+            target::Target::Node { kind, .. } => Some(kind),
+        }
     }
 
     /// The page's share of a window `w` by `h`: what the open panel
@@ -423,11 +449,10 @@ impl DevMode {
                     self.hot = over.clone();
                     took.changed = true;
                 }
-                if picking {
-                    took.changed |= self.inspect.hover(c.hit(x, y).cloned());
-                } else {
-                    took.changed |= self.inspect.hover(None);
-                }
+                let under = picking
+                    .then(|| target::Target::at(c, x, y, self.layer))
+                    .flatten();
+                took.changed |= self.inspect.hover(under);
             }
             WidgetEvent::MouseDown { .. } => {
                 if let Some(act) = over.clone() {
@@ -435,7 +460,7 @@ impl DevMode {
                     took.changed = true;
                     self.held = true;
                 } else if picking {
-                    self.inspect.pick(c.hit(x, y).cloned());
+                    self.pick_at(c, x, y);
                     self.tab = Tab::Inspect;
                     took.changed = true;
                     self.held = true;
@@ -491,7 +516,9 @@ impl DevMode {
             Act::Zone(zone) => self.zone = Some(zone),
             Act::Level(level) => self.log.filter(level),
             Act::ClearLog => self.log.clear(),
-            Act::Node(id) => self.inspect.pick(Some(id)),
+            Act::Line(number) => self.log.open(number),
+            Act::Control(id) => self.inspect.pick(Some(target::Target::Control(id))),
+            Act::Fold(id) => self.inspect.fold(id),
         }
     }
 
@@ -536,7 +563,7 @@ impl DevMode {
             hot: self.hot.clone(),
         };
         match l.panel {
-            None => gear(&mut p, l.gear),
+            None => head::gear(&mut p, l.gear),
             Some(panel) => {
                 p.fill(panel, theme.colors.bg.0);
                 let (edge, grip) = match self.dock {
@@ -576,10 +603,10 @@ impl DevMode {
                 } else {
                     theme.colors.divider.0
                 };
-                let line = if held {
-                    edge.outset_along(self.dock)
-                } else {
-                    edge
+                let more = if held { 1.0 } else { 0.0 };
+                let line = match self.dock {
+                    Dock::Bottom => Rect::new(edge.x, edge.y, edge.w, edge.h + more),
+                    Dock::Side => Rect::new(edge.x, edge.y, edge.w + more, edge.h),
                 };
                 p.fill(line, color);
             }
@@ -594,32 +621,4 @@ fn whole_key(recorder: &Recorder) -> Option<(u64, bool)> {
     recorder
         .settled()
         .map(|frame| (frame.index, frame.gpu.is_some()))
-}
-
-/// The gear that opens the panel: a small round button on the page.
-fn gear(p: &mut Painter<'_>, at: Rect) {
-    let hot = p.region(at, Act::Open);
-    let colors = &p.theme.colors;
-    let (ground, ink) = if hot {
-        (colors.bg_hover.0, colors.text.0)
-    } else {
-        (colors.bg.0, colors.text_mid.0)
-    };
-    p.pill(at.outset(1.0), colors.divider.0);
-    p.pill(at, ground);
-    p.icon_in("settings", at, paint::ICON, ink);
-}
-
-/// The panel's edge while it is held: two more pixels into the panel.
-trait Thicker {
-    fn outset_along(self, dock: Dock) -> Rect;
-}
-
-impl Thicker for Rect {
-    fn outset_along(self, dock: Dock) -> Rect {
-        match dock {
-            Dock::Bottom => Rect::new(self.x, self.y, self.w, self.h + 1.0),
-            Dock::Side => Rect::new(self.x, self.y, self.w + 1.0, self.h),
-        }
-    }
 }
