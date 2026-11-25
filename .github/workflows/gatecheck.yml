@@ -19,9 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
+      # the toolchain rust-toolchain.toml pins, with its components and
+      # targets: one source for the version, here and on every machine.
+      - run: rustup toolchain install
       - run: cargo fmt --check
 
   clippy:
@@ -33,9 +33,7 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
+      - run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
       - run: cargo clippy --workspace --all-targets -- -D warnings
       # the engine without its default features, the shape rust/llmrun's
@@ -55,7 +53,7 @@ jobs:
       CARGO_PROFILE_DEV_DEBUG: "0"
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
       - run: cargo test --workspace
 
@@ -75,7 +73,7 @@ jobs:
       CARGO_PROFILE_DEV_DEBUG: "0"
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
       - run: cargo run -p regress -- check --json regress-report.json
       - uses: actions/upload-artifact@v4
@@ -90,9 +88,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
+      - run: rustup toolchain install
       - uses: Swatinem/rust-cache@v2
       - run: cargo check --target wasm32-unknown-unknown -p uigallery
 
@@ -111,10 +107,7 @@ jobs:
         with:
           repository: hoffresearch/urna
           path: urna-src
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
-          targets: wasm32-unknown-unknown
+      - run: rustup toolchain install
       - run: ln -sfn "$GITHUB_WORKSPACE/urna-src" "$(dirname "$GITHUB_WORKSPACE")/urna"
       - run: cargo test --manifest-path apps/urnadbapp/Cargo.toml
       - run: cargo clippy --manifest-path apps/urnadbapp/Cargo.toml --all-targets -- -D warnings
@@ -129,7 +122,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: dtolnay/rust-toolchain@stable
+      - run: rustup toolchain install
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-hakari
