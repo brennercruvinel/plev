@@ -4,7 +4,7 @@
 #
 #   tool/tasks/builddir.sh size
 #   tool/tasks/builddir.sh trim [--over <GB>] [--yes]
-#   tool/tasks/builddir.sh seed <dir> [--from <dir>]
+#   tool/tasks/builddir.sh seed <dir> [--from <dir>] [--copy]
 #
 # size: what each build directory of the repository weighs: target/ by
 # folder, every agent's under target/agents, and the two workspaces that
@@ -30,6 +30,11 @@
 # same in every checkout and judges it fresh by mtime, so a copy that kept
 # them could hand a build an artifact compiled from another checkout's
 # sources (docs/Research/Workflows/orchestrate-coding-agents-on-this-repo.md).
+# a clone needs <dir> on the volume of the directory it clones, and a
+# filesystem with copy on write. where it cannot clone, seed refuses and
+# says what a whole copy would cost, since saving disk is the reason for
+# it; --copy takes the whole copy anyway (the warm start, without the
+# shared disk).
 # run it from the checkout that will build in <dir>, and not while a build
 # is writing the directory it clones. one build directory per checkout stays
 # the rule; this spares the new one its cold start. measured on arcade in a
@@ -91,34 +96,69 @@ trim() {
     [ -n "$dry" ] || { set -- $(weigh "$dir"); echo ">> $dir: $2 MB now"; }
 }
 
+# whether a clone of $1 can land in $2: the two on one volume, and that volume
+# a filesystem with copy on write. on macOS that is apfs, asked here because
+# `cp -c` copies everything in full, without a word, when it cannot clone.
+# on linux `cp --reflink=always` refuses by itself, so the answer is yes and
+# the copy says no.
+can_clone() {
+    [ "$(uname)" = Darwin ] || return 0
+    [ "$(stat -f %d "$1")" = "$(stat -f %d "$2")" ] || return 1
+    device=$(df -P "$1" | awk 'NR==2 {print $1}')
+    mount | awk -v d="$device" '$1 == d' | grep -q '(apfs'
+}
+
 seed() {
     [ $# -ge 1 ] || usage
     dest="$1"
     shift
     # the main checkout is the first entry of the worktree list
     from="$(git worktree list --porcelain | sed -n '1s/^worktree //p')/target"
+    copy=0
     while [ $# -gt 0 ]; do
         case "$1" in
             --from) from="$2"; shift 2 ;;
+            --copy) copy=1; shift ;;
             *) usage ;;
         esac
     done
     [ -d "$from/debug" ] || { echo ">> $from/debug: nothing to clone, build there first" >&2; exit 1; }
+    # cargo cleans only a directory it tagged as its own, and the copy is cleaned
+    [ -f "$from/CACHEDIR.TAG" ] || { echo ">> $from: no CACHEDIR.TAG, not a build directory cargo made" >&2; exit 1; }
     if [ -e "$dest" ] && [ -n "$(ls -A "$dest" 2>/dev/null)" ]; then
         echo ">> $dest: not empty, a seed never overwrites a build directory" >&2
         exit 1
     fi
-    mkdir -p "$dest"
+    made=0
+    [ -d "$dest" ] || { mkdir -p "$dest"; made=1; }
     dest=$(cd "$dest" && pwd)
-    case "$(uname)" in
-        Darwin) cp -c -R "$from/debug" "$dest/debug" ;;
-        *) cp -R --reflink=auto "$from/debug" "$dest/debug" ;;
-    esac
-    [ -f "$from/CACHEDIR.TAG" ] && cp "$from/CACHEDIR.TAG" "$dest/"
+    set -- $(weigh "$from/debug")
+    whole="$2"
+    cloned=0
+    if [ "$copy" = 0 ] && can_clone "$from/debug" "$dest"; then
+        case "$(uname)" in
+            Darwin) cp -c -R "$from/debug" "$dest/debug" && cloned=1 ;;
+            *) cp -R --reflink=always "$from/debug" "$dest/debug" 2>/dev/null && cloned=1 ;;
+        esac
+    fi
+    if [ "$cloned" = 0 ] && [ "$copy" = 0 ]; then
+        rm -rf "${dest:?}/debug"
+        [ "$made" = 1 ] && rmdir "$dest"
+        echo ">> $dest: cannot be cloned from $from: another volume, or a filesystem" >&2
+        echo "   without copy on write. a seed there would be a whole copy, $whole MB of disk." >&2
+        echo "   choose a directory on the volume of $from, or pass --copy to take the copy." >&2
+        exit 1
+    fi
+    [ "$cloned" = 1 ] || cp -R "$from/debug" "$dest/debug"
+    cp "$from/CACHEDIR.TAG" "$dest/"
     # what the workspace's crates compiled there came from another checkout's sources
     cargo clean --workspace --target-dir "$dest"
     set -- $(weigh "$dest")
-    echo ">> $dest: seeded with the dependencies ($2 MB, shared with $from until they change)"
+    if [ "$cloned" = 1 ]; then
+        echo ">> $dest: seeded with the dependencies ($2 MB, shared with $from until they change)"
+    else
+        echo ">> $dest: seeded with the dependencies, copied in full ($2 MB of disk, nothing shared)"
+    fi
     echo "   export CARGO_TARGET_DIR=$dest"
 }
 

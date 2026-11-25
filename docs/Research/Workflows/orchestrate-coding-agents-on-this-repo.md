@@ -145,6 +145,9 @@ guidelines win and this file gets fixed.
   about. the dependencies stay and cost no disk until one changes: a new
   worktree built `arcade` with 6 crates in 12 s, against 192 crates and 87 s
   from an empty directory. the directory is still that checkout's alone.
+  a clone needs the same volume and a filesystem with copy on write: where
+  it cannot clone, seed refuses and says what a whole copy would cost
+  (`--copy` takes it anyway).
 - kill a process by its exact pid, never by pattern. with parallel agents
   every worktree runs the same `tool/tasks/fullcheck.sh` and the same tools, so
   `pkill -f "tool/tasks/fullcheck.sh"` kills a neighbour's work too; it happened in
