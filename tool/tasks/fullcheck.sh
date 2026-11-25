@@ -16,6 +16,12 @@ fi
 
 cargo test --workspace
 cargo clippy --workspace --all-targets -- -D warnings
+# the engine without its default features (no accessibility, no hot reload),
+# the shape rust/llmrun's `plev` feature builds it in. every member of this
+# workspace takes the defaults, so the runs above never compile that shape:
+# code that read a gated module without its cfg went unseen from 2026-11-01
+# until task-106.
+cargo clippy -p engine --no-default-features -- -D warnings
 cargo fmt --check
 
 # wasm cross-platform guard. Skippable only when the std for the target is
