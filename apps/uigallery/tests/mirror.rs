@@ -460,7 +460,8 @@ impl App {
         let mut child = Command::new(exe)
             .args([
                 "--exact",
-                "app_child",
+                // the test's name in the suite carries this file's module
+                "mirror::app_child",
                 "--ignored",
                 "--nocapture",
                 "--test-threads=1",

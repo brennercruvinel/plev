@@ -25,6 +25,7 @@
 //! is left out, as in `hit_targets`.
 #![cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 
+#[path = "sweep/mod.rs"]
 mod sweep;
 
 use sweep::{Case, report};
