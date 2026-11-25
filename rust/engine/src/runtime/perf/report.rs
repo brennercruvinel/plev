@@ -22,7 +22,12 @@
 //! for a few frames of its own ([`Recorder::mark_tool`] before each),
 //! while [`Recorder::settling`] says the latest frame still waits for
 //! them. Tool frames stay in the history, flagged, and are left out of
-//! [`Recorder::latest`] and [`Recorder::slowest`].
+//! [`Recorder::latest`] and [`Recorder::slowest`]. A view that follows the
+//! latest frame shows [`Recorder::settled`]: the latest one that is whole,
+//! so it never shows a frame first without its GPU time and then with it.
+//!
+//! The lines code said outlive the frames: [`Recorder::log`] keeps the
+//! last [`LOG_LINES`] of them, each with the frame it was said in.
 //!
 //! Stages are per thread and zones per process: one recorder on at a time.
 
@@ -44,6 +49,17 @@ pub const HISTORY_FRAMES: usize = 240;
 /// Tool frames drawn after the latest frame before
 /// [`Recorder::settling`] gives up on its timestamps.
 pub const SETTLING_FRAMES: u32 = 3;
+
+/// Lines a [`Recorder`] keeps in its log.
+pub const LOG_LINES: usize = 500;
+
+/// A line code said, with the frame it was said in: `None` for a line
+/// said before the recorder was on.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LogLine {
+    pub frame: Option<u64>,
+    pub message: Message,
+}
 
 /// One frame, complete.
 #[derive(Clone, Debug, PartialEq)]
@@ -162,6 +178,13 @@ pub struct Recorder {
     gpu_available: bool,
     /// The heap's counters at the end of the last frame recorded.
     heap_last: HeapTotals,
+    /// The last [`LOG_LINES`] lines said, oldest first.
+    log: VecDeque<LogLine>,
+    /// Lines that left the log for a newer one, or were over a frame's
+    /// limit.
+    log_lost: u64,
+    /// Lines ever kept: the last line's place in everything said.
+    log_total: u64,
 }
 
 impl Recorder {
@@ -186,9 +209,49 @@ impl Recorder {
         if on {
             let _ = stages::take();
             let _ = zones::take();
-            let _ = marks::take();
+            // what was said while no recorder listened (held marks: a dev
+            // mode whose panel was closed) belongs to no frame
+            let said = marks::take();
+            self.log_lost += said.dropped;
+            for message in said.messages {
+                self.keep_line(None, message);
+            }
             self.heap_last = heap::totals();
         }
+    }
+
+    fn keep_line(&mut self, frame: Option<u64>, message: Message) {
+        if self.log.len() == LOG_LINES {
+            self.log.pop_front();
+            self.log_lost += 1;
+        }
+        self.log.push_back(LogLine { frame, message });
+        self.log_total += 1;
+    }
+
+    /// Lines ever kept, those that left the log included: line `i` of
+    /// [`log`](Self::log) is number `log_total() - log().len() + i` of
+    /// everything said, which a view that hides the lines before a moment
+    /// counts from.
+    pub fn log_total(&self) -> u64 {
+        self.log_total
+    }
+
+    /// The lines said, oldest first: the last [`LOG_LINES`] of them,
+    /// whatever became of their frames.
+    pub fn log(&self) -> impl DoubleEndedIterator<Item = &LogLine> + ExactSizeIterator {
+        self.log.iter()
+    }
+
+    /// Lines the log no longer holds.
+    pub fn log_lost(&self) -> u64 {
+        self.log_lost
+    }
+
+    /// Forget every line said.
+    pub fn clear_log(&mut self) {
+        self.log.clear();
+        self.log_lost = 0;
     }
 
     pub fn is_on(&self) -> bool {
@@ -219,6 +282,7 @@ impl Recorder {
         report.plots = said.plots;
         report.messages = said.messages;
         report.marks_dropped = said.dropped;
+        self.log_lost += said.dropped;
         let heap = heap::totals();
         report.heap = heap.since(&self.heap_last);
         self.heap_last = heap;
@@ -230,8 +294,8 @@ impl Recorder {
         self.push(report, readings, gpu.timestamps.is_some());
     }
 
-    /// Keep `report` (flagged when [`mark_tool`](Self::mark_tool) asked)
-    /// and attach `readings` by frame index; a reading whose frame left
+    /// Keep `report` (flagged when [`mark_tool`](Self::mark_tool) asked),
+    /// its lines in the log, and attach `readings` by frame index; a reading whose frame left
     /// the history is dropped. `gpu_available` says whether readings can
     /// come at all.
     pub(crate) fn push(
@@ -241,6 +305,9 @@ impl Recorder {
         gpu_available: bool,
     ) {
         self.gpu_available = gpu_available;
+        for message in &report.messages {
+            self.keep_line(Some(report.index), message.clone());
+        }
         report.tool = std::mem::take(&mut self.tool_next);
         if report.tool {
             self.tool_frames = self.tool_frames.saturating_add(1);
@@ -288,6 +355,23 @@ impl Recorder {
     /// The latest frame that was not the tool's.
     pub fn latest(&self) -> Option<&FrameReport> {
         self.frames.iter().rev().find(|f| !f.tool)
+    }
+
+    /// The latest frame that is whole: [`latest`](Self::latest), or, while
+    /// that one still waits for its GPU timestamps
+    /// ([`settling`](Self::settling)), the latest before it that has
+    /// them. What a view that follows the app shows, so a frame appears
+    /// once, complete.
+    pub fn settled(&self) -> Option<&FrameReport> {
+        let latest = self.latest()?;
+        if !self.settling() {
+            return Some(latest);
+        }
+        self.frames
+            .iter()
+            .rev()
+            .find(|f| !f.tool && f.gpu.is_some())
+            .or(Some(latest))
     }
 
     /// The report of frame `index`, while kept.

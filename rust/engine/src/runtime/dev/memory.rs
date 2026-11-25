@@ -3,14 +3,20 @@
 //! when the app installs `perf::heap::Counting` as its allocator: blocks
 //! and bytes asked for and given back in the frame, and what stays live,
 //! each as a chart over the frames kept. The GPU's side is the engine's
-//! own estimate from capacities (glyph atlas, texture pool, layers), with
-//! the process's resident memory as the system reports it.
+//! own estimate from capacities (glyph atlas, texture pool, layers) as
+//! one bar cut by what holds it, with the process's resident memory as
+//! the system reports it.
 
 use super::frames;
-use super::paint::{Painter, bytes, count, signed_bytes};
+use super::paint::{Painter, bytes, count, percent, signed_bytes};
 use crate::runtime::perf::FrameReport;
 use crate::runtime::perf::Recorder;
 use crate::widgets::prelude::Rect;
+
+/// The body's width from which the GPU's side sits beside the heap.
+const WIDE: f32 = 760.0;
+/// The lines a chart is at most tall, its words included.
+const CHART_LINES: f32 = 6.0;
 
 /// The view in `body`.
 pub(super) fn draw(
@@ -19,21 +25,19 @@ pub(super) fn draw(
     recorder: &Recorder,
     shown: Option<&FrameReport>,
 ) {
-    let caption = p.caption();
     let Some(shown) = shown else {
-        let waiting = "Waiting for a frame.";
-        p.text(waiting, body.x, body.y, body.w, p.mid(), &caption);
+        p.empty(body, "memory-stick", "Waiting for a frame.");
         return;
     };
     let kept = frames(recorder);
     let marked = kept.iter().position(|f| f.index == shown.index);
     let gap = p.gap();
-    let wide = body.w >= p.width(WIDEST, &caption) * 2.0 + gap * 4.0;
-    let (left, right) = if wide {
-        let w = (body.w - gap * 2.0) / 2.0;
+    let (left, right) = if body.w >= WIDE {
+        let w = ((body.w - gap * 3.0) / 2.0).round();
+        p.rule_v(body.x + w + gap * 1.5, body.y, body.h);
         (
             Rect::new(body.x, body.y, w, body.h),
-            Rect::new(body.x + w + gap * 2.0, body.y, w, body.h),
+            Rect::new(body.x + w + gap * 3.0, body.y, w, body.h),
         )
     } else {
         let h = (body.h / 2.0).floor();
@@ -46,8 +50,14 @@ pub(super) fn draw(
     held(p, right, &kept, shown, marked);
 }
 
-/// The widest line of a column, what sets its least width.
-const WIDEST: &str = "given back   0,000,000 blocks   0000.0 MB";
+/// A figure with its name over it and a second line under: one of the
+/// numbers a part of the view opens with. `w` is its room.
+fn figure(p: &mut Painter<'_>, x: f32, y: f32, w: f32, name: &str, value: &str, under: &str) {
+    let (caption, num, small) = (p.caption(), p.num_strong(), p.small());
+    p.text(name, x, y, w, p.faint(), &caption);
+    p.text(value, x, y + p.line(), w, p.ink(), &num);
+    p.text(under, x, y + p.line() * 2.0, w, p.mid(), &small);
+}
 
 /// The heap in the frame shown, and over the frames kept.
 fn heap(
@@ -57,12 +67,10 @@ fn heap(
     shown: &FrameReport,
     marked: Option<usize>,
 ) {
-    let (caption, strong) = (p.caption(), p.strong());
+    let caption = p.caption();
     let (gap, row) = (p.gap(), p.row());
-    let title = format!("Heap in frame {}", shown.index);
-    p.text(&title, area.x, area.y, area.w, p.ink(), &strong);
-    let mut y = area.y + row;
     let heap = shown.heap;
+    let mut y = p.title("Heap", &format!("frame {}", shown.index), area);
     if !heap.counted {
         for line in [
             "This app does not count its heap.",
@@ -73,37 +81,45 @@ fn heap(
         }
         return;
     }
-    let label_w = p.width("given back", &caption) + gap * 2.0;
-    let blocks_right = area.x + label_w + p.width("0,000,000 blocks", &caption);
-    let bytes_right = blocks_right + gap * 2.0 + p.width("+0000.0 MB", &caption);
     let kept_blocks = heap.allocs as i64 - heap.frees as i64;
-    let lines = [
+    let figures = [
         (
             "asked for",
-            format!("{} blocks", count(heap.allocs)),
             bytes(heap.bytes_in),
+            format!("{} blocks", count(heap.allocs)),
         ),
         (
             "given back",
-            format!("{} blocks", count(heap.frees)),
             bytes(heap.bytes_out),
+            format!("{} blocks", count(heap.frees)),
         ),
         (
-            "kept",
-            format!("{kept_blocks:+} blocks"),
+            "kept by the frame",
             signed_bytes(heap.net_bytes()),
+            format!("{kept_blocks:+} blocks"),
+        ),
+        (
+            "live since the count",
+            signed_bytes(heap.live_bytes),
+            String::new(),
         ),
     ];
-    for (label, blocks, size) in lines {
-        p.text(label, area.x, y, label_w, p.mid(), &caption);
-        p.text_right(&blocks, blocks_right, y, p.ink(), &caption);
-        p.text_right(&size, bytes_right, y, p.ink(), &caption);
-        y += row;
+    let each = area.w / figures.len() as f32;
+    for (i, (name, value, under)) in figures.iter().enumerate() {
+        figure(
+            p,
+            area.x + each * i as f32,
+            y,
+            each - gap,
+            name,
+            value,
+            under,
+        );
     }
-    y += gap / 2.0;
+    y += p.line() * 3.0 + gap;
 
-    let color = p.theme.colors.accent.0;
-    let live = p.theme.colors.info.0;
+    let color = p.theme.colors.info.0;
+    let live = p.theme.colors.success.0;
     let of = |f: &dyn Fn(&FrameReport) -> f64| -> Vec<f64> { kept.iter().map(|k| f(k)).collect() };
     let most = |values: &[f64]| values.iter().copied().fold(0.0, f64::max);
     let asked = of(&|f| f.heap.allocs as f64);
@@ -127,7 +143,7 @@ fn heap(
             color,
         ),
         (
-            "live bytes since the count began",
+            "live bytes",
             signed_bytes(heap.live_bytes),
             format!(
                 "{} to {}",
@@ -138,7 +154,7 @@ fn heap(
             live,
         ),
     ];
-    let each = ((area.bottom() - y) / charts.len() as f32).min(row * 6.0);
+    let each = ((area.bottom() - y) / charts.len() as f32).min(row * CHART_LINES);
     for (name, value, range, values, color) in charts {
         let cell = Rect::new(area.x, y, area.w, each - gap);
         p.plot(cell, name, &value, &range, &values, color, marked);
@@ -154,25 +170,12 @@ fn held(
     shown: &FrameReport,
     marked: Option<usize>,
 ) {
-    let (caption, strong) = (p.caption(), p.strong());
+    let (caption, num) = (p.caption(), p.num());
     let (gap, row) = (p.gap(), p.row());
     let memory = shown.memory;
-    let title = format!(
-        "GPU memory in frame {}: {} (from capacities)",
-        shown.index,
-        bytes(memory.gpu_total_bytes())
-    );
-    p.text(&title, area.x, area.y, area.w, p.ink(), &strong);
-    let mut y = area.y + row;
-    let label_w = p.width("texture pool", &caption) + gap * 2.0;
-    let value_w = p.width("0000.0 MB", &caption) + gap;
-    let lane = Rect::new(
-        area.x + label_w,
-        y,
-        (area.w - label_w - value_w).max(0.0),
-        p.line(),
-    );
-    let total = memory.gpu_total_bytes().max(1);
+    let total = memory.gpu_total_bytes();
+    let note = format!("{} from capacities", bytes(total));
+    let mut y = p.title("GPU memory", &note, area);
     let parts = [
         (
             "glyph atlas",
@@ -186,15 +189,39 @@ fn held(
         ),
         ("layers", memory.layer_bytes, p.theme.colors.accent.0),
     ];
-    for (name, size, color) in parts {
-        p.text(name, area.x, y, label_w, p.mid(), &caption);
-        p.track(Rect::new(lane.x, y, lane.w, lane.h));
-        let w = lane.w * (size as f32 / total as f32);
-        p.bar(Rect::new(lane.x, y, w, lane.h), color);
-        p.text_right(&bytes(size), area.right(), y, p.ink(), &caption);
-        y += row;
+    // one bar, cut by what holds the memory
+    let bar = Rect::new(area.x, y, area.w, p.line());
+    p.track(bar);
+    let mut x = bar.x;
+    for (_, size, color) in parts {
+        let w = bar.w * (size as f32 / total.max(1) as f32);
+        if w >= 1.0 {
+            p.bar(Rect::new(x, bar.y, (w - 1.0).max(1.0), bar.h), color);
+        }
+        x += w;
     }
-    y += gap / 2.0;
+    y += bar.h + gap;
+    let each = area.w / parts.len() as f32;
+    let swatch = (p.line() / 2.0).round();
+    for (i, (name, size, color)) in parts.iter().enumerate() {
+        let x = area.x + each * i as f32;
+        p.bar(
+            Rect::new(x, y + (p.line() - swatch) / 2.0, swatch, swatch),
+            *color,
+        );
+        let text_x = x + swatch + gap / 2.0;
+        p.text(name, text_x, y, each - swatch - gap, p.mid(), &caption);
+        let value = format!("{} · {}%", bytes(*size), percent(*size, total));
+        p.text(
+            &value,
+            text_x,
+            y + p.line(),
+            each - swatch - gap,
+            p.ink(),
+            &num,
+        );
+    }
+    y += p.line() * 2.0 + gap * 1.5;
 
     let color = p.theme.colors.accent.0;
     let totals: Vec<f64> = kept
@@ -204,7 +231,7 @@ fn held(
     let high = totals.iter().copied().fold(0.0, f64::max);
     let mut charts = vec![(
         "GPU memory over the frames",
-        bytes(memory.gpu_total_bytes()),
+        bytes(total),
         format!("up to {}", bytes(high as u64)),
         totals,
         color,
@@ -223,7 +250,7 @@ fn held(
             p.theme.colors.success.0,
         ));
     }
-    let each = ((area.bottom() - y) / charts.len() as f32).min(row * 6.0);
+    let each = ((area.bottom() - y) / charts.len() as f32).min(row * CHART_LINES);
     for (name, value, range, values, color) in charts {
         let cell = Rect::new(area.x, y, area.w, each - gap);
         p.plot(cell, name, &value, &range, &values, color, marked);

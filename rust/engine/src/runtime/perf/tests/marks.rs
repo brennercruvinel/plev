@@ -8,7 +8,7 @@
 
 use std::sync::MutexGuard;
 
-use super::super::marks::{self, MAX_MESSAGES_PER_FRAME, Message, PlotPoint};
+use super::super::marks::{self, Level, MAX_MESSAGES_PER_FRAME, Message, PlotPoint, Tee};
 use super::super::zones;
 
 /// Marks on for one test, off again (and drained) when it ends.
@@ -19,6 +19,7 @@ struct On {
 impl On {
     fn new() -> Self {
         let lock = zones::test_lock();
+        marks::hold(false);
         marks::enable(false);
         marks::enable(true);
         let _ = marks::take();
@@ -45,6 +46,7 @@ fn said(mark: &str) -> Vec<Message> {
 #[test]
 fn off_keeps_nothing_and_never_builds_the_text() {
     let _lock = zones::test_lock();
+    marks::hold(false);
     marks::enable(false);
     let mut built = false;
     marks::message(|| {
@@ -117,4 +119,59 @@ fn turning_off_drops_what_was_said() {
     let frame = marks::take();
     assert!(frame.plots.is_empty());
     assert!(said("marks-drop").is_empty());
+}
+
+#[test]
+fn held_marks_stay_on_when_a_recorder_turns_them_off() {
+    let _on = On::new();
+    marks::hold(true);
+    marks::enable(false);
+    assert!(marks::is_enabled(), "a dev mode holds them on");
+    crate::message!("marks-held said with no recorder");
+    assert_eq!(said("marks-held").len(), 1);
+    marks::hold(false);
+    marks::enable(false);
+    assert!(!marks::is_enabled(), "let go, the switch is the recorder's");
+}
+
+/// A logger that counts what reaches it.
+struct Counted(std::sync::atomic::AtomicUsize);
+
+impl log::Log for Counted {
+    fn enabled(&self, metadata: &log::Metadata<'_>) -> bool {
+        metadata.level() <= log::Level::Warn
+    }
+
+    fn log(&self, _: &log::Record<'_>) {
+        self.0.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    fn flush(&self) {}
+}
+
+#[test]
+fn the_tee_says_what_its_logger_lets_through_at_the_records_level() {
+    use log::Log;
+    let _on = On::new();
+    let tee = Tee::new(Counted(std::sync::atomic::AtomicUsize::new(0)));
+    let record = |level, args| {
+        log::Record::builder()
+            .level(level)
+            .target("marks-tee")
+            .args(args)
+            .build()
+    };
+    tee.log(&record(log::Level::Warn, format_args!("bound twice")));
+    tee.log(&record(log::Level::Error, format_args!("device lost")));
+    tee.log(&record(log::Level::Info, format_args!("not let through")));
+    let lines = said("marks-tee");
+    let read: Vec<(Level, &str)> = lines.iter().map(|m| (m.level, m.text.as_str())).collect();
+    assert_eq!(
+        read,
+        [
+            (Level::Warn, "marks-tee: bound twice"),
+            (Level::Error, "marks-tee: device lost"),
+        ],
+        "the info line is under the logger's filter"
+    );
 }
