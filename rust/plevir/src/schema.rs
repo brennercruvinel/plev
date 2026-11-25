@@ -4,10 +4,10 @@
 //!
 //! it is built from the same tables the types use (`Component::ALL`,
 //! each token's `ALL`, the names the specs accept), so it moves with them.
-//! `rust/plevir/assets/plev-ir-1.json` is this value written out; a test
-//! keeps the two equal (`UIR_BLESS=1 cargo test -p plevir` writes the file
-//! again). the schema checks shape only: ids, references, kinds, policy
-//! and accessibility are the verifier's.
+//! `rust/plevir/assets/plev-ir-1.json` is this value written out, the keys
+//! of each object in order; a test keeps the two equal (`UIR_BLESS=1 cargo
+//! test -p plevir` writes the file again). the schema checks shape only:
+//! ids, references, kinds, policy and accessibility are the verifier's.
 
 use serde_json::{Value, json};
 
