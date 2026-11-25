@@ -8,10 +8,10 @@ date: 2026-09-23
 date_basis: header
 recorded: 2026-06-10
 topics: [web-wasm, gpu, platform]
-relations: [adr-0001, operations-validate-visuals-by-pixel, task-61, task-75]
+relations: [adr-0001, operations-validate-visuals-by-pixel, task-61, task-75, task-106]
 source: docs/ref/build-and-serve-the-web-target.md
 source_revision: ec0a224c
-revised: 2026-10-30
+revised: 2026-11-25
 review: reviewed
 ---
 
@@ -32,6 +32,16 @@ avoid a white flash), builds the uigallery for wasm32, runs wasm-bindgen
 with the CLI version matching Cargo.lock, and emits hashed artifacts into
 `web/dist/`. a Homebrew rust ignores rust-toolchain.toml and ships no
 wasm32 std; use rustup.
+
+the first release build on a machine fetches two tools into trunk's cache:
+wasm-bindgen at the version Cargo.lock names (0.2.123 today; a newer one
+installed on the machine is not used) and wasm-opt, binaryen `version_131`
+for trunk 0.22.1. `--offline` stops there when either is missing.
+
+the gate checks `uigallery` on wasm32 and nothing else. a change to a demo's
+features is checked on the web by that demo's own build,
+`tool/tasks/webtarget.sh graphs build --release` (task-106 ran it after
+`graphs` took the engine's default features).
 
 `tool/tasks/webtarget.sh` with no argument is the development loop (127.0.0.1:8080,
 watch mode). urnadbapp has its own: `tool/tasks/webtarget.sh urnadbapp` on 8081, from
@@ -87,6 +97,7 @@ python3 -m http.server 8090 --directory web/dist
 
 - [ADR 0001: async GPU initialization and one wasm entry point per module](../../adr/Rendering/0001-async-gpu-init-and-single-wasm-entry/0001-async-gpu-init-and-single-wasm-entry.md)
 - [ADR 0022: one knowledge tree, and a minimal root](../../adr/Structure/0022-one-knowledge-tree-and-a-minimal-root/0022-one-knowledge-tree-and-a-minimal-root.md)
+- [task-106: what a build directory weighs, and a warm start for a new checkout](../../Tasks/task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md)
 - [task-61: agent surface (local socket, observe, act)](../../Tasks/task-61-agent-surface/task-61-agent-surface.md)
 - [task-75: production-ready platform accessibility](../../Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md)
 - [orchestrator and agent guidelines](generative-runtime-guidelines.md)

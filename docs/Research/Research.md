@@ -34,6 +34,7 @@ What we know, by the themes the ADRs use, and in Exploring what was measured: th
 | 2022-12-10 | [technical report: plev vs makepad](Ecosystem/plev-vs-makepad-report.md) | reference |
 | 2023-04-06 | [extracted patterns, 56 reference repos](Ecosystem/extracted-patterns.md) | reference |
 | 2023-04-12 | [task-34 extraction: phase e (WASM runtime) + phase f (competitors)](Ecosystem/extraction-fase-ef.md) | reference |
+| 2026-11-24 | [how large rust workspaces keep a build directory small](Ecosystem/build-directories-in-large-rust-workspaces.md) | reference |
 
 ## Exploring
 

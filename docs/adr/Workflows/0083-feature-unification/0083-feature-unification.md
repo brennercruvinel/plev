@@ -58,5 +58,9 @@ recorded round; the decision adopted the tool configured in the project.
 <!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
 ## Related
 
+- [ADR 0087: a crate's integration tests are one executable](../0087-a-crates-integration-tests-are-one-executable/0087-a-crates-integration-tests-are-one-executable.md)
+- [ADR 0089: a build directory belongs to one checkout, starts from a clone and has a ceiling](../0089-a-build-directory-belongs-to-one-checkout/0089-a-build-directory-belongs-to-one-checkout.md)
+- [ADR 0092: every member builds one engine, and the gate builds the other shape](../0092-every-member-builds-one-engine/0092-every-member-builds-one-engine.md)
 - [task-102: reusable builds and web commands](../../../Tasks/task-102-builds-and-web-commands/task-102-builds-and-web-commands.md)
+- [how large rust workspaces keep a build directory small](../../../Research/Ecosystem/build-directories-in-large-rust-workspaces.md)
 <!-- /related -->

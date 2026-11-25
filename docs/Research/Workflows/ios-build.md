@@ -59,3 +59,9 @@ Records the decisions and knowledge of the iOS build: fonts embedded with `inclu
 - `LSRequiresIPhoneOS: true`
 - `UISupportedInterfaceOrientations` para declarar orientações
 - `UIRequiresFullScreen: true` para evitar split-screen no ipad
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0088: libraries are plain, and a mobile build asks for its crate type](../../adr/Structure/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type.md)
+<!-- /related -->

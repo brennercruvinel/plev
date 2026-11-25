@@ -3,12 +3,12 @@ id: task-106
 title: "task-106: what a build directory weighs, and a warm start for a new checkout"
 project: plev
 type: task
-status: in-progress
+status: done
 date: 2026-11-24
 date_basis: text
 recorded: 2026-11-24
 topics: [workspace, performance, process, agents]
-relations: [task-102, operations-orchestrate-coding-agents-on-this-repo]
+relations: [task-102, operations-orchestrate-coding-agents-on-this-repo, adr-0087, adr-0088, adr-0089, adr-0090, adr-0091, adr-0092, research-build-directories-in-large-rust-workspaces]
 source: "https://github.com/brennercruvinel/plev/issues/185"
 source_revision: f7695626
 revised: 2026-11-25
@@ -135,28 +135,41 @@ A new checkout, through `builddir.sh seed`: the seed took 5 s and no disk, and `
 
 - A real iOS or Android build with the plain libraries. The machine of this task has Xcode, but no Rust target for iOS, no Android NDK and no cargo-ndk; `cargo rustc --crate-type staticlib` and `cdylib` were run on the host triple, and cargo-ndk's forwarding of a `rustc` subcommand was read in its source. Two defects a review found in the mobile script were fixed and tried on stand-ins only: the iOS build read the library from a fixed `target/` (it asks cargo now, so `CARGO_TARGET_DIR` is honored), and the Android build no longer cleared an old `libengine.so` from a reused `jniLibs`.
 - Sharing one build directory between the root workspace and urnadbapp's, now that the engine's file name carries the hash. The gate's leg keeps its own subdirectory.
-- The page of the web build of `graphs` in a browser. The build itself packages to the end (see what the task closed); what it wrote was not opened.
 - The gate on a clean runner. The `gatecheck` workflow is disabled and its last runs, on 2026-10-16, did not start for the account's billing, so the pinned toolchain, the linux leg of the matrix and the structural regression job were not run by CI. The gate was run on the machine of this task instead, part by part, at the branch's last commit; that run cannot be written in the commit it measures, so it is in [pull request 190](https://github.com/brennercruvinel/plev/pull/190), with the sha.
 
 ## Open
 
 - The inspector at 1280x800 draws the commit's sha cut over two rows since the code face changed (`2ca6ded9`), and `value_column` in its panel takes the first space after a label, so a two-word label never finds its value column. Seen, not changed.
 - `apps/urnadbapp` still builds into a directory of its own (4.0 GB). Sharing the root's, or joining the workspace, is [issue 191](https://github.com/brennercruvinel/plev/issues/191).
-- ADR 0069 still states 25.5 and 51 levels for `text_mid`; the theme makes them 24.56 and 49.13 since task-104m.
 - The engine's image store keeps an image decoded from a PNG and the same pixels given raw in two slots.
 
 ## Closed in the task
 
 - `.design`, `.devops` and `.secops` are gone from the root for good, the owner's decision. The task first restored them, reading their deletion as an accident because the tree's own test, the gate, CI, the readme and the atlas still named them; that was undone. What `.devops/check` held (the lychee, nextest and typos contracts) is in `.config`, beside hakari's, and every reference points there. nextest finds its file there with no flag.
 
-- The branch point is in `main`: pull request 184, the one commit of task-105 this task was built on (`f7695626`), was merged on 2026-11-25, and pull request 190 points at `main` since. Its diff is the task's 38 commits and nothing else, 125 files.
-- The web build of `graphs` packages to the end with the engine it now shares with the other members: `tool/tasks/webtarget.sh graphs build --release` compiles the wasm release build, wasm-bindgen 0.2.123 (the lockfile's) writes the JavaScript and a 5.6 MB wasm, wasm-opt (binaryen `version_131`) takes the wasm to 4.7 MB, and `demo/graphs/dist` is replaced. A first try stopped at wasm-opt, whose download timed out five times; the second, an hour later, fetched it in a second.
+- The branch point is in `main`: pull request 184, the one commit of task-105 this task was built on (`f7695626`), was merged on 2026-11-25, and pull request 190 pointed at `main` from then on, its diff the task's commits and nothing else, 125 files. The owner merged it the same day (`8a069959`), with what CI and the mobile builds did not cover listed in it. The records and the corrections of the audit that followed are a second pull request, 192.
+- The web build of `graphs` packages to the end with the engine it now shares with the other members: `tool/tasks/webtarget.sh graphs build --release` compiles the wasm release build, wasm-bindgen 0.2.123 (the lockfile's) writes the JavaScript and a 5.6 MB wasm, wasm-opt (binaryen `version_131`) takes the wasm to 4.7 MB, and `demo/graphs/dist` is replaced. A first try stopped at wasm-opt, whose download timed out five times; the second, an hour later, fetched it in a second. Served from `demo/graphs/dist` and opened in a headless Chromium with WebGPU on Metal, the page logs "GPU context ready (async)" and draws the lesmis graph:
+
+  ![the graphs demo's web build drawing the lesmis graph](img/graphs-web-lesmis.png)
+
+  A first capture, in which that browser gave no WebGPU context, ended in a panic at `rust/engine/src/drawing/gpu/context.rs:111` and a blank page, not in a message. Seen, not changed.
+- The decisions of the task are records: ADRs 0087 (one test executable per crate), 0088 (plain libraries), 0089 (the build directories), 0090 (the toolchain), 0092 (one engine) and, proposed, 0091 (the tool contracts in `.config`); what the five repositories compared with do is a research page. They are in the list at the end of this page.
+- ADR 0069 carries a correction for `text_mid`: 24.56 and 49.13 levels where its table says 25.5 and 51.
+- `TERMS.toml` says where the three contracts went and how a test command of an older page reads now (`--test <file>` is `--test suite <file>::`).
 - The toolchain is pinned: `rust-toolchain.toml` names 1.99.1, the compiler `stable` already was, and every CI job runs `rustup toolchain install`, which reads the same file. The CI change is not verified: no workflow has run on the repository since 2026-10-16.
 - `human_agent`'s commit author in `idestudio` followed `GIT_AUTHOR_NAME` when a session exported it. The test compares with the author git gave the commit, and the gate drops the identity variables before its tests.
 
 <!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
 ## Related
 
+- [ADR 0087: a crate's integration tests are one executable](../../adr/Workflows/0087-a-crates-integration-tests-are-one-executable/0087-a-crates-integration-tests-are-one-executable.md)
+- [ADR 0088: libraries are plain, and a mobile build asks for its crate type](../../adr/Structure/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type.md)
+- [ADR 0089: a build directory belongs to one checkout, starts from a clone and has a ceiling](../../adr/Workflows/0089-a-build-directory-belongs-to-one-checkout/0089-a-build-directory-belongs-to-one-checkout.md)
+- [ADR 0090: the toolchain is one exact version, read from one file](../../adr/Workflows/0090-the-toolchain-is-one-exact-version/0090-the-toolchain-is-one-exact-version.md)
+- [ADR 0091: the tools' contracts live in .config](../../adr/Structure/0091-tool-contracts-live-in-config/0091-tool-contracts-live-in-config.md)
+- [ADR 0092: every member builds one engine, and the gate builds the other shape](../../adr/Workflows/0092-every-member-builds-one-engine/0092-every-member-builds-one-engine.md)
 - [task-102: reusable builds and web commands](../task-102-builds-and-web-commands/task-102-builds-and-web-commands.md)
+- [how large rust workspaces keep a build directory small](../../Research/Ecosystem/build-directories-in-large-rust-workspaces.md)
+- [how to build and serve the web target](../../Research/Workflows/build-and-serve-the-web-target.md)
 - [how to orchestrate coding agents on this repo](../../Research/Workflows/orchestrate-coding-agents-on-this-repo.md)
 <!-- /related -->
