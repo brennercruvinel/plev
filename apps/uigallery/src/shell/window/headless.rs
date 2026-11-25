@@ -230,7 +230,31 @@ impl StagedPage {
             engine::plot!("controls bound", self.compositor.bindings().count());
             if index == 0 && tab == Tab::Inspect {
                 let first = self.compositor.bindings().next();
-                dev.pick(first.map(|(id, _)| id.clone()));
+                match first.map(|(id, _)| id.clone()) {
+                    Some(id) => dev.pick(Some(id)),
+                    // a page that binds nothing: the first path it draws
+                    // in view (an icon), as the picker would choose it
+                    None => {
+                        let icons: Vec<[f32; 4]> = self
+                            .compositor
+                            .layers()
+                            .iter()
+                            .filter(|layer| layer.visible)
+                            .flat_map(|layer| layer.nodes())
+                            .filter(|node| node.kind() == "Path")
+                            .filter_map(|node| node.bounds())
+                            .collect();
+                        for [x, y, w, h] in icons {
+                            let at = (x + w / 2.0, y + h / 2.0);
+                            if at.0 > 0.0 && at.0 < page_w && at.1 > 0.0 && at.1 < page_h {
+                                dev.pick_at(&self.compositor, at.0, at.1);
+                            }
+                            if dev.picked_kind() == Some("Path") {
+                                break;
+                            }
+                        }
+                    }
+                }
             }
             let snapshot = self.view.semantics();
             {

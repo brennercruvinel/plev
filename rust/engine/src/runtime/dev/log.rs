@@ -7,7 +7,8 @@
 //! The lines outlive their frames (`Recorder::log`), so the view is not
 //! empty a few seconds after something was said. Over them, a count a
 //! level that also filters to it, and a clear that hides what was said so
-//! far. The wheel scrolls back through the lines.
+//! far. The wheel scrolls back through the lines, and a press on a line
+//! opens it whole: a long text in as many lines as it needs.
 
 use super::Act;
 use super::paint::{ICON, Painter, alpha};
@@ -28,6 +29,8 @@ pub(super) struct LogView {
     total: u64,
     /// Lines the last draw had to show, at the level chosen.
     pub(super) listed: usize,
+    /// The line shown whole, by its number in everything said.
+    opened: Option<u64>,
 }
 
 impl LogView {
@@ -38,6 +41,7 @@ impl LogView {
             cleared: 0,
             total: 0,
             listed: 0,
+            opened: None,
         }
     }
 
@@ -67,6 +71,16 @@ impl LogView {
         moved
     }
 
+    /// Open the line numbered `number` whole, or close it when it is the
+    /// one open.
+    pub fn open(&mut self, number: u64) {
+        self.opened = if self.opened == Some(number) {
+            None
+        } else {
+            Some(number)
+        };
+    }
+
     /// The view in `body`.
     pub fn draw(
         &mut self,
@@ -77,18 +91,19 @@ impl LogView {
     ) {
         self.total = recorder.log_total();
         let first = self.total - recorder.log().len() as u64;
-        let said: Vec<&LogLine> = recorder
+        // each line with its number in everything said
+        let said: Vec<(u64, &LogLine)> = recorder
             .log()
             .enumerate()
-            .filter(|(i, _)| first + *i as u64 >= self.cleared)
-            .map(|(_, line)| line)
+            .map(|(i, line)| (first + i as u64, line))
+            .filter(|(number, _)| *number >= self.cleared)
             .collect();
         let y = self.bar(p, body, &said, recorder.log_lost());
         let area = Rect::new(body.x, y, body.w, body.bottom() - y);
-        let lines: Vec<&LogLine> = said
+        let lines: Vec<(u64, &LogLine)> = said
             .iter()
             .copied()
-            .filter(|line| self.level.is_none_or(|level| line.message.level == level))
+            .filter(|(_, line)| self.level.is_none_or(|level| line.message.level == level))
             .collect();
         self.listed = lines.len();
         if lines.is_empty() {
@@ -104,7 +119,7 @@ impl LogView {
     }
 
     /// The counts a level, each a filter, and the clear; the y under them.
-    fn bar(&self, p: &mut Painter<'_>, body: Rect, said: &[&LogLine], lost: u64) -> f32 {
+    fn bar(&self, p: &mut Painter<'_>, body: Rect, said: &[(u64, &LogLine)], lost: u64) -> f32 {
         let (caption, num) = (p.caption(), p.num());
         let gap = p.gap();
         let h = p.row() + 4.0;
@@ -145,7 +160,10 @@ impl LogView {
         };
         chip(p, None, "All", said.len());
         for level in Level::ALL {
-            let n = said.iter().filter(|l| l.message.level == level).count();
+            let n = said
+                .iter()
+                .filter(|(_, l)| l.message.level == level)
+                .count();
             let label = match level {
                 Level::Error => "Errors",
                 Level::Warn => "Warnings",
@@ -167,8 +185,15 @@ impl LogView {
         body.y + h + gap / 2.0
     }
 
-    /// The lines that fit in `area`, the latest at the bottom.
-    fn lines(&mut self, p: &mut Painter<'_>, area: Rect, lines: &[&LogLine], shown: Option<u64>) {
+    /// The lines that fit in `area`, the latest at the bottom. A press on
+    /// a line opens it whole: its text in as many lines as it needs.
+    fn lines(
+        &mut self,
+        p: &mut Painter<'_>,
+        area: Rect,
+        lines: &[(u64, &LogLine)],
+        shown: Option<u64>,
+    ) {
         let (caption, strong, num) = (p.caption(), p.strong(), p.num());
         let gap = p.gap();
         let row = p.row() + 2.0;
@@ -177,7 +202,7 @@ impl LogView {
         let frame_w = p.width("frame 000000", &num) + gap * 1.5;
         let thread_w = lines
             .iter()
-            .map(|line| p.width(&line.message.thread, &caption))
+            .map(|(_, line)| p.width(&line.message.thread, &caption))
             .fold(p.width("thread", &caption), f32::max)
             .min(area.w / 5.0)
             + gap * 1.5;
@@ -185,6 +210,7 @@ impl LogView {
         let frame_x = at_x + at_w;
         let thread_x = frame_x + frame_w;
         let text_x = thread_x + thread_w;
+        let text_w = area.right() - text_x - gap / 2.0;
 
         let head = Rect::new(area.x, area.y, area.w, row);
         p.table_head(head);
@@ -192,31 +218,50 @@ impl LogView {
         p.text_right("time", frame_x - gap * 1.5, head_y, p.mid(), &strong);
         p.text("frame", frame_x, head_y, frame_w, p.mid(), &strong);
         p.text("thread", thread_x, head_y, thread_w, p.mid(), &strong);
-        p.text(
-            "message",
-            text_x,
-            head_y,
-            area.right() - text_x,
-            p.mid(),
-            &strong,
-        );
+        p.text("message", text_x, head_y, text_w, p.mid(), &strong);
 
+        // how tall each line is: one row, or what its whole text needs
+        let pad = row - p.line();
+        let height = |p: &Painter<'_>, number: u64, text: &str| {
+            if self.opened == Some(number) {
+                (p.wrapped_height(text, text_w, &caption) + pad).max(row)
+            } else {
+                row
+            }
+        };
         let top = head.bottom();
-        let room = ((area.bottom() - top) / row).floor() as usize;
-        self.back = self.back.min(lines.len().saturating_sub(room));
+        let room = area.bottom() - top;
+        self.back = self.back.min(lines.len().saturating_sub(1));
         let end = lines.len() - self.back;
-        let begin = end.saturating_sub(room);
+        // from the latest line shown back, as many as fit
+        let mut begin = end;
+        let mut used = 0.0;
+        while begin > 0 {
+            let (number, line) = lines[begin - 1];
+            let h = height(p, number, &line.message.text);
+            if used + h > room && begin < end {
+                break;
+            }
+            used += h;
+            begin -= 1;
+        }
         let mut y = top;
-        for line in &lines[begin..end] {
+        for &(number, line) in &lines[begin..end] {
             let message = &line.message;
-            let place = Rect::new(area.x, y, area.w, row);
+            let open = self.opened == Some(number);
+            let h = height(p, number, &message.text).min(area.bottom() - y);
+            let place = Rect::new(area.x, y, area.w, h);
+            let hot = p.region(place, Act::Line(number));
             let color = p.level_color(message.level);
             if message.level != Level::Info {
                 p.fill(place, alpha(color, 0.07));
             }
-            let text_y = y + (row - p.line()) / 2.0;
+            if hot || open {
+                p.wash(place, 1.0);
+            }
+            let text_y = y + pad / 2.0;
             let here = line.frame.is_some() && line.frame == shown;
-            let ink = if message.level != Level::Info || here {
+            let ink = if message.level != Level::Info || here || open {
                 p.ink()
             } else {
                 p.mid()
@@ -242,15 +287,12 @@ impl LogView {
                 p.faint(),
                 &caption,
             );
-            p.text(
-                &message.text,
-                text_x,
-                text_y,
-                area.right() - text_x - gap / 2.0,
-                ink,
-                &caption,
-            );
-            y += row;
+            if open {
+                p.text_wrapped(&message.text, text_x, text_y, text_w, ink, &caption);
+            } else {
+                p.text(&message.text, text_x, text_y, text_w, ink, &caption);
+            }
+            y += h;
             p.fill(
                 Rect::new(area.x, y - 1.0, area.w, 1.0),
                 alpha(p.ink(), 0.04),

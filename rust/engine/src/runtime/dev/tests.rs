@@ -11,7 +11,7 @@ use super::insights::Severity;
 use super::*;
 use crate::runtime::perf::stages::{Stage, StageCost, StageFrame};
 use crate::runtime::perf::zones::{ThreadZones, ZoneFrame, ZoneRecord, test_lock};
-use crate::runtime::perf::{GpuReading, LayerReport, MemoryStats, Message, PlotPoint};
+use crate::runtime::perf::{FrameReport, GpuReading, LayerReport, MemoryStats, Message, PlotPoint};
 use crate::widgets::icons;
 
 const WINDOW: (f32, f32) = (1280.0, 800.0);
@@ -357,6 +357,171 @@ fn the_picker_arms_the_pointer_and_a_press_on_the_page_is_not_the_pages() {
     assert!(dev.event(&up, WINDOW.0, WINDOW.1, &c).taken);
     // one press, then the page has its pointer back
     assert!(!dev.event(&on_page, WINDOW.0, WINDOW.1, &c).taken);
+}
+
+/// A frame with a control bound over a ground and a label, and an icon
+/// beside it that nothing binds.
+fn page() -> Compositor {
+    let mut c = Compositor::new();
+    build(&mut c);
+    c
+}
+
+/// The frame of [`page`], built into `c` as an app builds every frame.
+fn build(c: &mut Compositor) {
+    use crate::drawing::compositor::{SceneNode, TextNodeKey};
+    c.begin_frame();
+    let fill = |x, y, w, h| SceneNode::Rect {
+        x,
+        y,
+        w,
+        h,
+        color: [1.0; 4],
+    };
+    c.push(fill(0.0, 0.0, 1280.0, 400.0));
+    let button = SemId::parse("page.button").unwrap();
+    c.bind(&button, [100.0, 100.0, 120.0, 40.0]);
+    c.push(fill(100.0, 100.0, 120.0, 40.0));
+    c.push(SceneNode::Text {
+        key: TextNodeKey::new("Save", 14.0, 20.0, None),
+        x: 140.0,
+        y: 110.0,
+        color: [0.0, 0.0, 0.0, 1.0],
+    });
+    c.push(fill(400.0, 100.0, 24.0, 24.0));
+}
+
+#[test]
+fn the_picker_chooses_the_control_or_the_node_whichever_is_more_particular() {
+    let _lock = test_lock();
+    let c = page();
+    let mut dev = open(Tab::Inspect);
+    // the control's own ground: the control
+    dev.pick_at(&c, 104.0, 104.0);
+    assert_eq!(dev.picked_kind(), Some("Control"));
+    assert_eq!(dev.picked().map(SemId::as_str), Some("page.button"));
+    // its label, smaller than it: the text node
+    dev.pick_at(&c, 150.0, 120.0);
+    assert_eq!(dev.picked_kind(), Some("Text"));
+    assert_eq!(dev.picked(), None);
+    // what the page gave no id is chosen all the same
+    dev.pick_at(&c, 410.0, 110.0);
+    assert_eq!(dev.picked_kind(), Some("Rect"));
+    // the page's ground under everything
+    dev.pick_at(&c, 900.0, 300.0);
+    assert_eq!(dev.picked_kind(), Some("Rect"));
+    dev.pick_at(&c, 2000.0, 2000.0);
+    assert_eq!(dev.picked_kind(), None, "nothing is drawn there");
+}
+
+#[test]
+fn a_node_chosen_draws_what_it_is_and_never_the_panel_itself() {
+    let _lock = test_lock();
+    let mut c = page();
+    let mut dev = open(Tab::Inspect);
+    dev.draw(&mut c, &Theme::dark(), WINDOW, &recorder(2), None);
+    let empty = c.layer(dev.layer.unwrap()).unwrap().nodes().len();
+    // a point of the open panel: the picker leaves its own layer out and
+    // answers with what the page drew under it, or nothing
+    dev.pick_at(&c, 640.0, 600.0);
+    assert_eq!(dev.picked_kind(), None, "the panel is not a thing to pick");
+    dev.pick_at(&c, 150.0, 120.0);
+    build(&mut c);
+    dev.draw(&mut c, &Theme::dark(), WINDOW, &recorder(2), None);
+    let with = c.layer(dev.layer.unwrap()).unwrap().nodes().len();
+    assert!(
+        with > empty,
+        "the text's lines and its ring: {with} > {empty}"
+    );
+}
+
+#[test]
+fn a_press_on_a_line_of_the_log_opens_it_whole_and_another_closes_it() {
+    let _lock = test_lock();
+    let mut kept = recorder(1);
+    let mut long = report(1);
+    long.messages[0].text = "a line of the log that says a great deal ".repeat(12);
+    kept.push(long, Vec::new(), false);
+    let mut dev = open(Tab::Log);
+    let _ = drawn(&mut dev, &kept);
+    let line = Act::Line(1);
+    let shut = place(&dev, &line);
+    press(&mut dev, &line);
+    let _ = drawn(&mut dev, &kept);
+    let whole = place(&dev, &line);
+    assert!(
+        whole.h > shut.h * 1.9,
+        "its text takes the lines it needs: {} then {}",
+        shut.h,
+        whole.h
+    );
+    press(&mut dev, &line);
+    let _ = drawn(&mut dev, &kept);
+    assert_eq!(place(&dev, &line).h, shut.h, "one row again");
+}
+
+#[test]
+fn a_parent_of_the_tree_folds_the_lines_under_it() {
+    use accord::{Role, SnapshotBuilder};
+    let _lock = test_lock();
+    let mut b = SnapshotBuilder::new();
+    b.node("list", Role::Region, "A list");
+    b.node("list.one", Role::Button, "One").parent("list");
+    b.node("list.two", Role::Button, "Two").parent("list");
+    let snapshot = b.finish().expect("a well formed tree");
+    let id = |text: &str| SemId::parse(text).unwrap();
+    let mut dev = open(Tab::Inspect);
+    let mut c = Compositor::new();
+    dev.draw(
+        &mut c,
+        &Theme::dark(),
+        WINDOW,
+        &recorder(1),
+        Some(&snapshot),
+    );
+    let lines = |dev: &DevMode| {
+        let shown = |(_, act): &(Rect, Act)| matches!(act, Act::Control(_));
+        dev.regions.iter().filter(|r| shown(r)).count()
+    };
+    assert_eq!(lines(&dev), 3);
+    assert!(
+        dev.regions
+            .iter()
+            .all(|(_, act)| *act != Act::Fold(id("list.one"))),
+        "a line that holds nothing has no fold"
+    );
+    press(&mut dev, &Act::Fold(id("list")));
+    c.begin_frame();
+    dev.draw(
+        &mut c,
+        &Theme::dark(),
+        WINDOW,
+        &recorder(1),
+        Some(&snapshot),
+    );
+    assert_eq!(lines(&dev), 1, "the two under it are folded away");
+    press(&mut dev, &Act::Fold(id("list")));
+    c.begin_frame();
+    dev.draw(
+        &mut c,
+        &Theme::dark(),
+        WINDOW,
+        &recorder(1),
+        Some(&snapshot),
+    );
+    assert_eq!(lines(&dev), 3);
+}
+
+#[test]
+fn a_launch_asks_for_the_gear_or_for_a_view() {
+    let _lock = test_lock();
+    assert!(!DevMode::from_request("").is_available());
+    assert!(!DevMode::from_request("0").is_available());
+    let gear = DevMode::from_request("1");
+    assert!(gear.is_available() && !gear.is_open());
+    let zones = DevMode::from_request("zones");
+    assert!(zones.is_open());
+    assert_eq!(zones.tab(), Tab::Zones);
 }
 
 #[test]

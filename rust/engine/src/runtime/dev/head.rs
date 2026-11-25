@@ -352,3 +352,17 @@ fn vitals(p: &mut Painter<'_>, line: Rect, recorder: &Recorder, shown: Option<&F
         x += value_w + pad;
     }
 }
+
+/// The gear that opens the panel: a small round button on the page.
+pub(super) fn gear(p: &mut Painter<'_>, at: Rect) {
+    let hot = p.region(at, Act::Open);
+    let colors = &p.theme.colors;
+    let (ground, ink) = if hot {
+        (colors.bg_hover.0, colors.text.0)
+    } else {
+        (colors.bg.0, colors.text_mid.0)
+    };
+    p.pill(at.outset(1.0), colors.divider.0);
+    p.pill(at, ground);
+    p.icon_in("settings", at, ICON, ink);
+}
