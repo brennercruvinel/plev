@@ -75,9 +75,9 @@ fn a_slider_draws_its_label_and_its_value_above_its_track() {
     );
 
     // a drag to three quarters of the travel shows 0.75
-    let knob = theme.control.slider_knob;
+    let thumb = theme.selection.slider.thumb_w;
     let y = track[1] + track[3] / 2.0;
-    let x = |t: f32| track[0] + knob / 2.0 + t * (track[2] - knob);
+    let x = |t: f32| track[0] + thumb / 2.0 + t * (track[2] - thumb);
     for event in [
         engine::widgets::WidgetEvent::MouseMove { x: x(0.5), y },
         engine::widgets::WidgetEvent::MouseDown { x: x(0.5), y },

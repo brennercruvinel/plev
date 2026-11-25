@@ -54,8 +54,8 @@ fn agent() -> Actor {
 
 /// The x at the fraction `t` of a slider's travel drawn at `r`.
 fn along(r: [f32; 4], t: f32, theme: &Theme) -> f32 {
-    let knob = theme.control.slider_knob;
-    r[0] + knob / 2.0 + t * (r[2] - knob)
+    let thumb = theme.selection.slider.thumb_w;
+    r[0] + thumb / 2.0 + t * (r[2] - thumb)
 }
 
 fn volume(app: &App) -> f64 {
