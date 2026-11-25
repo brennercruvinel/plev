@@ -8,7 +8,7 @@ date: 2026-11-03
 date_basis: text
 recorded: 2026-11-03
 topics: [rendering, process]
-relations: [adr-0008]
+relations: [adr-0008, adr-0093]
 source: "https://github.com/brennercruvinel/plev/issues/180"
 source_revision: a6d523b8
 revised: 2026-11-25
@@ -19,7 +19,7 @@ review: pending
 
 The engine's own view of what it does, drawn over any app. A small gear sits at the page's lower right corner. It opens a panel docked in the window, below the page or beside it, and the page lays out again in what is left, so nothing of it hides under the panel. The panel's edge drags to give it more or less of the window.
 
-A launch gets its dev mode from `PLEV_DEV`: `1` for the gear, a view's name (`PLEV_DEV=gpu`) for the panel already open on that view. F12 opens and closes the panel. Without the variable nothing is drawn, no event is taken and nothing is measured.
+A launch gets its dev mode from `PLEV_DEV`: `1` for the gear, a view's name (`PLEV_DEV=gpu`) for the panel already open on that view. In the browser, which has no environment, the page's query says the same: `?dev=1`, `?dev=gpu`. F12 opens and closes the panel. Without the request nothing is drawn, no event is taken and nothing is measured.
 
 ```sh
 PLEV_DEV=1 cargo run -p uigallery
@@ -42,8 +42,8 @@ Under the strip one line stays whatever the tab: the frame's time with its share
 - **Zones** puts the CPU's named zones on one time axis, thread by thread, each zone a bar with the zones it holds under it, in a color that is the zone's wherever it shows. The lines code said in the frame cross it as marks. The table gives every zone's calls, total, own time and its share, mean and longest run. A press on a row or on a bar chooses a zone, and its runs over the frames kept are counted in a histogram with the median, the mean and the 95th percentile.
 - **Plots** charts what each frame counted over the frames kept: the CPU's time, the GPU's, and the page's draw calls, scene nodes, glyphs and layers redrawn. Every value the app's code gave under a name follows them.
 - **Memory** counts the heap block by block: bytes and blocks asked for and given back in the frame, what the frame kept, and three charts over the frames. Beside it is what the engine holds on the GPU as one bar cut by what holds it (glyph atlas, texture pool, layers), and the process's resident memory.
-- **Log** lists the lines code said (`engine::message!`) and the process logged (`log::warn!`, `log::error!` and the rest the console shows), each with its level, its moment, its frame and its thread. A warning and an error stand on a tinted line. The counts a level filter to it, the bin hides what was said so far, and the wheel scrolls back. The lines outlive their frames: the last 500 are kept, and what was said before the panel opened is there.
-- **Inspect** shows the page's controls as a tree (the app's semantic snapshot: a role and a label a line, under its parent) and, beside it, the control chosen: its id, state, actions and flags, the code that projected it, its size and place, and what its layer did in the frame shown. A press on a line chooses a control, and the pointer over a line rings it on the page with its role and size. The picker does it the other way: the control under the pointer on the page is ringed, and a press chooses it instead of reaching the page. A page that projects nothing lists the ids its frame bound.
+- **Log** lists the lines code said (`engine::message!`) and the process logged (`log::warn!`, `log::error!` and the rest the console shows), each with its level, its moment, its frame and its thread. A warning and an error stand on a tinted line. The counts a level filter to it, the bin hides what was said so far, the wheel scrolls back, and a press on a line opens it whole, a long text in as many lines as it needs. The lines outlive their frames: the last 500 are kept, and what was said before the panel opened is there.
+- **Inspect** shows the page's controls as a tree (the app's semantic snapshot: a role and a label a line, under its parent, a parent folding what it holds) and, beside it, the thing chosen. A press on a line chooses a control, and the pointer over a line rings it on the page with its role and size. The picker does it the other way, and it picks anything the frame draws, not only what the page gave an id: the thing under the pointer is ringed, and a press chooses it instead of reaching the page. A control shows its id, state, actions and flags, the code that projected it, its size and place, and what its layer did in the frame shown. A scene node (an icon, a line of text, a card's ground) shows its kind, its paint with the color beside it, its type, its size and place, its number in its layer, and the control it sits in, which a press on that line chooses. A page that projects nothing lists the ids its frame bound; a page that binds nothing shows what its frame holds, layer by layer.
 
 ## The insights
 
@@ -77,8 +77,9 @@ Off, each of the three macros is one relaxed atomic load and a branch: no clock 
 
 ## Where it lives
 
+- **What is drawn where** is `Compositor::node_at` (`rust/engine/src/drawing/compositor/probe.rs`): the topmost scene node at a point, as the frame composites. The picker asks it beside `Compositor::hit`.
 - **The data** is in `rust/engine/src/runtime/perf/`: `zones` (nested zones per thread on one clock), `marks` (plots, messages with their level, and the tee over the `log` crate), `heap` (the counting allocator), `histogram`, `pipeline` (the 22 stages grouped into six phases), `gpu_time` (each pass with its layer and its frame) and `report` (`FrameReport`, one frame complete, and `Recorder`: the last 240 of them and the last 500 lines said).
-- **The panel** is in `rust/engine/src/runtime/dev/` (`DevMode`): `head` for the strip and the vital numbers, one file per view, `insights` for the findings and `paint` for what they draw with. It measures nothing itself.
+- **The panel** is in `rust/engine/src/runtime/dev/` (`DevMode`): `head` for the strip and the vital numbers, one file per view, `insights` for the findings, `facts` for what the Inspect view says of a control or a node, and `paint` for what they draw with. It measures nothing itself.
 - **The mount** is the gallery's shell: the pointer goes to the dev mode first, the page is resized to its share, and the panel is drawn after the page. A window host owns its recorder (`WindowHost::dev`).
 - **Without a window**, `uigallery --render <page> --dev <view> [--dev-side] --out file.png` draws 48 frames with the panel open and writes the last one. Every image below was made this way.
 
@@ -87,7 +88,9 @@ Off, each of the three macros is one relaxed atomic load and a branch: no clock 
 - **A report is exactly one frame.** The stages, zones and marks are taken after the present, so a frame holds what the app built for it and not the wait for the next one.
 - **The GPU's time is attached after the fact, and a frame shows once it is whole.** Timestamps are read back by a later frame, and each reading carries the index of the frame it measured. The engine renders on demand, so after the last frame of a change the panel asks for frames of its own to bring the timestamps back. A view that follows the app shows `Recorder::settled`: the latest frame that has its GPU time, or the latest as it is once the wait is over. Before this the panel drew the latest frame without its GPU time, the time arrived in a frame nobody drew again, and the next change showed the earlier frame with its time for one frame: a window showed no GPU time at rest, and the bars flickered at every move of the pointer.
 - **A frame the panel asks for is the tool's.** That is the frames that bring the timestamps back, and also the frames its own pointer causes (a tab under the pointer, a press on one). They are flagged and left out of "Live", "Slowest" and every chart, so the history is the app's.
+- **The picker chooses the more particular of two things.** Under a point there can be a control the page bound and a scene node the frame drew. The node is chosen when it is smaller than the control it sits in (a button's label), the control when the node is its whole ground (a button's fill), and a node alone where nothing is bound (an icon of the Icons page). A shadow is never chosen: it is the dress of the rect that casts it. The panel's own layer is left out.
 - **A view says where a press does something as it draws.** `Painter::region` keeps the place and the `Act`, and the next pointer event is read against that list. No view keeps a widget in step with what it drew, and the pointer asks for a frame only when it moves from one place to another.
+- **The page's own handling of an event is the frame's input stage.** The gallery's shell counts one event a pointer event the page takes; an event the dev mode keeps is not the page's input.
 - **The page's counts leave the dev mode out.** The panel is a layer of the same frame. The GPU view names it, and the Plots view leaves it out of the page's draw calls, nodes, glyphs and layers: a panel that draws more as its history grows was the curve itself.
 - **The heap is counted, and the marks are held, from the moment the dev mode exists.** A block older than that is counted when it is given back and never when it was asked for, so "live bytes" is the heap's change since then and can go below zero. What is said while the panel is closed is kept, up to a frame's limits, for the Log view to open with.
 - **Headless contexts give the GPU's objects no debug names off Apple's platforms** (`GpuContext::instance_flags`). The engine's GPU tests crashed in about one parallel run in four on the Linux machine (6 of 24). In the Vulkan loader Ubuntu 26.04 ships (1.4.341, fixed upstream after it, KhronosGroup/Vulkan-Loader#1863), naming an object walks every driver and device of the process while another thread's new instance unloads the drivers that found no device. With only the NVIDIA driver loaded the crash stopped (0 of 30), which confirmed it. With no names: 0 crashes in 90 parallel runs. A window keeps its names: it is made and dropped on the thread that draws.
@@ -114,20 +117,28 @@ In the Frame view's run the first frame takes 176.43 ms of CPU and 97.87 ms of G
 
 ![The Inspect view](img/dev-inspect.png)
 
+On the Icons page, which binds nothing, the picker chooses an icon: a path of 46 vertices, with its color, its size and its number in its layer.
+
+![The Inspect view on a scene node](img/dev-inspect-node.png)
+
 ![The panel beside the page](img/dev-zones-side.png)
 
 In a window on the same machine, launched with `PLEV_DEV=frame` and `PLEV_DEV=inspect` and read from a capture of the window: the panel opens with the launch, the first frame shows its GPU time (28.13 ms beside 107.67 ms of CPU), and the Theme page, which projects no semantics, lists the thirteen ids its frame bound. Launched with `PLEV_DEV=1`, the gear is at the page's lower right corner.
 
-The gallery's shell is tested through its own pointer and frame paths against a window that draws into a texture (`shell/window/pace/tests.rs`): a press on the gear opens the panel, the page takes half of the window, six frames are recorded with their zones, the page's plot and the GPU's time, the frame the panel shows has its GPU time, and a press on the close gives the page the window back; the picker chooses the control under a press and the page's state stays as it was; F12 opens and closes the panel, and is the page's key in a launch without a dev mode.
+In the browser, the web build (`tool/tasks/webtarget.sh uigallery build`) served from its `dist` and opened in Chrome without a window at `?page=Todo&dev=frame`: the panel is open on the Frame view over the Todo page, and the findings say what the browser leaves out (no GPU timestamps, a heap that is not counted). Every time reads 0 in that capture: the browser ran on a virtual clock (`--virtual-time-budget`), and the times were not read in a browser a person drives.
+
+![The dev mode in the browser](img/dev-web.png)
+
+The gallery's shell is tested through its own pointer and frame paths against a window that draws into a texture (`shell/window/pace/tests.rs`): a press on the gear opens the panel, the page takes half of the window, six frames are recorded with their zones, the page's plot and the GPU's time, the frame the panel shows has its GPU time, and a press on the close gives the page the window back; the picker chooses what is under a press on the Todo page and the page's state stays as it was; on the Icons page it chooses an icon that no id names; F12 opens and closes the panel, and is the page's key in a launch without a dev mode.
 
 ## Not done
 
-- The panel was not driven by a real pointer in a real window by its author: the window was launched and captured, and the pointer's path was run through the shell's own code against a texture. A hover, a drag of the edge and the wheel over the log were not seen on a screen.
-- On the web there is no way to turn it on: the page has no environment to read `PLEV_DEV` from, and the browser's device is not asked for timestamps.
-- Only the gallery mounts it. Another app has the same three calls to make (the event first, the page's share, the draw after the page) and none makes them yet.
-- The gallery's loop does not record the input stage.
-- The Log view shows one line a message, cut to the panel's width: a long line is not wrapped, and a line is not copied.
-- The Inspect view's tree shows every node: a subtree does not fold.
+- The panel was not driven by a real pointer in a real window by its author: the window was launched and captured, and the pointer's path was run through the shell's own code against a texture. A person drove it on a screen and reported what the third pass then changed (the picker that chose only bound controls).
+- Only the gallery mounts it. Another app has the same three calls to make (the event first, the page's share, the draw after the page), and each app and demo of the tree has a loop of its own, so none makes them yet.
+- In the browser the device is not asked for timestamps: the GPU's time reads "n/a" there.
+- The gallery's loop counts pointer events in the input stage, not keys.
+- A line of the log is not copied to the clipboard.
+- The picker chooses one thing a point: it does not walk down through what is under the thing chosen.
 - Of what Puffin and Tracy offer, these were not built: sampling with call stacks, the source view of a zone, context switches and lock contention, frame images, saving and loading a capture, comparing two captures, and the heap per zone.
 - On the Linux machine, about one parallel run in thirty of the engine's GPU tests hangs. A core dump shows a deadlock inside the NVIDIA driver (580.178.04): a thread in `vkDestroyDevice` holds a driver mutex while it waits for one of the driver's threads to end, and a test thread that is ending waits for that mutex. It happened before this task too. Keeping devices alive avoided it, but each device holds about 130 MiB of a GPU shared with other programs and the larger groups ran out of memory. With one test at a time the whole suite passes.
 
@@ -147,4 +158,5 @@ Each of those is answered by one frame report that every view reads.
 ## Related
 
 - [ADR 0008: render on demand makes invalidation a correctness contract](../../adr/Rendering/0008-render-on-demand-requires-explicit-invalidation/0008-render-on-demand-requires-explicit-invalidation.md)
+- [ADR 0093: the dev mode is the engine's own: one report a frame, shown once it is whole, in a panel that offers its places as it draws](../../adr/Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md)
 <!-- /related -->

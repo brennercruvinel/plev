@@ -9766,11 +9766,12 @@
     "process"
    ],
    "relations": [
-    "adr-0008"
+    "adr-0008",
+    "adr-0093"
    ],
    "source": "https://github.com/brennercruvinel/plev/issues/180",
    "source_revision": "a6d523b8",
-   "revised": "2026-11-12",
+   "revised": "2026-11-25",
    "review": "pending",
    "headings": [
     {
@@ -9780,8 +9781,18 @@
     },
     {
      "level": 2,
+     "title": "The panel",
+     "anchor": "the-panel"
+    },
+    {
+     "level": 2,
      "title": "The seven views",
      "anchor": "the-seven-views"
+    },
+    {
+     "level": 2,
+     "title": "The insights",
+     "anchor": "the-insights"
     },
     {
      "level": 2,
@@ -36877,6 +36888,67 @@
      "level": 1,
      "title": "every member builds one engine, and the gate builds the other shape",
      "anchor": "every-member-builds-one-engine-and-the-gate-builds-the-other-shape"
+    },
+    {
+     "level": 2,
+     "title": "context",
+     "anchor": "context"
+    },
+    {
+     "level": 2,
+     "title": "decision",
+     "anchor": "decision"
+    },
+    {
+     "level": 2,
+     "title": "consequences",
+     "anchor": "consequences"
+    },
+    {
+     "level": 2,
+     "title": "alternatives",
+     "anchor": "alternatives"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/adr/Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md",
+   "id": "adr-0093",
+   "title": "the dev mode is the engine's own: one report a frame, shown once it is whole, in a panel that offers its places as it draws",
+   "project": "plev",
+   "type": "adr",
+   "status": "accepted",
+   "date": "2026-11-25",
+   "date_basis": "git",
+   "recorded": "2026-11-25",
+   "topics": [
+    "rendering",
+    "process",
+    "performance"
+   ],
+   "relations": [
+    "task-105",
+    "adr-0008",
+    "adr-0048"
+   ],
+   "evidence": [
+    "f7695626",
+    "bb10319c"
+   ],
+   "source": "reconstruction",
+   "source_revision": "7ba5cfab",
+   "revised": "2026-11-25",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "the dev mode is the engine's own: one report a frame, shown once it is whole, in a panel that offers its places as it draws",
+     "anchor": "the-dev-mode-is-the-engines-own-one-report-a-frame-shown-once-it-is-whole-in-a-panel-that-offers-its-places-as-it-draws"
     },
     {
      "level": 2,
