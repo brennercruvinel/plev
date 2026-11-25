@@ -1,0 +1,56 @@
+{
+  "nodes": [
+    {
+      "id": "aspect_ratio_page",
+      "role": "region",
+      "label": "Aspect Ratio"
+    },
+    {
+      "id": "aspect_ratio_page.group[0]",
+      "role": "group",
+      "label": "Aspect ratio",
+      "parent": "aspect_ratio_page"
+    },
+    {
+      "id": "aspect_ratio_page.group[0].card[0]",
+      "role": "image",
+      "label": "1:1, the kit's square: Default, Hover",
+      "description": "1:1",
+      "parent": "aspect_ratio_page.group[0]"
+    },
+    {
+      "id": "aspect_ratio_page.group[0].card[1]",
+      "role": "image",
+      "label": "16:9",
+      "description": "16:9",
+      "parent": "aspect_ratio_page.group[0]"
+    },
+    {
+      "id": "aspect_ratio_page.group[1]",
+      "role": "group",
+      "label": "Aspect ratio, ranges",
+      "parent": "aspect_ratio_page"
+    },
+    {
+      "id": "aspect_ratio_page.group[1].card[0]",
+      "role": "image",
+      "label": "4:3",
+      "description": "4:3",
+      "parent": "aspect_ratio_page.group[1]"
+    },
+    {
+      "id": "aspect_ratio_page.group[1].card[1]",
+      "role": "image",
+      "label": "3:4",
+      "description": "3:4",
+      "parent": "aspect_ratio_page.group[1]"
+    },
+    {
+      "id": "aspect_ratio_page.group[1].card[2]",
+      "role": "image",
+      "label": "21:9",
+      "description": "21:9",
+      "parent": "aspect_ratio_page.group[1]"
+    }
+  ]
+}

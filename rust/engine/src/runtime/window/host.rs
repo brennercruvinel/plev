@@ -5,7 +5,8 @@
 //! recovery), the compositor whose layers and bindings are that window's
 //! frame, the input state (hit regions, hover, focus, the cursor), the
 //! touch tracker and the pointer synth, the IME, the scale factor and the
-//! safe area, the frame clock and the perf monitor, and the events
+//! safe area, the frame clock, the perf monitor and the dev mode's frame
+//! recorder, and the events
 //! buffered for the next frame. What is not here is the app's: the theme,
 //! the state and its dispatcher, the lifecycle, the event loop proxy.
 //! [`super::Windows`] keeps several hosts by `WindowId`; the engine `App`
@@ -43,7 +44,7 @@ use crate::drawing::gpu::GpuContext;
 use crate::drawing::gpu::RenderConfig;
 use crate::drawing::gpu::texture_pool::TexturePool;
 use crate::drawing::text::TextSystem;
-use crate::runtime::perf::{PerfHud, PerfMonitor};
+use crate::runtime::perf::{MemoryStats, PerfHud, PerfMonitor, Recorder};
 use crate::runtime::platform::SafeAreaInsets;
 use crate::runtime::platform::ime::ImeState;
 
@@ -93,6 +94,8 @@ pub struct WindowHost {
     pub(crate) tick: AnimationTick,
     pub(crate) perf: PerfMonitor,
     pub(crate) perf_hud: PerfHud,
+    /// The dev mode's frame reports, off until `dev_mut().set_on(true)`.
+    dev: Recorder,
     pub(crate) events: Vec<BufferedEvent>,
     animating: bool,
     /// A frame was asked for and not drawn yet. A host with a window asks
@@ -144,6 +147,7 @@ impl WindowHost {
             },
             perf: PerfMonitor::new(),
             perf_hud: PerfHud::new(),
+            dev: Recorder::new(),
             events: Vec::with_capacity(64),
             animating: false,
             redraw_asked: false,
@@ -306,6 +310,22 @@ impl WindowHost {
         self.frames
     }
 
+    /// The dev mode's frame reports of this window (`perf::report`).
+    pub fn dev(&self) -> &Recorder {
+        &self.dev
+    }
+
+    /// The dev mode's recorder, to turn it on and flag its own frames.
+    pub fn dev_mut(&mut self) -> &mut Recorder {
+        &mut self.dev
+    }
+
+    /// The scene to draw into and the frames recorded so far, together:
+    /// what the dev mode's panel needs to draw itself over the frame.
+    pub fn compositor_and_dev(&mut self) -> (&mut Compositor, &Recorder) {
+        (&mut self.compositor, &self.dev)
+    }
+
     /// The window's surface changed size (physical pixels): the surface is
     /// reconfigured, the logical projection reapplied (`gpu.resize` resets
     /// it to physical, which on HiDPI would draw everything at half size),
@@ -416,6 +436,7 @@ impl WindowHost {
     /// target for a headless host. `None` when there is no device yet, no
     /// surface, or the frame was skipped (a lost device with no adapter
     /// answering; `present_frame`). A lost device is recovered here first.
+    /// With the dev mode on, a frame drawn is reported to it.
     pub fn present(&mut self, clear_linear: [f32; 4], label: &str) -> Option<u32> {
         // `present_frame` polls and recovers a window's device itself; a
         // headless host's frame path is `draw_frame`, so the poll is here.
@@ -424,6 +445,8 @@ impl WindowHost {
             return None;
         }
         let gpu = self.gpu.as_mut()?;
+        // the frame's GPU timestamps carry its index (`perf::gpu_time`)
+        self.compositor.set_frame_index(self.frames);
         let draws = if gpu.gpu.surface.is_some() {
             super::present_frame(
                 &mut self.compositor,
@@ -449,6 +472,11 @@ impl WindowHost {
             ))
         };
         if draws.is_some() {
+            if self.dev.is_on() {
+                let memory = MemoryStats::of(&self.compositor, &gpu.text_system, &gpu.texture_pool);
+                self.dev
+                    .end_frame(self.frames, &self.compositor, memory, &gpu.gpu);
+            }
             self.frames += 1;
         }
         draws

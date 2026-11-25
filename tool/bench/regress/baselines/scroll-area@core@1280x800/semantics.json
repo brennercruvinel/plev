@@ -287,6 +287,76 @@
       ]
     },
     {
+      "id": "scroll_area_page.list[20]",
+      "role": "list_item",
+      "label": "Item 20",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[21]",
+      "role": "list_item",
+      "label": "Item 21",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[22]",
+      "role": "list_item",
+      "label": "Item 22",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[23]",
+      "role": "list_item",
+      "label": "Item 23",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scroll_area_page.list[24]",
+      "role": "list_item",
+      "label": "Item 24",
+      "parent": "scroll_area_page.list",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "scroll_area_page.list:selected"
+          ]
+        }
+      ]
+    },
+    {
       "id": "scroll_area_page.list",
       "role": "list",
       "label": "items",

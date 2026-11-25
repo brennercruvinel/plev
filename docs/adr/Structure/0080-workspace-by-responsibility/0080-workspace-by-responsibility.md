@@ -43,5 +43,6 @@ Keeping libraries and apps mixed together would preserve the old paths, but woul
 <!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
 ## Related
 
+- [ADR 0088: libraries are plain, and a mobile build asks for its crate type](../0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type.md)
 - [task-98: workspace reorganization](../../../Tasks/task-98-workspace-reorganization/task-98-workspace-reorganization.md)
 <!-- /related -->

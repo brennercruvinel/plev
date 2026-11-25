@@ -3,7 +3,7 @@
 //! finds under a click from the bindings a frame carries, and what a
 //! mask of the secrets would reach. A measurement, ignored; it prints:
 //!
-//!     cargo test -p uigallery --test mirror_probe -- --ignored --nocapture
+//!     cargo test -p uigallery --test suite mirror_probe:: -- --ignored --nocapture
 //!
 //! Per page: the bound controls; those the gallery's projection does not
 //! hold (a mask that fails closed would hide them); those marked secret;

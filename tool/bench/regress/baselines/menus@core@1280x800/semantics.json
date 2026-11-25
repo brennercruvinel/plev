@@ -1,0 +1,689 @@
+{
+  "nodes": [
+    {
+      "id": "menus_page",
+      "role": "region",
+      "label": "Menus"
+    },
+    {
+      "id": "menus_page.group[0]",
+      "role": "group",
+      "label": "Menu",
+      "parent": "menus_page"
+    },
+    {
+      "id": "menus_page.group[0].card[0]",
+      "role": "menu",
+      "label": "Zoom",
+      "parent": "menus_page.group[0]",
+      "state": {
+        "value": {
+          "kind": "text",
+          "value": "100%"
+        },
+        "picked": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "menus_page.group[0].card[0].line[0]",
+      "role": "radio",
+      "label": "Zoom in",
+      "description": "⌘ +",
+      "parent": "menus_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[0].line[1]",
+      "role": "radio",
+      "label": "Zoom out",
+      "description": "⌘ -",
+      "parent": "menus_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[0].line[2]",
+      "role": "radio",
+      "label": "Zoom to 100%",
+      "description": "⌘ 0",
+      "parent": "menus_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[0].line[3]",
+      "role": "radio",
+      "label": "Zoom to 200%",
+      "description": "⌘ 1",
+      "parent": "menus_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[0].line[4]",
+      "role": "radio",
+      "label": "Zoom to fit",
+      "description": "⌘ 2",
+      "parent": "menus_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[0].line[5]",
+      "role": "checkbox",
+      "label": "Comments",
+      "description": "Shift C",
+      "parent": "menus_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[0].line[6]",
+      "role": "checkbox",
+      "label": "3D Views",
+      "description": "Shift",
+      "parent": "menus_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[1][1]",
+      "role": "menu_item",
+      "label": "Export...",
+      "description": "⇧⌘E",
+      "parent": "menus_page.group[0].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[1][2]",
+      "role": "menu_item",
+      "label": "Create new scene...",
+      "description": "⌘N",
+      "parent": "menus_page.group[0].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[1][3]",
+      "role": "menu_item",
+      "label": "Duplicate",
+      "description": "⌘D",
+      "parent": "menus_page.group[0].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[1][4]",
+      "role": "menu_item",
+      "label": "Rename",
+      "parent": "menus_page.group[0].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[1][5]",
+      "role": "menu_item",
+      "label": "Move to folder...",
+      "parent": "menus_page.group[0].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[1][6]",
+      "role": "menu_item",
+      "label": "Delete",
+      "parent": "menus_page.group[0].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[1]",
+      "role": "menu",
+      "label": "File menu",
+      "parent": "menus_page.group[0]",
+      "state": {
+        "picked": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "menus_page.group[0].card[2].search",
+      "role": "text_input",
+      "label": "Search files",
+      "parent": "menus_page.group[0].card[2]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "menus_page.group[0].card[2].search:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[2].new",
+      "role": "button",
+      "label": "New Folder",
+      "parent": "menus_page.group[0].card[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[2][0]",
+      "role": "button",
+      "label": "Untitled Folder",
+      "parent": "menus_page.group[0].card[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[2][1]",
+      "role": "button",
+      "label": "3D Icons",
+      "parent": "menus_page.group[0].card[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[2][2]",
+      "role": "button",
+      "label": "Cute Characters",
+      "parent": "menus_page.group[0].card[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[2][3]",
+      "role": "button",
+      "label": "Baby Monster",
+      "parent": "menus_page.group[0].card[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[2]",
+      "role": "group",
+      "label": "File menu",
+      "parent": "menus_page.group[0]",
+      "state": {
+        "picked": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "menus_page.group[0].card[3][0]",
+      "role": "menu_item",
+      "label": "Hoff Research App 2.5",
+      "description": "Great for 3D modeling",
+      "parent": "menus_page.group[0].card[3]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "menus_page.group[0].card[3]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[3][1]",
+      "role": "menu_item",
+      "label": "Sora 4",
+      "description": "Great for video generation",
+      "parent": "menus_page.group[0].card[3]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "menus_page.group[0].card[3]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[3][2]",
+      "role": "menu_item",
+      "label": "Kling AI",
+      "description": "Great for video generation",
+      "parent": "menus_page.group[0].card[3]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "menus_page.group[0].card[3]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[3][3]",
+      "role": "menu_item",
+      "label": "Spline AI",
+      "description": "Great for pre-made scenes",
+      "parent": "menus_page.group[0].card[3]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "menus_page.group[0].card[3]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[3]",
+      "role": "menu",
+      "label": "Select AI model",
+      "parent": "menus_page.group[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": ""
+        },
+        "picked": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "menus_page.group[0].card[4][1]",
+      "role": "menu_item",
+      "label": "Add photos or videos",
+      "parent": "menus_page.group[0].card[4]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[4][2]",
+      "role": "menu_item",
+      "label": "Add 3D objects",
+      "parent": "menus_page.group[0].card[4]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[4][3]",
+      "role": "menu_item",
+      "label": "Add files (docs, txt...)",
+      "parent": "menus_page.group[0].card[4]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[4]",
+      "role": "menu",
+      "label": "Upload",
+      "parent": "menus_page.group[0]",
+      "state": {
+        "picked": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "menus_page.group[0].card[5][1]",
+      "role": "menu_item",
+      "label": "All scenes",
+      "parent": "menus_page.group[0].card[5]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[5][2]",
+      "role": "menu_item",
+      "label": "Designs",
+      "parent": "menus_page.group[0].card[5]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[5][3]",
+      "role": "menu_item",
+      "label": "Animation",
+      "parent": "menus_page.group[0].card[5]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[5][4]",
+      "role": "menu_item",
+      "label": "Newest first",
+      "parent": "menus_page.group[0].card[5]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[5][5]",
+      "role": "menu_item",
+      "label": "Oldest first",
+      "parent": "menus_page.group[0].card[5]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[5]",
+      "role": "menu",
+      "label": "Filter menu",
+      "parent": "menus_page.group[0]",
+      "state": {
+        "picked": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "menus_page.group[0].card[6][1]",
+      "role": "menu_item",
+      "label": "Profile",
+      "parent": "menus_page.group[0].card[6]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[6][2]",
+      "role": "menu_item",
+      "label": "Subscription",
+      "parent": "menus_page.group[0].card[6]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[6][3]",
+      "role": "menu_item",
+      "label": "Join Discord",
+      "parent": "menus_page.group[0].card[6]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[6][4]",
+      "role": "menu_item",
+      "label": "Settings",
+      "parent": "menus_page.group[0].card[6]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[6][5]",
+      "role": "menu_item",
+      "label": "Updates",
+      "parent": "menus_page.group[0].card[6]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[6][6]",
+      "role": "menu_item",
+      "label": "Sign out",
+      "parent": "menus_page.group[0].card[6]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "menus_page.group[0].card[6]",
+      "role": "menu",
+      "label": "Profile menu",
+      "parent": "menus_page.group[0]",
+      "state": {
+        "picked": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    }
+  ]
+}

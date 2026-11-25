@@ -241,6 +241,7 @@ Records what the autonomous cycle of September 2026 taught about the way of work
 <!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
 ## Related
 
+- [ADR 0088: libraries are plain, and a mobile build asks for its crate type](../../adr/Structure/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type.md)
 - [task-70: adaptive transformations](../../Tasks/task-70-adaptive-transformations/task-70-adaptive-transformations.md)
 - [task-75: production-ready platform accessibility](../../Tasks/task-75-platform-accessibility/task-75-platform-accessibility.md)
 - [task-83: the delta carries the node that was just added, and the refusal names who acted](../../Tasks/task-83-delta-carries-node-refusal-names-actor/task-83-delta-carries-node-refusal-names-actor.md)

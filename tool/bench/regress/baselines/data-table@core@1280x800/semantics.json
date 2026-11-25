@@ -6,6 +6,12 @@
       "label": "Data Table"
     },
     {
+      "id": "table_page.group[0]",
+      "role": "group",
+      "label": "Data Table",
+      "parent": "table_page"
+    },
+    {
       "id": "table_page.table[0]",
       "role": "row",
       "label": "crates/comps/src/file_0.rs, modified, 3 KB, 0000000",
@@ -163,12 +169,222 @@
     {
       "id": "table_page.table",
       "role": "table",
-      "label": "files",
-      "parent": "table_page",
+      "label": "Default, Hover, Selected, Focus, Scroll: 2,000 rows",
+      "parent": "table_page.group[0]",
       "state": {
         "count": {
           "kind": "int",
           "value": 2000
+        },
+        "selected_row": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "table_page.group[1]",
+      "role": "group",
+      "label": "Data Table, ranges",
+      "parent": "table_page"
+    },
+    {
+      "id": "table_page.group[1].card[0][0]",
+      "role": "row",
+      "label": "crates/screen/src/file_0.rs, modified, 3 KB, 0000000",
+      "parent": "table_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "table_page.group[1].card[0][1]",
+      "role": "row",
+      "label": "crates/screen/src/file_1.rs, added, 40 KB, e3779ba",
+      "parent": "table_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.group[1].card[0][2]",
+      "role": "row",
+      "label": "crates/screen/src/file_2.rs, renamed, 77 KB, c6ef375",
+      "parent": "table_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.group[1].card[0][3]",
+      "role": "row",
+      "label": "crates/screen/src/file_3.rs, modified, 114 KB, aa66d30",
+      "parent": "table_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.group[1].card[0][4]",
+      "role": "row",
+      "label": "crates/screen/src/file_4.rs, added, 151 KB, 8dde6eb",
+      "parent": "table_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.group[1].card[0][5]",
+      "role": "row",
+      "label": "crates/screen/src/file_5.rs, renamed, 188 KB, 71560a6",
+      "parent": "table_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.group[1].card[0][6]",
+      "role": "row",
+      "label": "crates/screen/src/file_6.rs, modified, 225 KB, 54cda61",
+      "parent": "table_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.group[1].card[0][7]",
+      "role": "row",
+      "label": "crates/screen/src/file_7.rs, added, 262 KB, 384541c",
+      "parent": "table_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[0]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.group[1].card[0]",
+      "role": "table",
+      "label": "Narrow: columns drop by priority",
+      "parent": "table_page.group[1]",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 500
+        },
+        "selected_row": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "table_page.group[1].card[1][0]",
+      "role": "row",
+      "label": "crates/accord/src/file_0.rs, modified, 3 KB, 0000000",
+      "parent": "table_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[1]:selected_row"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "table_page.group[1].card[1][1]",
+      "role": "row",
+      "label": "crates/accord/src/file_1.rs, added, 40 KB, e3779ba",
+      "parent": "table_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[1]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.group[1].card[1][2]",
+      "role": "row",
+      "label": "crates/accord/src/file_2.rs, renamed, 77 KB, c6ef375",
+      "parent": "table_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "table_page.group[1].card[1]:selected_row"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "table_page.group[1].card[1]",
+      "role": "table",
+      "label": "Few rows: nothing to scroll",
+      "parent": "table_page.group[1]",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 3
+        },
+        "selected_row": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "table_page.group[1].card[2]",
+      "role": "table",
+      "label": "Empty: no rows",
+      "parent": "table_page.group[1]",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 0
         },
         "selected_row": {
           "kind": "text",

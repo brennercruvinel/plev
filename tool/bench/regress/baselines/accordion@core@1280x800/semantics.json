@@ -1,0 +1,393 @@
+{
+  "nodes": [
+    {
+      "id": "accordion_page",
+      "role": "region",
+      "label": "Accordion"
+    },
+    {
+      "id": "accordion_page.group[0]",
+      "role": "group",
+      "label": "Accordion",
+      "parent": "accordion_page"
+    },
+    {
+      "id": "accordion_page.group[0].card[0].item[0]",
+      "role": "button",
+      "label": "3D Objects",
+      "parent": "accordion_page.group[0].card[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[0].card[0].item[0]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[0].card[0].item[0].panel",
+      "role": "region",
+      "label": "3D Objects",
+      "description": "Meshes, primitives and imported scenes, ready to drop on the canvas.",
+      "parent": "accordion_page.group[0].card[0]"
+    },
+    {
+      "id": "accordion_page.group[0].card[0].item[1]",
+      "role": "button",
+      "label": "Materials",
+      "parent": "accordion_page.group[0].card[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[0].card[0].item[1]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[0].card[0].item[2]",
+      "role": "button",
+      "label": "Lights",
+      "parent": "accordion_page.group[0].card[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[0].card[0].item[2]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[0].card[0]",
+      "role": "group",
+      "label": "Single: Closed, Open, Focus",
+      "parent": "accordion_page.group[0]"
+    },
+    {
+      "id": "accordion_page.group[0].card[1].item[0]",
+      "role": "button",
+      "label": "3D Objects",
+      "parent": "accordion_page.group[0].card[1]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[0].card[1].item[0]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[0].card[1].item[0].panel",
+      "role": "region",
+      "label": "3D Objects",
+      "description": "Meshes, primitives and imported scenes, ready to drop on the canvas.",
+      "parent": "accordion_page.group[0].card[1]"
+    },
+    {
+      "id": "accordion_page.group[0].card[1].item[1]",
+      "role": "button",
+      "label": "Materials",
+      "parent": "accordion_page.group[0].card[1]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[0].card[1].item[1]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[0].card[1].item[1].panel",
+      "role": "region",
+      "label": "Materials",
+      "description": "Surfaces with their color, roughness and the maps that drive them.",
+      "parent": "accordion_page.group[0].card[1]"
+    },
+    {
+      "id": "accordion_page.group[0].card[1]",
+      "role": "group",
+      "label": "Multiple: Open",
+      "parent": "accordion_page.group[0]"
+    },
+    {
+      "id": "accordion_page.group[1]",
+      "role": "group",
+      "label": "Accordion, edges",
+      "parent": "accordion_page"
+    },
+    {
+      "id": "accordion_page.group[1].card[0].item[0]",
+      "role": "button",
+      "label": "3D Objects",
+      "parent": "accordion_page.group[1].card[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[1].card[0].item[0]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[1].card[0].item[0].panel",
+      "role": "region",
+      "label": "3D Objects",
+      "description": "Meshes, primitives and imported scenes, ready to drop on the canvas.",
+      "parent": "accordion_page.group[1].card[0]"
+    },
+    {
+      "id": "accordion_page.group[1].card[0].item[1]",
+      "role": "button",
+      "label": "Materials",
+      "parent": "accordion_page.group[1].card[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[1].card[0].item[1]:expanded"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[1].card[0].item[2]",
+      "role": "button",
+      "label": "Lights",
+      "parent": "accordion_page.group[1].card[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[1].card[0].item[2]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[1].card[0]",
+      "role": "group",
+      "label": "Disabled",
+      "parent": "accordion_page.group[1]"
+    },
+    {
+      "id": "accordion_page.group[1].card[1].item[0]",
+      "role": "button",
+      "label": "Materials imported from the shared library of the studio, sorted by the project that uses them",
+      "parent": "accordion_page.group[1].card[1]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[1].card[1].item[0]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[1].card[1].item[0].panel",
+      "role": "region",
+      "label": "Materials imported from the shared library of the studio, sorted by the project that uses them",
+      "description": "A section holds what it holds: its height comes from the text measured at the width the card gets, so a narrow card makes a taller section, and the section opens to exactly that height. Nothing here is cut to fit, nothing is given a fixed height, and the title above wraps the same way when the card gets narrow.",
+      "parent": "accordion_page.group[1].card[1]"
+    },
+    {
+      "id": "accordion_page.group[1].card[1].item[1]",
+      "role": "button",
+      "label": "3D Objects",
+      "parent": "accordion_page.group[1].card[1]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[1].card[1].item[1]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[1].card[1]",
+      "role": "group",
+      "label": "Long content",
+      "parent": "accordion_page.group[1]"
+    },
+    {
+      "id": "accordion_page.group[2]",
+      "role": "group",
+      "label": "Accordion, the kit's assets",
+      "parent": "accordion_page"
+    },
+    {
+      "id": "accordion_page.group[2].card[0].item[0]",
+      "role": "button",
+      "label": "3D Objects",
+      "parent": "accordion_page.group[2].card[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[2].card[0].item[0]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[2].card[0].item[0].panel",
+      "role": "region",
+      "label": "3D Objects",
+      "parent": "accordion_page.group[2].card[0]"
+    },
+    {
+      "id": "accordion_page.group[2].card[0].item[0].panel.tile[0]",
+      "role": "image",
+      "label": "Cube",
+      "parent": "accordion_page.group[2].card[0].item[0].panel"
+    },
+    {
+      "id": "accordion_page.group[2].card[0].item[0].panel.tile[1]",
+      "role": "image",
+      "label": "Sphere",
+      "parent": "accordion_page.group[2].card[0].item[0].panel"
+    },
+    {
+      "id": "accordion_page.group[2].card[0].item[0].panel.tile[2]",
+      "role": "image",
+      "label": "Stack",
+      "parent": "accordion_page.group[2].card[0].item[0].panel"
+    },
+    {
+      "id": "accordion_page.group[2].card[0].item[1]",
+      "role": "button",
+      "label": "Materials",
+      "parent": "accordion_page.group[2].card[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "accordion_page.group[2].card[0].item[1]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "accordion_page.group[2].card[0].item[1].panel",
+      "role": "region",
+      "label": "Materials",
+      "parent": "accordion_page.group[2].card[0]"
+    },
+    {
+      "id": "accordion_page.group[2].card[0].item[1].panel.tile[0]",
+      "role": "image",
+      "label": "Paper",
+      "parent": "accordion_page.group[2].card[0].item[1].panel"
+    },
+    {
+      "id": "accordion_page.group[2].card[0].item[1].panel.tile[1]",
+      "role": "image",
+      "label": "Glass",
+      "parent": "accordion_page.group[2].card[0].item[1].panel"
+    },
+    {
+      "id": "accordion_page.group[2].card[0].item[1].panel.tile[2]",
+      "role": "image",
+      "label": "Metal",
+      "parent": "accordion_page.group[2].card[0].item[1].panel"
+    },
+    {
+      "id": "accordion_page.group[2].card[0]",
+      "role": "group",
+      "label": "Thumbnails: Open, Hover",
+      "parent": "accordion_page.group[2]"
+    }
+  ]
+}

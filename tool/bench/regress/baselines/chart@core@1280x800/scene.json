@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "be02ea90cf664ff6",
+    "nodes": 62
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "chart_page",
       "z": 0,
-      "hash": "937c0d7c9a652ab8",
-      "nodes": 105,
+      "hash": "ef9adc95a82dbffb",
+      "nodes": 150,
       "bounds": [
-        283.0,
-        49.0,
-        957.0,
-        711.0
+        0.0,
+        24.0,
+        1280.0,
+        728.0
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "41dc04b6fa7988ef",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,118 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "chart_page.group[0].card[0]",
+      "layer": "chart_page",
+      "rect": [
+        56.0,
+        262.0,
+        572.0,
+        240.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "chart_page.group[0].card[1]",
+      "layer": "chart_page",
+      "rect": [
+        652.0,
+        262.0,
+        572.0,
+        240.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "chart_page.group[0].card[2]",
+      "layer": "chart_page",
+      "rect": [
+        56.0,
+        590.0,
+        572.0,
+        240.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "chart_page.group[0].card[3]",
+      "layer": "chart_page",
+      "rect": [
+        652.0,
+        590.0,
+        572.0,
+        240.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "chart_page.group[1].card[0]",
+      "layer": "chart_page",
+      "rect": [
+        56.0,
+        1104.0,
+        572.0,
+        8.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "chart_page.group[1].card[1]",
+      "layer": "chart_page",
+      "rect": [
+        652.0,
+        1066.0,
+        572.0,
+        84.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "chart_page.group[2].card[0]",
+      "layer": "chart_page",
+      "rect": [
+        56.0,
+        1386.0,
+        1168.0,
+        240.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    }
+  ]
 }

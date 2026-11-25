@@ -1,22 +1,92 @@
 {
   "nodes": [
     {
-      "id": "tooltip_page",
+      "id": "hover_card_page",
       "role": "region",
       "label": "Hover Card"
     },
     {
-      "id": "tooltip_page.button",
+      "id": "hover_card_page.group[0]",
+      "role": "group",
+      "label": "Live",
+      "parent": "hover_card_page"
+    },
+    {
+      "id": "hover_card_page.group[0].card[0]",
       "role": "button",
-      "label": "Hover me",
-      "description": "Tooltips wait 450 ms, then place themselves above the anchor, or below when there is no room.",
-      "parent": "tooltip_page",
+      "label": "@plev",
+      "description": "Default, Hover, Open, Focus",
+      "parent": "hover_card_page.group[0]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
       "actions": [
         {
           "name": "activate"
         }
       ],
       "focusable": true
+    },
+    {
+      "id": "hover_card_page.group[1]",
+      "role": "group",
+      "label": "States",
+      "parent": "hover_card_page"
+    },
+    {
+      "id": "hover_card_page.group[1].card[0]",
+      "role": "button",
+      "label": "@plev",
+      "description": "Open",
+      "parent": "hover_card_page.group[1]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "hover_card_page.group[1].card[0].panel",
+      "role": "group",
+      "label": "Brenner Cruvinel",
+      "description": "Builds plev, a native engine where a capability keeps its identity while its look is born, fades or changes in real time.",
+      "parent": "hover_card_page.group[1]"
+    },
+    {
+      "id": "hover_card_page.group[1].card[1]",
+      "role": "button",
+      "label": "@plev",
+      "description": "Flips to the top",
+      "parent": "hover_card_page.group[1]",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "hover_card_page.group[1].card[1].panel",
+      "role": "group",
+      "label": "Brenner Cruvinel",
+      "description": "Builds plev, a native engine where a capability keeps its identity while its look is born, fades or changes in real time.",
+      "parent": "hover_card_page.group[1]"
     }
   ]
 }

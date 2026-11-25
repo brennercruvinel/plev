@@ -81,6 +81,10 @@ pub fn settle(surface: &mut Surface, area: Rect, theme: &Theme) -> (Compositor, 
     let mut c = Compositor::new();
     surface.render(&mut c, area, theme);
     let mut frames = 0;
+    // a transition may run on the wall clock (a text field's edge fades in
+    // 0.1 s by Instant, task-104m), and 600 of these turns pass in a few
+    // milliseconds: the frames alone do not say that one never ends
+    let started = std::time::Instant::now();
     loop {
         let wake = surface.wake(TURN);
         if wake.now {
@@ -91,7 +95,10 @@ pub fn settle(surface: &mut Surface, area: Rect, theme: &Theme) -> (Compositor, 
         if !wake.is_continuous() {
             return (c, frames);
         }
-        assert!(frames < 600, "the transitions never settle");
+        assert!(
+            frames < 600 || started.elapsed() < std::time::Duration::from_secs(2),
+            "the transitions never settle"
+        );
     }
 }
 

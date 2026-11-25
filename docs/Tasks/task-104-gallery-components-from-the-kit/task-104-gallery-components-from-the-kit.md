@@ -3,7 +3,7 @@ id: task-104
 title: "task-104: the 35 empty or borrowed gallery tabs become kit components"
 project: plev
 type: task
-status: in-review
+status: in-progress
 date: 2026-10-31
 date_basis: text
 recorded: 2026-10-31

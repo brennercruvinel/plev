@@ -6,11 +6,16 @@
       "label": "Navigation Menu"
     },
     {
+      "id": "navigation_menu_page.group[0]",
+      "role": "group",
+      "label": "Navigation menu",
+      "parent": "navigation_menu_page"
+    },
+    {
       "id": "navigation_menu_page.link[0]",
       "role": "link",
       "label": "Workspace",
-      "description": "1",
-      "parent": "navigation_menu_page",
+      "parent": "navigation_menu_page.group[0]",
       "state": {
         "active": {
           "kind": "bool",
@@ -31,8 +36,7 @@
       "id": "navigation_menu_page.link[1]",
       "role": "link",
       "label": "Branches",
-      "description": "2",
-      "parent": "navigation_menu_page",
+      "parent": "navigation_menu_page.group[0]",
       "state": {
         "active": {
           "kind": "bool",
@@ -53,8 +57,7 @@
       "id": "navigation_menu_page.link[2]",
       "role": "link",
       "label": "History",
-      "description": "4",
-      "parent": "navigation_menu_page",
+      "parent": "navigation_menu_page.group[0]",
       "state": {
         "active": {
           "kind": "bool",
@@ -74,9 +77,8 @@
     {
       "id": "navigation_menu_page.link[3]",
       "role": "link",
-      "label": "A label long enough to truncate in a narrow rail",
-      "description": "9",
-      "parent": "navigation_menu_page",
+      "label": "Settings",
+      "parent": "navigation_menu_page.group[0]",
       "state": {
         "active": {
           "kind": "bool",
@@ -88,6 +90,105 @@
           "name": "activate",
           "reads": [
             "navigation_menu_page.link[3]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "navigation_menu_page.group[1]",
+      "role": "group",
+      "label": "Trailing content",
+      "parent": "navigation_menu_page"
+    },
+    {
+      "id": "navigation_menu_page.link[4]",
+      "role": "link",
+      "label": "Search",
+      "description": "Ctrl K",
+      "parent": "navigation_menu_page.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "navigation_menu_page.link[4]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "navigation_menu_page.link[5]",
+      "role": "link",
+      "label": "History",
+      "description": "4",
+      "parent": "navigation_menu_page.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "navigation_menu_page.link[5]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "navigation_menu_page.group[2]",
+      "role": "group",
+      "label": "Long content",
+      "parent": "navigation_menu_page"
+    },
+    {
+      "id": "navigation_menu_page.link[6]",
+      "role": "link",
+      "label": "A label long enough to truncate in a narrow rail",
+      "description": "9",
+      "parent": "navigation_menu_page.group[2]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "navigation_menu_page.link[6]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "navigation_menu_page.link[7]",
+      "role": "link",
+      "label": "Configurações de privacidade",
+      "parent": "navigation_menu_page.group[2]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "navigation_menu_page.link[7]:active"
           ]
         }
       ],

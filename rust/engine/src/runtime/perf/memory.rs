@@ -26,6 +26,21 @@ impl MemoryStats {
     pub fn gpu_total_bytes(&self) -> u64 {
         self.glyph_atlas_bytes + self.texture_pool_bytes + self.layer_bytes
     }
+
+    /// The readings of one window's frame resources now, the process's
+    /// RSS with them.
+    pub(crate) fn of(
+        compositor: &crate::drawing::compositor::Compositor,
+        text_system: &crate::drawing::text::TextSystem,
+        texture_pool: &crate::drawing::gpu::texture_pool::TexturePool,
+    ) -> Self {
+        Self {
+            glyph_atlas_bytes: text_system.atlas_memory_bytes(),
+            texture_pool_bytes: texture_pool.memory_bytes(),
+            layer_bytes: compositor.gpu_memory_bytes(),
+            process_rss_bytes: process_rss_bytes(),
+        }
+    }
 }
 
 /// Resident set size of the current process in bytes, or `None` where the

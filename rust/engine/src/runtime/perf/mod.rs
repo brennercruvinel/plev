@@ -11,19 +11,40 @@
 //! items, time), off unless a thread turns it on. `gpu_time` adds the
 //! GPU's own clock to it, from timestamp queries, when the context asked
 //! for them (`RenderConfig::gpu_timestamps`).
+//!
+//! The dev mode reads a frame whole: [`zones`] are named, nested CPU
+//! scopes per thread on a shared clock, [`pipeline`] groups the stages
+//! into the phases a frame runs, and [`report`] keeps the last frames,
+//! each with its stages, zones, counters, layers and GPU passes
+//! ([`Recorder`], one per window host). [`marks`] are what code says about
+//! a frame (a value under a name, a line of text), [`heap`] counts the
+//! process's allocations, and [`histogram`] spreads the runs of one zone.
 
 pub(crate) mod gpu_time;
+pub mod heap;
+pub mod histogram;
 mod hud;
+pub mod marks;
 mod memory;
+pub mod pipeline;
+pub mod report;
 pub mod stages;
+pub mod zones;
 
 mod samples;
 #[cfg(test)]
 mod tests;
 
+pub use gpu_time::{GpuPass, GpuReading};
+pub use heap::{HeapFrame, HeapTotals};
+pub use histogram::Histogram;
 pub use hud::PerfHud;
+pub use marks::{Level, MarkFrame, Message, PlotPoint, Tee};
 pub use memory::{MemoryStats, process_rss_bytes};
+pub use pipeline::{Phase, PhaseCost, Pipeline};
+pub use report::{FrameReport, LayerReport, LogLine, Recorder};
 pub use samples::RollingWindow;
+pub use zones::{ThreadZones, ZoneFrame, ZoneRecord, ZoneStat};
 
 use crate::compose::animation::AnimationTick;
 use crate::drawing::compositor::RenderStats;

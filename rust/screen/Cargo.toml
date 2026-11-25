@@ -13,6 +13,11 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 description = "plev surfaces materialized from verified IR: layout by the engine, tokens by the Theme, widgets by comps, semantics from the IR, events as requests through the app's dispatcher"
+# the integration tests are one executable, tests/suite.rs, a module per file
+# (task-106): cargo links every file under tests/ as an executable of its
+# own, each with the whole crate inside. a target listed apart at the end of
+# this file is one that needs a process to itself.
+autotests = false
 
 [dependencies]
 # the IR and its verifier: only a VerifiedIr materializes.
@@ -36,3 +41,7 @@ indexmap.workspace = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "suite"
+path = "tests/suite.rs"

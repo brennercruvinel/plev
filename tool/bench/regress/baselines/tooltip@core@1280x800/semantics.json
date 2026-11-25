@@ -6,17 +6,51 @@
       "label": "Tooltip"
     },
     {
+      "id": "tooltip_page.group[0]",
+      "role": "group",
+      "label": "Live",
+      "parent": "tooltip_page"
+    },
+    {
       "id": "tooltip_page.button",
       "role": "button",
-      "label": "Hover me",
-      "description": "Tooltips wait 450 ms, then place themselves above the anchor, or below when there is no room.",
-      "parent": "tooltip_page",
+      "label": "Undo",
+      "description": "U",
+      "parent": "tooltip_page.group[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
       "actions": [
         {
-          "name": "activate"
+          "name": "activate",
+          "reads": [
+            "tooltip_page.button:active"
+          ]
         }
       ],
       "focusable": true
+    },
+    {
+      "id": "tooltip_page.group[1]",
+      "role": "group",
+      "label": "Tooltip",
+      "parent": "tooltip_page"
+    },
+    {
+      "id": "tooltip_page.group[1].card[0]",
+      "role": "label",
+      "label": "Copy prompt",
+      "parent": "tooltip_page.group[1]"
+    },
+    {
+      "id": "tooltip_page.group[1].card[1]",
+      "role": "label",
+      "label": "Redo",
+      "description": "R",
+      "parent": "tooltip_page.group[1]"
     }
   ]
 }

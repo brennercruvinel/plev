@@ -15,7 +15,7 @@
 
 // shared with the other ide tests: this binary uses part of the rig.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};

@@ -65,6 +65,26 @@
     },
     {
      "level": 2,
+     "title": "2026-11-25",
+     "anchor": "2026-11-25"
+    },
+    {
+     "level": 2,
+     "title": "2026-11-24",
+     "anchor": "2026-11-24"
+    },
+    {
+     "level": 2,
+     "title": "2026-11-12",
+     "anchor": "2026-11-12"
+    },
+    {
+     "level": 2,
+     "title": "2026-11-03",
+     "anchor": "2026-11-03"
+    },
+    {
+     "level": 2,
      "title": "2026-11-02",
      "anchor": "2026-11-02"
     },
@@ -816,6 +836,66 @@
      "level": 2,
      "title": "Reading an old record",
      "anchor": "reading-an-old-record"
+    }
+   ]
+  },
+  {
+   "path": "docs/Research/Ecosystem/build-directories-in-large-rust-workspaces.md",
+   "id": "research-build-directories-in-large-rust-workspaces",
+   "title": "how large rust workspaces keep a build directory small",
+   "project": "plev",
+   "type": "research",
+   "status": "reference",
+   "date": "2026-11-24",
+   "date_basis": "text",
+   "recorded": "2026-11-25",
+   "topics": [
+    "workspace",
+    "performance",
+    "research"
+   ],
+   "relations": [
+    "task-106",
+    "adr-0083",
+    "adr-0087",
+    "adr-0088",
+    "adr-0089",
+    "adr-0090"
+   ],
+   "source": "reconstruction",
+   "source_revision": "0a8598f9",
+   "revised": "2026-11-25",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "how large rust workspaces keep a build directory small",
+     "anchor": "how-large-rust-workspaces-keep-a-build-directory-small"
+    },
+    {
+     "level": 2,
+     "title": "What was counted",
+     "anchor": "what-was-counted"
+    },
+    {
+     "level": 2,
+     "title": "What each one does",
+     "anchor": "what-each-one-does"
+    },
+    {
+     "level": 2,
+     "title": "What was tried and does not apply",
+     "anchor": "what-was-tried-and-does-not-apply"
+    },
+    {
+     "level": 2,
+     "title": "Limits",
+     "anchor": "limits"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
     }
    ]
   },
@@ -6398,6 +6478,11 @@
      "level": 2,
      "title": "lições",
      "anchor": "lições"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
     }
    ]
   },
@@ -7444,11 +7529,12 @@
     "adr-0001",
     "operations-validate-visuals-by-pixel",
     "task-61",
-    "task-75"
+    "task-75",
+    "task-106"
    ],
    "source": "docs/ref/build-and-serve-the-web-target.md",
    "source_revision": "ec0a224c",
-   "revised": "2026-10-30",
+   "revised": "2026-11-25",
    "review": "reviewed",
    "headings": [
     {
@@ -7758,6 +7844,11 @@
      "level": 2,
      "title": "Related lists",
      "anchor": "related-lists"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
     }
    ]
   },
@@ -8165,6 +8256,11 @@
      "level": 2,
      "title": "info.plist obrigatório",
      "anchor": "infoplist-obrigatório"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
     }
    ]
   },
@@ -8198,7 +8294,7 @@
    ],
    "source": "docs/ref/orchestrate-coding-agents-on-this-repo.md",
    "source_revision": "ec0a224c",
-   "revised": "2026-10-31",
+   "revised": "2026-11-24",
    "review": "reviewed",
    "headings": [
     {
@@ -9592,7 +9688,7 @@
    "title": "task-104: the 35 empty or borrowed gallery tabs become kit components",
    "project": "plev",
    "type": "task",
-   "status": "in-review",
+   "status": "in-progress",
    "date": "2026-10-31",
    "date_basis": "text",
    "recorded": "2026-10-31",
@@ -9647,6 +9743,185 @@
      "level": 2,
      "title": "Evidence",
      "anchor": "evidence"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md",
+   "id": "task-105",
+   "title": "task-105: a dev mode over any app: the frame, the GPU, the zones, the heap and the page's controls",
+   "project": "plev",
+   "type": "task",
+   "status": "in-progress",
+   "date": "2026-11-03",
+   "date_basis": "text",
+   "recorded": "2026-11-03",
+   "topics": [
+    "rendering",
+    "process"
+   ],
+   "relations": [
+    "adr-0008",
+    "adr-0093"
+   ],
+   "source": "https://github.com/brennercruvinel/plev/issues/180",
+   "source_revision": "a6d523b8",
+   "revised": "2026-11-25",
+   "review": "pending",
+   "headings": [
+    {
+     "level": 1,
+     "title": "task-105: a dev mode over any app: the frame, the GPU, the zones, the heap and the page's controls",
+     "anchor": "task-105-a-dev-mode-over-any-app-the-frame-the-gpu-the-zones-the-heap-and-the-pages-controls"
+    },
+    {
+     "level": 2,
+     "title": "The panel",
+     "anchor": "the-panel"
+    },
+    {
+     "level": 2,
+     "title": "The seven views",
+     "anchor": "the-seven-views"
+    },
+    {
+     "level": 2,
+     "title": "The insights",
+     "anchor": "the-insights"
+    },
+    {
+     "level": 2,
+     "title": "What an app writes",
+     "anchor": "what-an-app-writes"
+    },
+    {
+     "level": 2,
+     "title": "Where it lives",
+     "anchor": "where-it-lives"
+    },
+    {
+     "level": 2,
+     "title": "Choices made on the way",
+     "anchor": "choices-made-on-the-way"
+    },
+    {
+     "level": 2,
+     "title": "Seen working",
+     "anchor": "seen-working"
+    },
+    {
+     "level": 2,
+     "title": "Not done",
+     "anchor": "not-done"
+    },
+    {
+     "level": 2,
+     "title": "What the first try taught",
+     "anchor": "what-the-first-try-taught"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/Tasks/task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md",
+   "id": "task-106",
+   "title": "task-106: what a build directory weighs, and a warm start for a new checkout",
+   "project": "plev",
+   "type": "task",
+   "status": "done",
+   "date": "2026-11-24",
+   "date_basis": "text",
+   "recorded": "2026-11-24",
+   "topics": [
+    "workspace",
+    "performance",
+    "process",
+    "agents"
+   ],
+   "relations": [
+    "task-102",
+    "operations-orchestrate-coding-agents-on-this-repo",
+    "adr-0087",
+    "adr-0088",
+    "adr-0089",
+    "adr-0090",
+    "adr-0091",
+    "adr-0092",
+    "research-build-directories-in-large-rust-workspaces"
+   ],
+   "source": "https://github.com/brennercruvinel/plev/issues/185",
+   "source_revision": "f7695626",
+   "revised": "2026-11-25",
+   "review": "pending",
+   "headings": [
+    {
+     "level": 1,
+     "title": "task-106: what a build directory weighs, and a warm start for a new checkout",
+     "anchor": "task-106-what-a-build-directory-weighs-and-a-warm-start-for-a-new-checkout"
+    },
+    {
+     "level": 2,
+     "title": "What weighed",
+     "anchor": "what-weighed"
+    },
+    {
+     "level": 2,
+     "title": "What changed",
+     "anchor": "what-changed"
+    },
+    {
+     "level": 2,
+     "title": "One file's tests",
+     "anchor": "one-files-tests"
+    },
+    {
+     "level": 2,
+     "title": "What a shared process showed",
+     "anchor": "what-a-shared-process-showed"
+    },
+    {
+     "level": 2,
+     "title": "The same tests, before and after",
+     "anchor": "the-same-tests-before-and-after"
+    },
+    {
+     "level": 2,
+     "title": "The eighteen that failed on the branch point",
+     "anchor": "the-eighteen-that-failed-on-the-branch-point"
+    },
+    {
+     "level": 2,
+     "title": "Measured after",
+     "anchor": "measured-after"
+    },
+    {
+     "level": 2,
+     "title": "What was decided against",
+     "anchor": "what-was-decided-against"
+    },
+    {
+     "level": 2,
+     "title": "What was not verified",
+     "anchor": "what-was-not-verified"
+    },
+    {
+     "level": 2,
+     "title": "Open",
+     "anchor": "open"
+    },
+    {
+     "level": 2,
+     "title": "Closed in the task",
+     "anchor": "closed-in-the-task"
     },
     {
      "level": 2,
@@ -27911,7 +28186,7 @@
    ],
    "source": "docs/adr/importing/0069-importers-target-plev-ir.md",
    "source_revision": "ec0a224c",
-   "revised": "2026-11-02",
+   "revised": "2026-11-25",
    "review": "reviewed",
    "headings": [
     {
@@ -34042,6 +34317,132 @@
    ]
   },
   {
+   "path": "docs/adr/Structure/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type.md",
+   "id": "adr-0088",
+   "title": "libraries are plain, and a mobile build asks for its crate type",
+   "project": "plev",
+   "type": "adr",
+   "status": "accepted",
+   "date": "2026-11-24",
+   "date_basis": "git",
+   "recorded": "2026-11-25",
+   "topics": [
+    "workspace",
+    "mobile",
+    "performance"
+   ],
+   "relations": [
+    "task-106",
+    "adr-0080",
+    "platform-ios-build",
+    "platform-android-emulator-deploy",
+    "learning-general",
+    "research-build-directories-in-large-rust-workspaces"
+   ],
+   "evidence": [
+    "9a57115d",
+    "91f812ed",
+    "b2834503",
+    "e1d415c4"
+   ],
+   "source": "reconstruction",
+   "source_revision": "0a8598f9",
+   "revised": "2026-11-25",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "libraries are plain, and a mobile build asks for its crate type",
+     "anchor": "libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type"
+    },
+    {
+     "level": 2,
+     "title": "context",
+     "anchor": "context"
+    },
+    {
+     "level": 2,
+     "title": "decision",
+     "anchor": "decision"
+    },
+    {
+     "level": 2,
+     "title": "consequences",
+     "anchor": "consequences"
+    },
+    {
+     "level": 2,
+     "title": "alternatives",
+     "anchor": "alternatives"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/adr/Structure/0091-tool-contracts-live-in-config/0091-tool-contracts-live-in-config.md",
+   "id": "adr-0091",
+   "title": "the tools' contracts live in .config",
+   "project": "plev",
+   "type": "adr",
+   "status": "proposed",
+   "date": "2026-11-24",
+   "date_basis": "git",
+   "recorded": "2026-11-25",
+   "topics": [
+    "workspace",
+    "process"
+   ],
+   "relations": [
+    "task-106",
+    "adr-0022",
+    "docs-conventions"
+   ],
+   "evidence": [
+    "b6759681",
+    "a1c697a3"
+   ],
+   "source": "reconstruction",
+   "source_revision": "0a8598f9",
+   "revised": "2026-11-25",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "the tools' contracts live in .config",
+     "anchor": "the-tools-contracts-live-in-config"
+    },
+    {
+     "level": 2,
+     "title": "context",
+     "anchor": "context"
+    },
+    {
+     "level": 2,
+     "title": "decision",
+     "anchor": "decision"
+    },
+    {
+     "level": 2,
+     "title": "consequences",
+     "anchor": "consequences"
+    },
+    {
+     "level": 2,
+     "title": "alternatives",
+     "anchor": "alternatives"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
    "path": "docs/adr/Synthesis/0049-plev-ir-typed-and-verified/0049-plev-ir-typed-and-verified.md",
    "id": "adr-0049",
    "title": "the plev IR is typed, references only declared capabilities, and runs only once verified",
@@ -36263,6 +36664,311 @@
      "level": 2,
      "title": "2026-09-23",
      "anchor": "2026-09-23"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/adr/Workflows/0087-a-crates-integration-tests-are-one-executable/0087-a-crates-integration-tests-are-one-executable.md",
+   "id": "adr-0087",
+   "title": "a crate's integration tests are one executable",
+   "project": "plev",
+   "type": "adr",
+   "status": "accepted",
+   "date": "2026-11-24",
+   "date_basis": "git",
+   "recorded": "2026-11-25",
+   "topics": [
+    "workspace",
+    "performance",
+    "process"
+   ],
+   "relations": [
+    "task-106",
+    "adr-0083",
+    "research-build-directories-in-large-rust-workspaces"
+   ],
+   "evidence": [
+    "df245521",
+    "aff2388a",
+    "57e62523",
+    "92c1cd0a"
+   ],
+   "source": "reconstruction",
+   "source_revision": "0a8598f9",
+   "revised": "2026-11-25",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "a crate's integration tests are one executable",
+     "anchor": "a-crates-integration-tests-are-one-executable"
+    },
+    {
+     "level": 2,
+     "title": "context",
+     "anchor": "context"
+    },
+    {
+     "level": 2,
+     "title": "decision",
+     "anchor": "decision"
+    },
+    {
+     "level": 2,
+     "title": "consequences",
+     "anchor": "consequences"
+    },
+    {
+     "level": 2,
+     "title": "alternatives",
+     "anchor": "alternatives"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/adr/Workflows/0089-a-build-directory-belongs-to-one-checkout/0089-a-build-directory-belongs-to-one-checkout.md",
+   "id": "adr-0089",
+   "title": "a build directory belongs to one checkout, starts from a clone and has a ceiling",
+   "project": "plev",
+   "type": "adr",
+   "status": "accepted",
+   "date": "2026-11-24",
+   "date_basis": "git",
+   "recorded": "2026-11-25",
+   "topics": [
+    "workspace",
+    "performance",
+    "agents"
+   ],
+   "relations": [
+    "task-106",
+    "operations-orchestrate-coding-agents-on-this-repo",
+    "adr-0083",
+    "research-build-directories-in-large-rust-workspaces"
+   ],
+   "evidence": [
+    "38fa0c21",
+    "cbce2d89"
+   ],
+   "source": "reconstruction",
+   "source_revision": "0a8598f9",
+   "revised": "2026-11-25",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "a build directory belongs to one checkout, starts from a clone and has a ceiling",
+     "anchor": "a-build-directory-belongs-to-one-checkout-starts-from-a-clone-and-has-a-ceiling"
+    },
+    {
+     "level": 2,
+     "title": "context",
+     "anchor": "context"
+    },
+    {
+     "level": 2,
+     "title": "decision",
+     "anchor": "decision"
+    },
+    {
+     "level": 2,
+     "title": "consequences",
+     "anchor": "consequences"
+    },
+    {
+     "level": 2,
+     "title": "alternatives",
+     "anchor": "alternatives"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/adr/Workflows/0090-the-toolchain-is-one-exact-version/0090-the-toolchain-is-one-exact-version.md",
+   "id": "adr-0090",
+   "title": "the toolchain is one exact version, read from one file",
+   "project": "plev",
+   "type": "adr",
+   "status": "accepted",
+   "date": "2026-11-24",
+   "date_basis": "git",
+   "recorded": "2026-11-25",
+   "topics": [
+    "workspace",
+    "process",
+    "performance"
+   ],
+   "relations": [
+    "task-106",
+    "research-build-directories-in-large-rust-workspaces"
+   ],
+   "evidence": [
+    "90447a43"
+   ],
+   "source": "reconstruction",
+   "source_revision": "0a8598f9",
+   "revised": "2026-11-25",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "the toolchain is one exact version, read from one file",
+     "anchor": "the-toolchain-is-one-exact-version-read-from-one-file"
+    },
+    {
+     "level": 2,
+     "title": "context",
+     "anchor": "context"
+    },
+    {
+     "level": 2,
+     "title": "decision",
+     "anchor": "decision"
+    },
+    {
+     "level": 2,
+     "title": "consequences",
+     "anchor": "consequences"
+    },
+    {
+     "level": 2,
+     "title": "alternatives",
+     "anchor": "alternatives"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/adr/Workflows/0092-every-member-builds-one-engine/0092-every-member-builds-one-engine.md",
+   "id": "adr-0092",
+   "title": "every member builds one engine, and the gate builds the other shape",
+   "project": "plev",
+   "type": "adr",
+   "status": "accepted",
+   "date": "2026-11-24",
+   "date_basis": "git",
+   "recorded": "2026-11-25",
+   "topics": [
+    "workspace",
+    "performance",
+    "process"
+   ],
+   "relations": [
+    "task-106",
+    "adr-0083"
+   ],
+   "evidence": [
+    "ce07c1a2",
+    "0844ce0c"
+   ],
+   "source": "reconstruction",
+   "source_revision": "0a8598f9",
+   "revised": "2026-11-25",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "every member builds one engine, and the gate builds the other shape",
+     "anchor": "every-member-builds-one-engine-and-the-gate-builds-the-other-shape"
+    },
+    {
+     "level": 2,
+     "title": "context",
+     "anchor": "context"
+    },
+    {
+     "level": 2,
+     "title": "decision",
+     "anchor": "decision"
+    },
+    {
+     "level": 2,
+     "title": "consequences",
+     "anchor": "consequences"
+    },
+    {
+     "level": 2,
+     "title": "alternatives",
+     "anchor": "alternatives"
+    },
+    {
+     "level": 2,
+     "title": "Related",
+     "anchor": "related"
+    }
+   ]
+  },
+  {
+   "path": "docs/adr/Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md",
+   "id": "adr-0093",
+   "title": "the dev mode is the engine's own: one report a frame, shown once it is whole, in a panel that offers its places as it draws",
+   "project": "plev",
+   "type": "adr",
+   "status": "accepted",
+   "date": "2026-11-25",
+   "date_basis": "git",
+   "recorded": "2026-11-25",
+   "topics": [
+    "rendering",
+    "process",
+    "performance"
+   ],
+   "relations": [
+    "task-105",
+    "adr-0008",
+    "adr-0048"
+   ],
+   "evidence": [
+    "f7695626",
+    "bb10319c"
+   ],
+   "source": "reconstruction",
+   "source_revision": "7ba5cfab",
+   "revised": "2026-11-25",
+   "review": "reviewed",
+   "headings": [
+    {
+     "level": 1,
+     "title": "the dev mode is the engine's own: one report a frame, shown once it is whole, in a panel that offers its places as it draws",
+     "anchor": "the-dev-mode-is-the-engines-own-one-report-a-frame-shown-once-it-is-whole-in-a-panel-that-offers-its-places-as-it-draws"
+    },
+    {
+     "level": 2,
+     "title": "context",
+     "anchor": "context"
+    },
+    {
+     "level": 2,
+     "title": "decision",
+     "anchor": "decision"
+    },
+    {
+     "level": 2,
+     "title": "consequences",
+     "anchor": "consequences"
+    },
+    {
+     "level": 2,
+     "title": "alternatives",
+     "anchor": "alternatives"
     },
     {
      "level": 2,

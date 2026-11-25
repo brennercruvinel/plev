@@ -1,0 +1,1809 @@
+{
+  "nodes": [
+    {
+      "id": "sidebar_page",
+      "role": "region",
+      "label": "Sidebar"
+    },
+    {
+      "id": "sidebar_page.group[0]",
+      "role": "group",
+      "label": "Canvas Sidebar",
+      "parent": "sidebar_page"
+    },
+    {
+      "id": "sidebar_page.scene",
+      "role": "region",
+      "label": "Scene, Assets",
+      "parent": "sidebar_page.group[0]"
+    },
+    {
+      "id": "sidebar_page.scene.logo",
+      "role": "link",
+      "label": "Plev",
+      "parent": "sidebar_page.scene",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.panel",
+      "role": "button",
+      "label": "Toggle the panel",
+      "parent": "sidebar_page.scene",
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.project",
+      "role": "button",
+      "label": "Robot 2.0",
+      "parent": "sidebar_page.scene",
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.search",
+      "role": "text_input",
+      "label": "Search",
+      "description": "⌘ K",
+      "parent": "sidebar_page.scene",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "sidebar_page.scene.search:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.search.action",
+      "role": "button",
+      "label": "search",
+      "parent": "sidebar_page.scene",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.tabs[0]",
+      "role": "tab",
+      "label": "Scene",
+      "parent": "sidebar_page.scene.tabs",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "sidebar_page.scene.tabs:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.tabs[1]",
+      "role": "tab",
+      "label": "Assets",
+      "parent": "sidebar_page.scene.tabs",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "sidebar_page.scene.tabs:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.tabs",
+      "role": "tab_list",
+      "label": "Scene or assets",
+      "parent": "sidebar_page.scene",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "sidebar_page.scene.item[0]",
+      "role": "button",
+      "label": "Camera 1",
+      "parent": "sidebar_page.scene",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[0].lock",
+      "role": "toggle",
+      "label": "lock",
+      "parent": "sidebar_page.scene.item[0]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[0].lock:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[0].hide",
+      "role": "toggle",
+      "label": "hide",
+      "parent": "sidebar_page.scene.item[0]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[0].hide:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[0].mark",
+      "role": "toggle",
+      "label": "mark",
+      "parent": "sidebar_page.scene.item[0]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[0].mark:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[1]",
+      "role": "button",
+      "label": "Dome Light",
+      "parent": "sidebar_page.scene",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[1].lock",
+      "role": "toggle",
+      "label": "lock",
+      "parent": "sidebar_page.scene.item[1]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[1].lock:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[1].hide",
+      "role": "toggle",
+      "label": "hide",
+      "parent": "sidebar_page.scene.item[1]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[1].hide:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[1].mark",
+      "role": "toggle",
+      "label": "mark",
+      "parent": "sidebar_page.scene.item[1]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[1].mark:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[2]",
+      "role": "button",
+      "label": "Key Light",
+      "parent": "sidebar_page.scene",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[2].lock",
+      "role": "toggle",
+      "label": "lock",
+      "parent": "sidebar_page.scene.item[2]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[2].lock:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[2].hide",
+      "role": "toggle",
+      "label": "hide",
+      "parent": "sidebar_page.scene.item[2]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[2].hide:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[2].mark",
+      "role": "toggle",
+      "label": "mark",
+      "parent": "sidebar_page.scene.item[2]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[2].mark:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[3]",
+      "role": "button",
+      "label": "Area Light",
+      "parent": "sidebar_page.scene",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[3].lock",
+      "role": "toggle",
+      "label": "lock",
+      "parent": "sidebar_page.scene.item[3]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[3].lock:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[3].hide",
+      "role": "toggle",
+      "label": "hide",
+      "parent": "sidebar_page.scene.item[3]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[3].hide:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[3].mark",
+      "role": "toggle",
+      "label": "mark",
+      "parent": "sidebar_page.scene.item[3]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[3].mark:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[4]",
+      "role": "button",
+      "label": "Object 2",
+      "parent": "sidebar_page.scene",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[4].lock",
+      "role": "toggle",
+      "label": "lock",
+      "parent": "sidebar_page.scene.item[4]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[4].lock:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[4].hide",
+      "role": "toggle",
+      "label": "hide",
+      "parent": "sidebar_page.scene.item[4]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[4].hide:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[4].mark",
+      "role": "toggle",
+      "label": "mark",
+      "parent": "sidebar_page.scene.item[4]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[4].mark:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[5]",
+      "role": "button",
+      "label": "Background 2",
+      "parent": "sidebar_page.scene",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[5].lock",
+      "role": "toggle",
+      "label": "lock",
+      "parent": "sidebar_page.scene.item[5]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[5].lock:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[5].hide",
+      "role": "toggle",
+      "label": "hide",
+      "parent": "sidebar_page.scene.item[5]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[5].hide:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[5].mark",
+      "role": "toggle",
+      "label": "mark",
+      "parent": "sidebar_page.scene.item[5]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[5].mark:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[6]",
+      "role": "button",
+      "label": "Robot",
+      "parent": "sidebar_page.scene",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[6].lock",
+      "role": "toggle",
+      "label": "lock",
+      "parent": "sidebar_page.scene.item[6]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[6].lock:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[6].hide",
+      "role": "toggle",
+      "label": "hide",
+      "parent": "sidebar_page.scene.item[6]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[6].hide:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[6].mark",
+      "role": "toggle",
+      "label": "mark",
+      "parent": "sidebar_page.scene.item[6]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[6].mark:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[7]",
+      "role": "button",
+      "label": "Background 1",
+      "parent": "sidebar_page.scene",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[7].lock",
+      "role": "toggle",
+      "label": "lock",
+      "parent": "sidebar_page.scene.item[7]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[7].lock:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[7].hide",
+      "role": "toggle",
+      "label": "hide",
+      "parent": "sidebar_page.scene.item[7]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[7].hide:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.scene.item[7].mark",
+      "role": "toggle",
+      "label": "mark",
+      "parent": "sidebar_page.scene.item[7]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.scene.item[7].mark:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design",
+      "role": "region",
+      "label": "Design, Animation",
+      "parent": "sidebar_page.group[0]"
+    },
+    {
+      "id": "sidebar_page.design.share",
+      "role": "button",
+      "label": "Share",
+      "parent": "sidebar_page.design",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.tabs[0]",
+      "role": "tab",
+      "label": "Design",
+      "parent": "sidebar_page.design.tabs",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "sidebar_page.design.tabs:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.tabs[1]",
+      "role": "tab",
+      "label": "Animation",
+      "parent": "sidebar_page.design.tabs",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "sidebar_page.design.tabs:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.tabs",
+      "role": "tab_list",
+      "label": "Design or animation",
+      "parent": "sidebar_page.design",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "sidebar_page.design.block[0]",
+      "role": "group",
+      "label": "Show Frame",
+      "parent": "sidebar_page.design"
+    },
+    {
+      "id": "sidebar_page.design.block[0].switch",
+      "role": "toggle",
+      "label": "Show Frame",
+      "parent": "sidebar_page.design.block[0]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "sidebar_page.design.block[0].switch:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[1]",
+      "role": "group",
+      "label": "Artboard",
+      "parent": "sidebar_page.design"
+    },
+    {
+      "id": "sidebar_page.design.block[1].select[0]",
+      "role": "select",
+      "label": "Artboard size",
+      "parent": "sidebar_page.design.block[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "800x600"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "sidebar_page.design.block[1].select[0]:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "sidebar_page.design.block[1].select[0]:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "sidebar_page.design.block[1].select[0]:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "800x600",
+          "1024x768",
+          "1280x1024",
+          "1600x1200",
+          "1920x1080"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[1].width",
+      "role": "text_input",
+      "label": "Width",
+      "description": "px",
+      "parent": "sidebar_page.design.block[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "800"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "sidebar_page.design.block[1].width:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[1].height",
+      "role": "text_input",
+      "label": "Height",
+      "description": "px",
+      "parent": "sidebar_page.design.block[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "600"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "sidebar_page.design.block[1].height:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[2]",
+      "role": "group",
+      "label": "Materials",
+      "parent": "sidebar_page.design"
+    },
+    {
+      "id": "sidebar_page.design.block[2].tile[0]",
+      "role": "button",
+      "label": "Materials 1",
+      "parent": "sidebar_page.design.block[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[2].tile[1]",
+      "role": "button",
+      "label": "Materials 2",
+      "parent": "sidebar_page.design.block[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[2].tile[2]",
+      "role": "button",
+      "label": "Materials 3",
+      "parent": "sidebar_page.design.block[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[2].tile[3]",
+      "role": "button",
+      "label": "Materials 4",
+      "parent": "sidebar_page.design.block[2]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[3]",
+      "role": "group",
+      "label": "Styles",
+      "parent": "sidebar_page.design"
+    },
+    {
+      "id": "sidebar_page.design.block[3].tile[0]",
+      "role": "button",
+      "label": "Styles 1",
+      "parent": "sidebar_page.design.block[3]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[3].tile[1]",
+      "role": "button",
+      "label": "Styles 2",
+      "parent": "sidebar_page.design.block[3]",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[4]",
+      "role": "group",
+      "label": "Background",
+      "parent": "sidebar_page.design"
+    },
+    {
+      "id": "sidebar_page.design.block[4].color",
+      "role": "group",
+      "label": "Background",
+      "parent": "sidebar_page.design.block[4]",
+      "state": {
+        "value": {
+          "kind": "text",
+          "value": "#F4F4F4FF"
+        }
+      }
+    },
+    {
+      "id": "sidebar_page.design.block[4].color.hex",
+      "role": "text_input",
+      "label": "Hex",
+      "parent": "sidebar_page.design.block[4].color",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "F4F4F4"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "sidebar_page.design.block[4].color.hex:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[4].color.alpha",
+      "role": "text_input",
+      "label": "Opacity",
+      "description": "percent",
+      "parent": "sidebar_page.design.block[4].color",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "100"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "sidebar_page.design.block[4].color.alpha:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[5]",
+      "role": "group",
+      "label": "Camera",
+      "parent": "sidebar_page.design"
+    },
+    {
+      "id": "sidebar_page.design.block[5].tabs[0]",
+      "role": "tab",
+      "label": "Isometric",
+      "parent": "sidebar_page.design.block[5].tabs",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "sidebar_page.design.block[5].tabs:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[5].tabs[1]",
+      "role": "tab",
+      "label": "Perspective",
+      "parent": "sidebar_page.design.block[5].tabs",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "sidebar_page.design.block[5].tabs:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.design.block[5].tabs",
+      "role": "tab_list",
+      "label": "Camera",
+      "parent": "sidebar_page.design.block[5]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "sidebar_page.group[1]",
+      "role": "group",
+      "label": "Home Sidebar",
+      "parent": "sidebar_page"
+    },
+    {
+      "id": "sidebar_page.home",
+      "role": "region",
+      "label": "Home",
+      "parent": "sidebar_page.group[1]"
+    },
+    {
+      "id": "sidebar_page.home.logo",
+      "role": "link",
+      "label": "Plev",
+      "parent": "sidebar_page.home",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.home.row[0]",
+      "role": "button",
+      "label": "Explore",
+      "parent": "sidebar_page.home",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "sidebar_page.home.row[0]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.home.row[0].panel",
+      "role": "region",
+      "label": "Explore",
+      "parent": "sidebar_page.home"
+    },
+    {
+      "id": "sidebar_page.home.row[0].links[0]",
+      "role": "link",
+      "label": "Designs",
+      "parent": "sidebar_page.home.row[0].panel",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.home.row[0].links[0]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.home.row[0].links[1]",
+      "role": "link",
+      "label": "Animations",
+      "parent": "sidebar_page.home.row[0].panel",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.home.row[0].links[1]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.home.row[1]",
+      "role": "button",
+      "label": "Assets",
+      "parent": "sidebar_page.home",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle_expanded",
+          "reads": [
+            "sidebar_page.home.row[1]:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.home.row[2]",
+      "role": "link",
+      "label": "Likes",
+      "parent": "sidebar_page.home",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.home.row[2]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.home.scenes",
+      "role": "link",
+      "label": "My Scenes",
+      "description": "My scenes",
+      "parent": "sidebar_page.home",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.home.scenes:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.home.new",
+      "role": "button",
+      "label": "New Folder",
+      "parent": "sidebar_page.home",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.home.folder[0]",
+      "role": "button",
+      "label": "Untitled Folder",
+      "parent": "sidebar_page.home",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.home.folder[1]",
+      "role": "button",
+      "label": "3D Icons",
+      "parent": "sidebar_page.home",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline",
+      "role": "region",
+      "label": "Guideline",
+      "parent": "sidebar_page.group[1]"
+    },
+    {
+      "id": "sidebar_page.guideline.logo",
+      "role": "link",
+      "label": "Plev",
+      "parent": "sidebar_page.guideline",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline.group[0]",
+      "role": "group",
+      "label": "Foundations",
+      "parent": "sidebar_page.guideline"
+    },
+    {
+      "id": "sidebar_page.guideline[0]",
+      "role": "link",
+      "label": "Branding",
+      "parent": "sidebar_page.guideline.group[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[0]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[1]",
+      "role": "link",
+      "label": "Colors",
+      "parent": "sidebar_page.guideline.group[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[1]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[2]",
+      "role": "link",
+      "label": "Depths",
+      "parent": "sidebar_page.guideline.group[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[2]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[3]",
+      "role": "link",
+      "label": "Icons",
+      "parent": "sidebar_page.guideline.group[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[3]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[4]",
+      "role": "link",
+      "label": "Typography",
+      "parent": "sidebar_page.guideline.group[0]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[4]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline.group[1]",
+      "role": "group",
+      "label": "Components",
+      "parent": "sidebar_page.guideline"
+    },
+    {
+      "id": "sidebar_page.guideline[5]",
+      "role": "link",
+      "label": "Buttons, tool-tip",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[5]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[6]",
+      "role": "link",
+      "label": "Cards",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[6]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[7]",
+      "role": "link",
+      "label": "Comment",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[7]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[8]",
+      "role": "link",
+      "label": "Dropdown",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[8]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[9]",
+      "role": "link",
+      "label": "Inputs",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[9]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[10]",
+      "role": "link",
+      "label": "Menu",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[10]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[11]",
+      "role": "link",
+      "label": "Notifications",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[11]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[12]",
+      "role": "link",
+      "label": "Modal, Dialogs",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[12]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[13]",
+      "role": "link",
+      "label": "Sidebar",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[13]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[14]",
+      "role": "link",
+      "label": "Prompt Input",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[14]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[15]",
+      "role": "link",
+      "label": "Toolbar",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[15]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sidebar_page.guideline[16]",
+      "role": "link",
+      "label": "Topbar",
+      "parent": "sidebar_page.guideline.group[1]",
+      "state": {
+        "active": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "sidebar_page.guideline[16]:active"
+          ]
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

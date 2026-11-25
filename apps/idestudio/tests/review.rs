@@ -11,7 +11,7 @@
 
 // shared with the other ide tests: this binary uses part of the rig.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{Actor, Node, SemId, StateRef, Value, ValueKind};
 use gitdrv::GitEvent;

@@ -29,12 +29,14 @@
 //! `UserEvent::GpuReady` on the event loop proxy. On desktop and mobile
 //! GPU init blocks inside `resumed` instead.
 
+mod devmode;
 pub mod system;
 pub mod window;
 
 use crate::views::ShowcaseView;
 use engine::compose::animation::FrameClock;
 use engine::drawing::gpu::GpuContext;
+use engine::runtime::perf::stages::{self, Stage};
 #[cfg(test)]
 use engine::runtime::window::WindowHost;
 use engine::runtime::window::Windows;
@@ -132,6 +134,9 @@ pub struct App {
     /// Where the app's links come from (`links`; `None` before the main
     /// window is up).
     links: Option<Box<dyn engine::runtime::platform::links::LinkSource>>,
+    /// The dev mode over any page (`engine::runtime::dev`): there when
+    /// the launch has `PLEV_DEV=1`.
+    dev: engine::runtime::dev::DevMode,
     /// View source (`source`): a cmd+click taking the button until it is
     /// released, a literal edited in place.
     #[cfg(all(
@@ -180,6 +185,7 @@ impl App {
     /// `PLEV_TEXT_SCALE` where the app is given one (macOS has no system
     /// value: there it is the app's).
     fn launch_prefs() -> engine::styling::theme::Prefs {
+        #[cfg_attr(target_arch = "wasm32", allow(unused_mut))] // the override is native
         let mut prefs = engine::runtime::platform::prefs::read();
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(f) = std::env::var("PLEV_TEXT_SCALE")
@@ -219,6 +225,7 @@ impl App {
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             focus: None,
             links: None,
+            dev: engine::runtime::dev::DevMode::from_launch(),
             #[cfg(all(
                 debug_assertions,
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
@@ -324,6 +331,8 @@ impl App {
                 bottom: sa.bottom / sf,
                 left: sa.left / sf,
             });
+            // the open dev mode takes its share of the window
+            let (lw, lh) = self.dev.page_size(lw, lh);
             self.view.resize(lw, lh, sf);
         } else if self.is_page_window(id) {
             self.view.resize_detached(lw, lh, sf);
@@ -335,6 +344,11 @@ impl App {
     /// alone in its own window, to the whole view in the main one. `true`
     /// when a frame is needed.
     fn pointer(&mut self, id: WindowId, event: &WidgetEvent) -> bool {
+        if let Some(changed) = self.dev_event(id, event) {
+            return changed;
+        }
+        // the page's own handling is the frame's input stage: one event
+        let _input = stages::span(Stage::Input).items(1);
         if self.is_page_window(id) {
             self.view.detached_event(event)
         } else {
@@ -438,6 +452,19 @@ impl ApplicationHandler<UserEvent> for App {
 
         // Native: the window and its device (blocking, as before). Wasm:
         // the window alone, the device below.
+        // the dev mode reads the GPU's own times: its device asks for the
+        // timestamps, which no other launch does
+        #[cfg(not(target_arch = "wasm32"))]
+        let id = {
+            let config = engine::drawing::gpu::RenderConfig {
+                gpu_timestamps: self.dev.is_available(),
+                ..Default::default()
+            };
+            self.windows
+                .open_with_config(event_loop, attrs, config)
+                .unwrap()
+        };
+        #[cfg(target_arch = "wasm32")]
         let id = self.windows.open(event_loop, attrs).unwrap();
         self.main = Some(id);
         // read on the desktop and the web only; mobile just checks it opened

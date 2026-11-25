@@ -1,0 +1,397 @@
+{
+  "nodes": [
+    {
+      "id": "textarea_page",
+      "role": "region",
+      "label": "Textarea"
+    },
+    {
+      "id": "textarea_page.group[0]",
+      "role": "group",
+      "label": "Textarea",
+      "parent": "textarea_page"
+    },
+    {
+      "id": "textarea_page.group[0].card[0]",
+      "role": "text_input",
+      "label": "Write a message",
+      "parent": "textarea_page.group[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "multiline": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "textarea_page.group[0].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "textarea_page.group[0].card[1]",
+      "role": "text_input",
+      "label": "Write a message",
+      "parent": "textarea_page.group[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "Bring the signed consent forms.\nThe lab opens at nine."
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "multiline": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "textarea_page.group[0].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "textarea_page.group[0].card[2]",
+      "role": "text_input",
+      "label": "Notes",
+      "description": "Write at least twenty characters.",
+      "parent": "textarea_page.group[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "Too short."
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": true
+        },
+        "multiline": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "textarea_page.group[0].card[2]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "textarea_page.group[1]",
+      "role": "group",
+      "label": "Grows",
+      "parent": "textarea_page"
+    },
+    {
+      "id": "textarea_page.group[1].card[0]",
+      "role": "text_input",
+      "label": "Write a message",
+      "parent": "textarea_page.group[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "multiline": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "textarea_page.group[1].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "textarea_page.group[1].card[1]",
+      "role": "text_input",
+      "label": "Write a message",
+      "parent": "textarea_page.group[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "One line.\nTwo lines.\nThree lines.\nFour lines.\nFive lines.\nSix lines."
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "multiline": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "textarea_page.group[1].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "textarea_page.group[2]",
+      "role": "group",
+      "label": "Disabled",
+      "parent": "textarea_page"
+    },
+    {
+      "id": "textarea_page.group[2].card[0]",
+      "role": "text_input",
+      "label": "Write a message",
+      "parent": "textarea_page.group[2]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "multiline": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "textarea_page.group[2].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "textarea_page.group[2].card[1]",
+      "role": "text_input",
+      "label": "Write a message",
+      "parent": "textarea_page.group[2]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "Bring the signed consent forms.\nThe lab opens at nine."
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "multiline": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "textarea_page.group[2].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "textarea_page.group[3]",
+      "role": "group",
+      "label": "Content",
+      "parent": "textarea_page"
+    },
+    {
+      "id": "textarea_page.group[3].card[0]",
+      "role": "text_input",
+      "label": "Write a message",
+      "parent": "textarea_page.group[3]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "A summary of the visit: the participant arrived on time, the questionnaire took twenty minutes, and the second sample was taken after the break. Follow up next week about the results."
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "multiline": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "textarea_page.group[3].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "textarea_page.group[3].card[1]",
+      "role": "text_input",
+      "label": "Beschreibung des Anliegens für die Forschungsgruppe",
+      "description": "Wir antworten innerhalb von zwei Arbeitstagen.",
+      "parent": "textarea_page.group[3]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "multiline": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "textarea_page.group[3].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "textarea_page.group[3].card[2]",
+      "role": "text_input",
+      "label": "כתבו הודעה",
+      "parent": "textarea_page.group[3]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "שלום עולם\nשורה שנייה"
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "multiline": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "textarea_page.group[3].card[2]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    }
+  ]
+}

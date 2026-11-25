@@ -9,24 +9,13 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
 
 fn root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
-}
-
-/// the tracked names of a directory (hidden ones included), sorted
-fn entries(dir: &Path) -> Vec<String> {
-    let mut out: Vec<String> = fs::read_dir(dir)
-        .unwrap_or_else(|e| panic!("read {}: {e}", dir.display()))
-        .flatten()
-        .map(|e| e.file_name().to_string_lossy().into_owned())
-        .collect();
-    out.sort();
-    out
 }
 
 /// the tracked names directly under `dir` (relative to the root), from git:
@@ -106,14 +95,11 @@ fn the_root_holds_the_workspace_files_and_the_nine_directories() {
     let want = [
         ".cargo",
         ".config",
-        ".design",
-        ".devops",
         ".editorconfig",
         ".gitattributes",
         ".github",
         ".gitignore",
         ".gitmodules",
-        ".secops",
         "Cargo.lock",
         "Cargo.toml",
         "LICENSE",
@@ -148,7 +134,10 @@ fn every_crate_has_its_manifest_and_its_source() {
     let foreign = submodules();
     let mut bad = Vec::new();
     for home in ["rust", "apps", "demo", "tool/bench"] {
-        for name in entries(&root.join(home)) {
+        // the tracked names, as everywhere in this file: a directory a
+        // checkout holds besides (an empty one git cannot even see) is not
+        // a crate out of shape
+        for name in tracked(home) {
             let dir = root.join(home).join(&name);
             if !dir.is_dir() || untracked(&name) || foreign.contains(&format!("{home}/{name}")) {
                 continue;

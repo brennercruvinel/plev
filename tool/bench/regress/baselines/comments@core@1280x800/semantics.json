@@ -1,0 +1,1351 @@
+{
+  "nodes": [
+    {
+      "id": "comments_page",
+      "role": "region",
+      "label": "Comments"
+    },
+    {
+      "id": "comments_page.group[0]",
+      "role": "group",
+      "label": "Comment cursor, pin",
+      "parent": "comments_page"
+    },
+    {
+      "id": "comments_page.group[0].card[0]",
+      "role": "group",
+      "label": "Point",
+      "parent": "comments_page.group[0]"
+    },
+    {
+      "id": "comments_page.group[0].card[0].marker",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "point",
+      "parent": "comments_page.group[0].card[0]"
+    },
+    {
+      "id": "comments_page.group[0].card[1]",
+      "role": "group",
+      "label": "Pinned",
+      "parent": "comments_page.group[0]"
+    },
+    {
+      "id": "comments_page.group[0].card[1].marker",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "pinned",
+      "parent": "comments_page.group[0].card[1]"
+    },
+    {
+      "id": "comments_page.group[0].card[2]",
+      "role": "group",
+      "label": "Uploading",
+      "parent": "comments_page.group[0]"
+    },
+    {
+      "id": "comments_page.group[0].card[2].marker",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "uploading",
+      "parent": "comments_page.group[0].card[2]"
+    },
+    {
+      "id": "comments_page.group[0].card[3]",
+      "role": "group",
+      "label": "Typing",
+      "parent": "comments_page.group[0]"
+    },
+    {
+      "id": "comments_page.group[0].card[3].marker",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "typing",
+      "parent": "comments_page.group[0].card[3]"
+    },
+    {
+      "id": "comments_page.group[0].card[4]",
+      "role": "group",
+      "label": "Conversation",
+      "parent": "comments_page.group[0]"
+    },
+    {
+      "id": "comments_page.group[0].card[4].marker",
+      "role": "button",
+      "label": "Comment by Luna Starfield, Sam",
+      "parent": "comments_page.group[0].card[4]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[0].card[4].marker:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[0].card[5]",
+      "role": "group",
+      "label": "Single comment",
+      "parent": "comments_page.group[0]"
+    },
+    {
+      "id": "comments_page.group[0].card[5].marker",
+      "role": "button",
+      "label": "Comment by Luna Starfield",
+      "parent": "comments_page.group[0].card[5]",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[0].card[5].marker:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1]",
+      "role": "group",
+      "label": "Comment Popup",
+      "parent": "comments_page"
+    },
+    {
+      "id": "comments_page.group[1].card[0]",
+      "role": "group",
+      "label": "Add comment, Typing, Image uploaded, File uploaded, Upload image",
+      "parent": "comments_page.group[1]"
+    },
+    {
+      "id": "comments_page.group[1].card[0].new.cursor",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "pinned",
+      "parent": "comments_page.group[1].card[0].new"
+    },
+    {
+      "id": "comments_page.group[1].card[0].new.text",
+      "role": "text_input",
+      "label": "Comment",
+      "parent": "comments_page.group[1].card[0].new",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "comments_page.group[1].card[0].new.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[0].new",
+      "role": "group",
+      "label": "New comment",
+      "parent": "comments_page.group[1].card[0]",
+      "state": {
+        "posted": {
+          "kind": "int",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[1].card[1]",
+      "role": "group",
+      "label": "Single comment",
+      "parent": "comments_page.group[1]"
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.pin",
+      "role": "button",
+      "label": "Comment by Luna Starfield",
+      "parent": "comments_page.group[1].card[1].thread",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[1].card[1].thread.pin:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.close",
+      "role": "button",
+      "label": "Close",
+      "parent": "comments_page.group[1].card[1].thread",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[1].card[1].thread:open"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.messages",
+      "role": "list",
+      "label": "Messages",
+      "parent": "comments_page.group[1].card[1].thread",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 1
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.messages[0]",
+      "role": "list_item",
+      "label": "Luna Starfield, 2s",
+      "description": "I love this bag, it looks great. Could you make it with leather material? 🤔",
+      "parent": "comments_page.group[1].card[1].thread.messages",
+      "state": {
+        "verified": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.reply",
+      "role": "text_input",
+      "label": "Reply",
+      "parent": "comments_page.group[1].card[1].thread",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "comments_page.group[1].card[1].thread.reply:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread.send",
+      "role": "button",
+      "label": "Send",
+      "parent": "comments_page.group[1].card[1].thread",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[1].card[1].thread.send:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[1].thread",
+      "role": "group",
+      "label": "Comment thread",
+      "parent": "comments_page.group[1].card[1]",
+      "state": {
+        "open": {
+          "kind": "bool",
+          "value": true
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[1].card[2]",
+      "role": "group",
+      "label": "Conversation",
+      "parent": "comments_page.group[1]"
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.pin",
+      "role": "button",
+      "label": "Comment by Luna Starfield, Sam",
+      "parent": "comments_page.group[1].card[2].thread",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[1].card[2].thread.pin:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.close",
+      "role": "button",
+      "label": "Close",
+      "parent": "comments_page.group[1].card[2].thread",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[1].card[2].thread:open"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.messages",
+      "role": "list",
+      "label": "Messages",
+      "parent": "comments_page.group[1].card[2].thread",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 2
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.messages[0]",
+      "role": "list_item",
+      "label": "Luna Starfield, 2s",
+      "description": "I love this bag, it looks great. Could you make it with leather material? 🤔",
+      "parent": "comments_page.group[1].card[2].thread.messages",
+      "state": {
+        "verified": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.messages[1]",
+      "role": "list_item",
+      "label": "Sam, 1s",
+      "description": "@Luna Thank, I’m working on it",
+      "parent": "comments_page.group[1].card[2].thread.messages",
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.reply",
+      "role": "text_input",
+      "label": "Reply",
+      "parent": "comments_page.group[1].card[2].thread",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "comments_page.group[1].card[2].thread.reply:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread.send",
+      "role": "button",
+      "label": "Send",
+      "parent": "comments_page.group[1].card[2].thread",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[1].card[2].thread.send:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[1].card[2].thread",
+      "role": "group",
+      "label": "Comment thread",
+      "parent": "comments_page.group[1].card[2]",
+      "state": {
+        "open": {
+          "kind": "bool",
+          "value": true
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[1].card[3]",
+      "role": "group",
+      "label": "Empty: no comments yet",
+      "parent": "comments_page.group[1]"
+    },
+    {
+      "id": "comments_page.group[1].card[3].empty",
+      "role": "status",
+      "label": "No comments yet",
+      "description": "Pin a comment to the scene to start a thread.",
+      "parent": "comments_page.group[1].card[3]"
+    },
+    {
+      "id": "comments_page.group[2]",
+      "role": "group",
+      "label": "New comment",
+      "parent": "comments_page"
+    },
+    {
+      "id": "comments_page.group[2].card[0]",
+      "role": "group",
+      "label": "Add comment",
+      "parent": "comments_page.group[2]"
+    },
+    {
+      "id": "comments_page.group[2].card[0].new.cursor",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "pinned",
+      "parent": "comments_page.group[2].card[0].new"
+    },
+    {
+      "id": "comments_page.group[2].card[0].new.text",
+      "role": "text_input",
+      "label": "Comment",
+      "parent": "comments_page.group[2].card[0].new",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "comments_page.group[2].card[0].new.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[0].new",
+      "role": "group",
+      "label": "New comment",
+      "parent": "comments_page.group[2].card[0]",
+      "state": {
+        "posted": {
+          "kind": "int",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[2].card[1]",
+      "role": "group",
+      "label": "Typing",
+      "parent": "comments_page.group[2]"
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.cursor",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "typing",
+      "parent": "comments_page.group[2].card[1].new"
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.text",
+      "role": "text_input",
+      "label": "Comment",
+      "parent": "comments_page.group[2].card[1].new",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "Love the lighting"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "comments_page.group[2].card[1].new.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.files",
+      "role": "list",
+      "label": "Attachments",
+      "parent": "comments_page.group[2].card[1].new"
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.tools[0]",
+      "role": "button",
+      "label": "Add a picture",
+      "parent": "comments_page.group[2].card[1].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.tools[1]",
+      "role": "button",
+      "label": "Mention",
+      "parent": "comments_page.group[2].card[1].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.tools[2]",
+      "role": "button",
+      "label": "Emoji",
+      "parent": "comments_page.group[2].card[1].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[1].new.send",
+      "role": "button",
+      "label": "Post",
+      "parent": "comments_page.group[2].card[1].new",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[2].card[1].new.send:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[1].new",
+      "role": "group",
+      "label": "New comment",
+      "parent": "comments_page.group[2].card[1]",
+      "state": {
+        "posted": {
+          "kind": "int",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[2].card[2]",
+      "role": "group",
+      "label": "Image uploaded",
+      "parent": "comments_page.group[2]"
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.cursor",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "typing",
+      "parent": "comments_page.group[2].card[2].new"
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.text",
+      "role": "text_input",
+      "label": "Comment",
+      "parent": "comments_page.group[2].card[2].new",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "Two angles"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "comments_page.group[2].card[2].new.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.files[0]",
+      "role": "list_item",
+      "label": "Front",
+      "description": "PNG",
+      "parent": "comments_page.group[2].card[2].new.files",
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.files[0].remove",
+      "role": "button",
+      "label": "Remove Front",
+      "parent": "comments_page.group[2].card[2].new.files[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.files[1]",
+      "role": "list_item",
+      "label": "Side",
+      "description": "PNG",
+      "parent": "comments_page.group[2].card[2].new.files",
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.files[1].remove",
+      "role": "button",
+      "label": "Remove Side",
+      "parent": "comments_page.group[2].card[2].new.files[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.files",
+      "role": "list",
+      "label": "Attachments",
+      "parent": "comments_page.group[2].card[2].new"
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.tools[0]",
+      "role": "button",
+      "label": "Add a picture",
+      "parent": "comments_page.group[2].card[2].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.tools[1]",
+      "role": "button",
+      "label": "Mention",
+      "parent": "comments_page.group[2].card[2].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.tools[2]",
+      "role": "button",
+      "label": "Emoji",
+      "parent": "comments_page.group[2].card[2].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[2].new.send",
+      "role": "button",
+      "label": "Post",
+      "parent": "comments_page.group[2].card[2].new",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[2].card[2].new.send:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[2].new",
+      "role": "group",
+      "label": "New comment",
+      "parent": "comments_page.group[2].card[2]",
+      "state": {
+        "posted": {
+          "kind": "int",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[2].card[3]",
+      "role": "group",
+      "label": "File uploaded",
+      "parent": "comments_page.group[2]"
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.cursor",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "typing",
+      "parent": "comments_page.group[2].card[3].new"
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.text",
+      "role": "text_input",
+      "label": "Comment",
+      "parent": "comments_page.group[2].card[3].new",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "The brief"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "comments_page.group[2].card[3].new.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.files[0]",
+      "role": "list_item",
+      "label": "Brief.pdf",
+      "description": "PDF · 1.2 MB",
+      "parent": "comments_page.group[2].card[3].new.files",
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.files[0].remove",
+      "role": "button",
+      "label": "Remove Brief.pdf",
+      "parent": "comments_page.group[2].card[3].new.files[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.files",
+      "role": "list",
+      "label": "Attachments",
+      "parent": "comments_page.group[2].card[3].new"
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.tools[0]",
+      "role": "button",
+      "label": "Add a picture",
+      "parent": "comments_page.group[2].card[3].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.tools[1]",
+      "role": "button",
+      "label": "Mention",
+      "parent": "comments_page.group[2].card[3].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.tools[2]",
+      "role": "button",
+      "label": "Emoji",
+      "parent": "comments_page.group[2].card[3].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[3].new.send",
+      "role": "button",
+      "label": "Post",
+      "parent": "comments_page.group[2].card[3].new",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[2].card[3].new.send:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[3].new",
+      "role": "group",
+      "label": "New comment",
+      "parent": "comments_page.group[2].card[3]",
+      "state": {
+        "posted": {
+          "kind": "int",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[2].card[4]",
+      "role": "group",
+      "label": "Upload image",
+      "parent": "comments_page.group[2]"
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.cursor",
+      "role": "image",
+      "label": "Comment cursor",
+      "description": "uploading",
+      "parent": "comments_page.group[2].card[4].new"
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.text",
+      "role": "text_input",
+      "label": "Comment",
+      "parent": "comments_page.group[2].card[4].new",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "comments_page.group[2].card[4].new.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.files[0]",
+      "role": "list_item",
+      "label": "Render",
+      "description": "PNG",
+      "parent": "comments_page.group[2].card[4].new.files",
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.files[0].remove",
+      "role": "button",
+      "label": "Remove Render",
+      "parent": "comments_page.group[2].card[4].new.files[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.files",
+      "role": "list",
+      "label": "Attachments",
+      "parent": "comments_page.group[2].card[4].new"
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.tools[0]",
+      "role": "button",
+      "label": "Add a picture",
+      "parent": "comments_page.group[2].card[4].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.tools[1]",
+      "role": "button",
+      "label": "Mention",
+      "parent": "comments_page.group[2].card[4].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.tools[2]",
+      "role": "button",
+      "label": "Emoji",
+      "parent": "comments_page.group[2].card[4].new",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[4].new.send",
+      "role": "button",
+      "label": "Post",
+      "parent": "comments_page.group[2].card[4].new",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[2].card[4].new.send:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[2].card[4].new",
+      "role": "group",
+      "label": "New comment",
+      "parent": "comments_page.group[2].card[4]",
+      "state": {
+        "posted": {
+          "kind": "int",
+          "value": 0
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[3]",
+      "role": "group",
+      "label": "Quick Comment",
+      "parent": "comments_page"
+    },
+    {
+      "id": "comments_page.group[3].card[0]",
+      "role": "group",
+      "label": "Shop House Icon",
+      "parent": "comments_page.group[3]"
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.close",
+      "role": "button",
+      "label": "Close",
+      "parent": "comments_page.group[3].card[0].quick",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.comments",
+      "role": "list",
+      "label": "Comments",
+      "parent": "comments_page.group[3].card[0].quick",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 1
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.comments[0].reaction",
+      "role": "button",
+      "label": "2",
+      "description": "like",
+      "parent": "comments_page.group[3].card[0].quick.comments[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.comments[0]",
+      "role": "list_item",
+      "label": "Randomdash, 1h",
+      "description": "These draggable sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y. But by default I don't think we need these controllers, you could just rotate the object by clicking and dragging anywhere as expected on any 3D tool (theoretically).",
+      "parent": "comments_page.group[3].card[0].quick.comments",
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.reply",
+      "role": "text_input",
+      "label": "Reply",
+      "parent": "comments_page.group[3].card[0].quick",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "comments_page.group[3].card[0].quick.reply:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.tools[0]",
+      "role": "button",
+      "label": "Add",
+      "parent": "comments_page.group[3].card[0].quick",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.tools[1]",
+      "role": "button",
+      "label": "Emoji",
+      "parent": "comments_page.group[3].card[0].quick",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.tools[2]",
+      "role": "button",
+      "label": "Like",
+      "parent": "comments_page.group[3].card[0].quick",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.tools[3]",
+      "role": "button",
+      "label": "Dislike",
+      "parent": "comments_page.group[3].card[0].quick",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick.send",
+      "role": "button",
+      "label": "Send",
+      "parent": "comments_page.group[3].card[0].quick",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[3].card[0].quick",
+      "role": "group",
+      "label": "Shop House Icon",
+      "description": "3D Objects",
+      "parent": "comments_page.group[3].card[0]"
+    },
+    {
+      "id": "comments_page.group[4]",
+      "role": "group",
+      "label": "Content",
+      "parent": "comments_page"
+    },
+    {
+      "id": "comments_page.group[4].card[0]",
+      "role": "group",
+      "label": "Long text, six scripts with emoji",
+      "parent": "comments_page.group[4]"
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.pin",
+      "role": "button",
+      "label": "Comment by Randomdash, Ana Lucía Fernández-Oliveira",
+      "parent": "comments_page.group[4].card[0].thread",
+      "state": {
+        "unread": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[4].card[0].thread.pin:unread"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.close",
+      "role": "button",
+      "label": "Close",
+      "parent": "comments_page.group[4].card[0].thread",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[4].card[0].thread:open"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.messages",
+      "role": "list",
+      "label": "Messages",
+      "parent": "comments_page.group[4].card[0].thread",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 2
+        }
+      }
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.messages[0]",
+      "role": "list_item",
+      "label": "Randomdash, 1h",
+      "description": "These draggable sliders look really cool. Maybe these could be displayed when you hold shift, to rotate exactly on the X or Y. But by default I don't think we need these controllers, you could just rotate the object by clicking and dragging anywhere as expected on any 3D tool (theoretically).",
+      "parent": "comments_page.group[4].card[0].thread.messages",
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.messages[1]",
+      "role": "list_item",
+      "label": "Ana Lucía Fernández-Oliveira, now",
+      "description": "Olá! مرحبا بالعالم · שלום עולם · नमस्ते दुनिया · 你好世界 · こんにちは · 안녕하세요 🎉👍🏽",
+      "parent": "comments_page.group[4].card[0].thread.messages",
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.reply",
+      "role": "text_input",
+      "label": "Reply",
+      "parent": "comments_page.group[4].card[0].thread",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "comments_page.group[4].card[0].thread.reply:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread.send",
+      "role": "button",
+      "label": "Send",
+      "parent": "comments_page.group[4].card[0].thread",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "comments_page.group[4].card[0].thread.send:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "comments_page.group[4].card[0].thread",
+      "role": "group",
+      "label": "Comment thread",
+      "parent": "comments_page.group[4].card[0]",
+      "state": {
+        "open": {
+          "kind": "bool",
+          "value": true
+        }
+      }
+    }
+  ]
+}

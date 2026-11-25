@@ -1,0 +1,618 @@
+{
+  "nodes": [
+    {
+      "id": "todo",
+      "role": "region",
+      "label": "todo",
+      "state": {
+        "items": {
+          "kind": "list",
+          "value": [
+            "1",
+            "2",
+            "3"
+          ]
+        }
+      }
+    },
+    {
+      "id": "todo.input",
+      "role": "text_input",
+      "label": "new todo",
+      "parent": "todo",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "todo.input:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "submit",
+          "enabled": false,
+          "reads": [
+            "todo.input:text"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "todo.filter",
+      "role": "tab_list",
+      "label": "filter",
+      "parent": "todo",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "all"
+        }
+      }
+    },
+    {
+      "id": "todo.filter[all]",
+      "role": "tab",
+      "label": "All",
+      "parent": "todo.filter",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "todo.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo.filter[active]",
+      "role": "tab",
+      "label": "Active",
+      "parent": "todo.filter",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "todo.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo.filter[completed]",
+      "role": "tab",
+      "label": "Completed",
+      "parent": "todo.filter",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "todo.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo.item[1]",
+      "role": "list_item",
+      "label": "Absorb the plev demos into the showcase",
+      "parent": "todo",
+      "state": {
+        "completed": {
+          "kind": "bool",
+          "value": false
+        },
+        "text": {
+          "kind": "text",
+          "value": "Absorb the plev demos into the showcase"
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "todo.item[1]:completed"
+          ]
+        },
+        {
+          "name": "remove",
+          "policy": {
+            "destructive": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "todo.item[2]",
+      "role": "list_item",
+      "label": "Measure text, never estimate it",
+      "parent": "todo",
+      "state": {
+        "completed": {
+          "kind": "bool",
+          "value": false
+        },
+        "text": {
+          "kind": "text",
+          "value": "Measure text, never estimate it"
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "todo.item[2]:completed"
+          ]
+        },
+        {
+          "name": "remove",
+          "policy": {
+            "destructive": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "todo.item[3]",
+      "role": "list_item",
+      "label": "Port the todo domain (tested first)",
+      "parent": "todo",
+      "state": {
+        "completed": {
+          "kind": "bool",
+          "value": true
+        },
+        "text": {
+          "kind": "text",
+          "value": "Port the todo domain (tested first)"
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "todo.item[3]:completed"
+          ]
+        },
+        {
+          "name": "remove",
+          "policy": {
+            "destructive": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "todo.counter",
+      "role": "status",
+      "label": "2 active · 1 done",
+      "parent": "todo",
+      "state": {
+        "active": {
+          "kind": "int",
+          "value": 2
+        },
+        "done": {
+          "kind": "int",
+          "value": 1
+        }
+      }
+    },
+    {
+      "id": "todo_panel",
+      "role": "region",
+      "label": "quick todo"
+    },
+    {
+      "id": "todo_panel.card",
+      "role": "group",
+      "label": "todo",
+      "parent": "todo_panel"
+    },
+    {
+      "id": "todo_panel.entry",
+      "role": "group",
+      "label": "",
+      "parent": "todo_panel.card"
+    },
+    {
+      "id": "todo_panel.input",
+      "role": "text_input",
+      "label": "new todo",
+      "parent": "todo_panel.entry",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "todo_panel.input:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "submit",
+          "enabled": false,
+          "reads": [
+            "todo_panel.input:text"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "todo_panel.add",
+      "role": "button",
+      "label": "add",
+      "parent": "todo_panel.entry",
+      "actions": [
+        {
+          "name": "activate",
+          "enabled": false,
+          "reads": [
+            "todo_panel.input:text"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "todo_panel.items",
+      "role": "list",
+      "label": "items",
+      "parent": "todo_panel.card"
+    },
+    {
+      "id": "todo_panel.item[1]",
+      "role": "group",
+      "label": "1",
+      "parent": "todo_panel.items"
+    },
+    {
+      "id": "todo_panel.item[1].text",
+      "role": "label",
+      "label": "Absorb the plev demos into the showcase",
+      "parent": "todo_panel.item[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "Absorb the plev demos into the showcase"
+        }
+      }
+    },
+    {
+      "id": "todo_panel.item[1].done",
+      "role": "checkbox",
+      "label": "done",
+      "parent": "todo_panel.item[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "todo_panel.item[1].done:checked"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo_panel.item[2]",
+      "role": "group",
+      "label": "2",
+      "parent": "todo_panel.items"
+    },
+    {
+      "id": "todo_panel.item[2].text",
+      "role": "label",
+      "label": "Measure text, never estimate it",
+      "parent": "todo_panel.item[2]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "Measure text, never estimate it"
+        }
+      }
+    },
+    {
+      "id": "todo_panel.item[2].done",
+      "role": "checkbox",
+      "label": "done",
+      "parent": "todo_panel.item[2]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "todo_panel.item[2].done:checked"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo_panel.item[3]",
+      "role": "group",
+      "label": "3",
+      "parent": "todo_panel.items"
+    },
+    {
+      "id": "todo_panel.item[3].text",
+      "role": "label",
+      "label": "Port the todo domain (tested first)",
+      "parent": "todo_panel.item[3]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "Port the todo domain (tested first)"
+        }
+      }
+    },
+    {
+      "id": "todo_panel.item[3].done",
+      "role": "checkbox",
+      "label": "done",
+      "parent": "todo_panel.item[3]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "todo_panel.item[3].done:checked"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo_panel.filter",
+      "role": "group",
+      "label": "filter",
+      "parent": "todo_panel.card"
+    },
+    {
+      "id": "todo_panel.filter.all",
+      "role": "button",
+      "label": "All",
+      "parent": "todo_panel.filter",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "todo.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo_panel.filter.active",
+      "role": "button",
+      "label": "Active",
+      "parent": "todo_panel.filter",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "todo.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo_panel.filter.completed",
+      "role": "button",
+      "label": "Completed",
+      "parent": "todo_panel.filter",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "todo.filter:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "todo_panel.counts",
+      "role": "group",
+      "label": "",
+      "parent": "todo_panel.card"
+    },
+    {
+      "id": "todo_panel.active",
+      "role": "label",
+      "label": "active",
+      "parent": "todo_panel.counts",
+      "state": {
+        "value": {
+          "kind": "int",
+          "value": 2
+        }
+      }
+    },
+    {
+      "id": "todo_panel.done",
+      "role": "label",
+      "label": "done",
+      "parent": "todo_panel.counts",
+      "state": {
+        "value": {
+          "kind": "int",
+          "value": 1
+        }
+      }
+    },
+    {
+      "id": "surface_page",
+      "role": "region",
+      "label": "propose a surface"
+    },
+    {
+      "id": "surface_page.intent",
+      "role": "text_input",
+      "label": "intent",
+      "parent": "surface_page",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "surface_page.intent:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "surface_page.proposer",
+      "role": "select",
+      "label": "proposer",
+      "parent": "surface_page",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "rules"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "surface_page.proposer:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "surface_page.proposer:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "surface_page.proposer:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "rules"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "surface_page.propose",
+      "role": "button",
+      "label": "propose",
+      "parent": "surface_page",
+      "actions": [
+        {
+          "name": "propose",
+          "enabled": false,
+          "reads": [
+            "surface_page.intent:text",
+            "surface_page.proposer:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "surface_page.cancel",
+      "role": "button",
+      "label": "cancel",
+      "parent": "surface_page",
+      "actions": [
+        {
+          "name": "activate",
+          "enabled": false
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "surface_page.status",
+      "role": "status",
+      "label": "proposal",
+      "parent": "surface_page",
+      "state": {
+        "message": {
+          "kind": "text",
+          "value": ""
+        },
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      }
+    }
+  ]
+}

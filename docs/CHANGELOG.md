@@ -70,6 +70,83 @@ the whole earlier history no longer exists.
 
 The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the first technical plan, were deleted from the tree at some point and recovered from git history. Their recovered versions are historical sources; the exact paths and revisions are in their `source` field.
 
+## 2026-11-25
+
+- the dev mode reads as a tool
+  ([task-105](Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)):
+  a gear at the page's lower right corner in place of the "Dev" button,
+  a strip of small tabs with icons, the frame's vital numbers on one line
+  under them, and the edge of the panel dragged to size it; `PLEV_DEV`
+  takes a view's name to open on it (`?dev=` in the browser), and F12
+  opens and closes the panel. The Frame view says what its numbers mean
+  (the insights); the Log view keeps its lines after their frames, by
+  level, with what `log::warn!` and `log::error!` say, and a press opens
+  a long line whole; the Inspect view shows the page's controls as a tree
+  that folds, and its picker chooses anything the frame draws, a control
+  or a scene node (`Compositor::node_at`): an icon of a page that binds
+  nothing is chosen like a button. A node chosen is kept by what it is
+  (`SceneNode::mark`) and found again in every frame, ringed by what its
+  clip shows, with the control it sat in; a node drawn over a control is
+  not that control; an open log line is cut to the panel. A frame shows
+  once its GPU time is in,
+  which a window never showed at rest before. The README says how to use
+  it.
+- ADR 0093: [the dev mode is the engine's own: one report a frame, shown once it is whole, in a panel that offers its places as it draws](adr/Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md)
+- task-106 after its review: `.design`, `.devops` and `.secops` are gone
+  from the root and the lychee, nextest and typos contracts live in
+  `.config`; `builddir.sh seed` refuses where it cannot clone; the iOS
+  build finds its library where cargo wrote it and the Android build
+  clears an old engine `.so`; the web build of `graphs` packages to the
+  end. The branch point (task-105) entered `main` and the task's pull
+  request was merged after it; the gate is green at `aac7fb94` on one macOS
+  machine, with CI and the real mobile builds not run. The task's
+  decisions are records of their own, ADRs 0087 to 0092, with what five
+  large Rust repositories do beside them; ADR 0069 carries the corrected
+  tolerance of `text_mid`, and `TERMS.toml` says how a test command of
+  an older page reads today.
+
+## 2026-11-24
+
+- what a build directory weighs, and a warm start for a new checkout
+  ([task-106](Tasks/task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md)):
+  the engine and the apps are plain libraries (a mobile build asks for
+  its crate type), every member takes one engine, a crate's integration
+  tests are one executable (127 targets became 29, the same tests
+  passing), and `tool/tasks/builddir.sh` weighs, trims and seeds the
+  build directories. `cargo test --workspace --no-run` in an empty
+  directory went from 186 test executables and 8.1 GB to 88 and 5.0 GB.
+  The 18 tests that failed on the branch point, unseen while no workflow
+  ran, were each traced to the commit that left them behind and pass; the
+  toolchain is pinned to 1.99.1.
+
+- [task-106: what a build directory weighs, and a warm start for a new checkout](Tasks/task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md)
+- ADR 0087: [a crate's integration tests are one executable](adr/Workflows/0087-a-crates-integration-tests-are-one-executable/0087-a-crates-integration-tests-are-one-executable.md)
+- ADR 0088: [libraries are plain, and a mobile build asks for its crate type](adr/Structure/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type.md)
+- ADR 0089: [a build directory belongs to one checkout, starts from a clone and has a ceiling](adr/Workflows/0089-a-build-directory-belongs-to-one-checkout/0089-a-build-directory-belongs-to-one-checkout.md)
+- ADR 0090: [the toolchain is one exact version, read from one file](adr/Workflows/0090-the-toolchain-is-one-exact-version/0090-the-toolchain-is-one-exact-version.md)
+- ADR 0091 (proposed): [the tools' contracts live in .config](adr/Structure/0091-tool-contracts-live-in-config/0091-tool-contracts-live-in-config.md)
+- ADR 0092: [every member builds one engine, and the gate builds the other shape](adr/Workflows/0092-every-member-builds-one-engine/0092-every-member-builds-one-engine.md)
+- research: [how large rust workspaces keep a build directory small](Research/Ecosystem/build-directories-in-large-rust-workspaces.md)
+
+## 2026-11-12
+
+- a dev mode over any app, the engine's own and with no dependency
+  ([task-105](Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)):
+  a panel docked in the window reads one report per frame and shows it in
+  seven views (the frame by phase, the GPU by pass and layer, the CPU's
+  zones with a histogram, plots, the heap and GPU memory, the lines code
+  said, and one control of the page). It replaces the Puffin and Tracy
+  POC of 2026-11-03 below, whose features and dependencies left the tree.
+
+## 2026-11-03
+
+- the frame in Puffin and Tracy from a panel over any gallery tab, a POC
+  behind the `profiler` and `tracy` features
+  ([task-105](Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)):
+  wgpu-profiler times each pass of the engine's frame on the GPU and
+  `engine::cpu_scope!` marks the CPU; the gallery draws Puffin's frames in
+  the panel, and Tracy reads them in its own window.
+
 ## 2026-11-02
 
 - the archive reads as one graph in any tool (2026-11-02, PR #178): two

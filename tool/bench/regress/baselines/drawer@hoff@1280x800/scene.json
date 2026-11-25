@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "8652cc36cb816308",
+    "nodes": 12
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "drawer_page",
       "z": 0,
-      "hash": "3954254282d0e114",
-      "nodes": 30,
+      "hash": "a6ec8603569731a8",
+      "nodes": 51,
       "bounds": [
-        283.0,
-        49.0,
-        442.25604,
-        543.56
+        25.584782,
+        35.810867,
+        1222.4152,
+        732.18915
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "318e36033b90becd",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,22 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "drawer_page.group[0].card[0]",
+      "layer": "drawer_page",
+      "rect": [
+        553.0,
+        239.0,
+        175.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    }
+  ]
 }

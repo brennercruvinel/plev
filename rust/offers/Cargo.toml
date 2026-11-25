@@ -14,6 +14,11 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 description = "proposers of plev IR: an intent, the capability registry, the snapshot and the current surface in, a proposed IR out, and only a VerifiedIr past propose_verified; rules without a model, and a language model behind a trait with the verifier's errors sent back a bounded number of times"
+# the integration tests are one executable, tests/suite.rs, a module per file
+# (task-106): cargo links every file under tests/ as an executable of its
+# own, each with the whole crate inside. a target listed apart at the end of
+# this file is one that needs a process to itself.
+autotests = false
 
 [dependencies]
 # the IR, the registry, the verifier, the schema the prompt carries.
@@ -27,3 +32,7 @@ unions.workspace = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "suite"
+path = "tests/suite.rs"

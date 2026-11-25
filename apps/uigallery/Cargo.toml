@@ -9,12 +9,18 @@ publish = false
 # uigallery` keeps running the gallery.
 default-run = "uigallery"
 description = "plev design system gallery — every widget, every state, every theme"
+# the integration tests are one executable, tests/suite.rs, a module per file
+# (task-106): cargo links every file under tests/ as an executable of its
+# own, each with the whole crate inside. a target listed apart at the end of
+# this file is one that needs a process to itself.
+autotests = false
 
-# lib: rlib for the desktop/web bin; cdylib is the android `.so` (GameActivity
-# loads it and calls `android_main`); staticlib is the iOS `.a` linked by the
-# Xcode app (which calls `uigallery_ios_main`).
-[lib]
-crate-type = ["lib", "cdylib", "staticlib"]
+# lib: a plain rlib for the desktop/web bin. the mobile builds ask for their
+# crate type on the command line (tool/tasks/mobileapp.sh, `cargo rustc
+# --crate-type`): cdylib is the android `.so` (GameActivity loads it and calls
+# `android_main`), staticlib is the iOS `.a` linked by the Xcode app (which
+# calls `uigallery_ios_main`). listed here, both were linked on every desktop
+# build, a 327 MB archive nobody read (task-106).
 
 [[bin]]
 name = "uigallery"
@@ -102,3 +108,15 @@ android_logger.workspace = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "suite"
+path = "tests/suite.rs"
+
+# its own process: the test takes the literal baseline of a copy of the
+# repository and writes the Todo title through it. the baseline is the
+# process's (engine::runtime::hot_reload::literals), and view_source, in the
+# suite, reads that title's literal: together, one of the two fails.
+[[test]]
+name = "edit_literal"
+path = "tests/edit_literal.rs"

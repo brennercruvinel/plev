@@ -1,0 +1,413 @@
+{
+  "format": "regress.baseline.v1",
+  "hash": "regress.layer.v1",
+  "page": "Notifications",
+  "theme": "core",
+  "width": 1280.0,
+  "height": 800.0,
+  "scale": 1.0,
+  "settle": {
+    "steps": 2,
+    "settled": true
+  },
+  "semantics": {
+    "revision": "7435034484dfce6b",
+    "nodes": 37
+  },
+  "layers": [
+    {
+      "name": "notifications_page",
+      "z": 0,
+      "hash": "6e1aefa340e4d55c",
+      "nodes": 205,
+      "bounds": [
+        0.0,
+        24.0,
+        1280.0,
+        728.0
+      ]
+    },
+    {
+      "name": "z10",
+      "z": 10,
+      "hash": "c853f02ec00cb9d8",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1000",
+      "z": 1000,
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1200",
+      "z": 1200,
+      "hash": "ef5874151115e51e",
+      "nodes": 0,
+      "bounds": null
+    }
+  ],
+  "bindings": [
+    {
+      "id": "notifications_page.group[0].card[0].alert",
+      "layer": "notifications_page",
+      "rect": [
+        149.0,
+        262.0,
+        386.0,
+        124.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[0].card[1].alert",
+      "layer": "notifications_page",
+      "rect": [
+        745.0,
+        272.0,
+        386.0,
+        104.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[0].card[2].alert",
+      "layer": "notifications_page",
+      "rect": [
+        149.0,
+        474.0,
+        386.0,
+        128.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[0].card[2].alert.action[0]",
+      "layer": "notifications_page",
+      "rect": [
+        233.0,
+        546.0,
+        82.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[0].card[2].alert.action[1]",
+      "layer": "notifications_page",
+      "rect": [
+        323.0,
+        546.0,
+        80.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[0].card[3].alert",
+      "layer": "notifications_page",
+      "rect": [
+        745.0,
+        494.0,
+        386.0,
+        88.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[0].card[4].alert",
+      "layer": "notifications_page",
+      "rect": [
+        149.0,
+        698.0,
+        386.0,
+        104.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown",
+      "layer": "notifications_page",
+      "rect": [
+        448.0,
+        1028.0,
+        384.0,
+        800.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.filter[0]",
+      "layer": "notifications_page",
+      "rect": [
+        720.0,
+        1045.0,
+        30.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.filter[1]",
+      "layer": "notifications_page",
+      "rect": [
+        754.0,
+        1045.0,
+        57.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[0]",
+      "layer": "notifications_page",
+      "rect": [
+        449.0,
+        1086.0,
+        382.0,
+        124.0
+      ],
+      "clip": [
+        449.0,
+        1086.0,
+        382.0,
+        -334.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[1]",
+      "layer": "notifications_page",
+      "rect": [
+        449.0,
+        1210.0,
+        382.0,
+        105.0
+      ],
+      "clip": [
+        449.0,
+        1086.0,
+        382.0,
+        -334.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[2]",
+      "layer": "notifications_page",
+      "rect": [
+        449.0,
+        1315.0,
+        382.0,
+        129.0
+      ],
+      "clip": [
+        449.0,
+        1086.0,
+        382.0,
+        -334.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[2].action[0]",
+      "layer": "notifications_page",
+      "rect": [
+        533.0,
+        1388.0,
+        82.0,
+        36.0
+      ],
+      "clip": [
+        449.0,
+        1086.0,
+        382.0,
+        -334.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[2].action[1]",
+      "layer": "notifications_page",
+      "rect": [
+        623.0,
+        1388.0,
+        80.0,
+        36.0
+      ],
+      "clip": [
+        449.0,
+        1086.0,
+        382.0,
+        -334.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[3]",
+      "layer": "notifications_page",
+      "rect": [
+        449.0,
+        1444.0,
+        382.0,
+        89.0
+      ],
+      "clip": [
+        449.0,
+        1086.0,
+        382.0,
+        -334.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[4]",
+      "layer": "notifications_page",
+      "rect": [
+        449.0,
+        1533.0,
+        382.0,
+        125.0
+      ],
+      "clip": [
+        449.0,
+        1086.0,
+        382.0,
+        -334.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[5]",
+      "layer": "notifications_page",
+      "rect": [
+        449.0,
+        1658.0,
+        382.0,
+        105.0
+      ],
+      "clip": [
+        449.0,
+        1086.0,
+        382.0,
+        -334.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[0].dropdown.list[6]",
+      "layer": "notifications_page",
+      "rect": [
+        449.0,
+        1763.0,
+        382.0,
+        125.0
+      ],
+      "clip": [
+        449.0,
+        1086.0,
+        382.0,
+        -334.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[1].dropdown",
+      "layer": "notifications_page",
+      "rect": [
+        448.0,
+        1916.0,
+        384.0,
+        215.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[1].dropdown.filter[0]",
+      "layer": "notifications_page",
+      "rect": [
+        720.0,
+        1933.0,
+        30.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "notifications_page.group[1].card[1].dropdown.filter[1]",
+      "layer": "notifications_page",
+      "rect": [
+        754.0,
+        1933.0,
+        57.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    }
+  ]
+}

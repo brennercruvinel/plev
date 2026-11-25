@@ -9,7 +9,7 @@
 
 // shared with the other test binaries: this one reads less of it.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{Actor, Actors, Policy, Role, SnapshotBuilder};
 use offers::{Ask, Part, ProposeError, Proposer, Rules, propose_verified};

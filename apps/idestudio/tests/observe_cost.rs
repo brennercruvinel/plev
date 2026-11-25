@@ -6,7 +6,7 @@
 //! writes it (the same form the laboratory's screenshot arm weighs). This
 //! repository's history moves, so it is a measurement, ignored by default:
 //!
-//! `cargo test -p idestudio --test observe_cost -- --ignored --nocapture`
+//! `cargo test -p idestudio --test suite observe_cost:: -- --ignored --nocapture`
 
 use std::path::Path;
 use std::process::Command;

@@ -211,12 +211,11 @@ impl WindowHost {
 
         // Feed the perf monitor from the existing per-frame sources.
         perf.record_frame(*tick, compositor.stats());
-        perf.record_memory(crate::runtime::perf::MemoryStats {
-            glyph_atlas_bytes: text_system.atlas_memory_bytes(),
-            texture_pool_bytes: texture_pool.memory_bytes(),
-            layer_bytes: compositor.gpu_memory_bytes(),
-            process_rss_bytes: crate::runtime::perf::process_rss_bytes(),
-        });
+        perf.record_memory(crate::runtime::perf::MemoryStats::of(
+            compositor,
+            text_system,
+            texture_pool,
+        ));
         if gpu.config.perf_log
             && gpu.config.perf_log_interval > 0
             && perf.frames() % u64::from(gpu.config.perf_log_interval) == 0

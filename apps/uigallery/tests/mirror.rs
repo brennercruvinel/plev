@@ -13,8 +13,8 @@
 //! window host, its agent port open, its frames offered as the shell
 //! offers them), and the test is the viewer, headless. The child prints
 //! the hash of each frame it draws; the viewer draws what came over the
-//! socket and compares. Pages: Card (images, whose pixels cross from
-//! one image store to the other), Todo (text and bindings, and a hover
+//! socket and compares. Pages: Attachment (images, whose pixels cross
+//! from one image store to the other), Todo (text and bindings, and a hover
 //! that sends one layer's patch), Effects (glass, the backdrop blur) and
 //! Capture with the fake camera on (a stream image: one stream slot in
 //! the viewer, its atlas does not grow). The bytes each frame took are
@@ -460,7 +460,8 @@ impl App {
         let mut child = Command::new(exe)
             .args([
                 "--exact",
-                "app_child",
+                // the test's name in the suite carries this file's module
+                "mirror::app_child",
                 "--ignored",
                 "--nocapture",
                 "--test-threads=1",
@@ -689,7 +690,7 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
 
     let mut band = Vec::new();
     for (title, theme) in [
-        ("Card", "hoff"),
+        ("Attachment", "hoff"),
         ("Todo", "core"),
         ("Effects", "hoff"),
         ("Capture", "core"),
@@ -715,7 +716,7 @@ fn the_app_mirrors_over_the_socket_with_the_same_pixels() {
         ));
     }
     let counts = w.viewer.mirror().image_counts();
-    assert!(counts.loads >= 2, "Card's images crossed: {counts:?}");
+    assert!(counts.loads >= 2, "Attachment's images crossed: {counts:?}");
     assert_eq!(counts.missing, 0);
 
     // Todo: a hover over one control, one layer's patch
@@ -1019,7 +1020,7 @@ impl Band {
 /// (its assets among it: the icons' paths, the images' pixels), a frame
 /// with one change, a frame with none. A measurement: it prints, run
 ///
-///     cargo test -p uigallery --test mirror band -- --ignored --nocapture
+///     cargo test -p uigallery --test suite mirror::band -- --ignored --nocapture
 #[test]
 #[ignore = "a measurement: run with --ignored --nocapture"]
 fn band() {

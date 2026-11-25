@@ -32,7 +32,8 @@ fn without_the_env_var_no_socket_is_created() {
         let mut cmd = Command::new(&exe);
         cmd.args([
             "--exact",
-            "from_env_in_a_child",
+            // the test's name in the suite carries this file's module
+            "env::from_env_in_a_child",
             "--nocapture",
             "--test-threads=1",
         ])
@@ -90,7 +91,8 @@ fn the_scene_is_shared_only_with_plev_mirror() {
         let mut cmd = Command::new(&exe);
         cmd.args([
             "--exact",
-            "scene_from_env_in_a_child",
+            // the name carries the module, as above
+            "env::scene_from_env_in_a_child",
             "--nocapture",
             "--test-threads=1",
         ])

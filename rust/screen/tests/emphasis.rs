@@ -7,7 +7,7 @@
 
 // shared with the other surface tests: this binary uses the page helpers.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{Actor, Role, SnapshotBuilder};
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode};

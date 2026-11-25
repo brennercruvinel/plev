@@ -306,13 +306,15 @@ pub fn encode_layer_passes(
         dirty_layer_ids,
         encoder,
         None,
+        None,
     )
 }
 
 /// [`encode_layer_passes`] with the frame's timestamps: every layer pass
 /// (a pass resumed after a backdrop is one more) writes a timestamp at
-/// its start and end while `stamps` has room.
-#[allow(clippy::too_many_arguments)] // the public one's, plus the stamps
+/// its start and end while `stamps` has room. `drawn` gets each layer
+/// encoded, in order, with the draw calls its passes issued.
+#[allow(clippy::too_many_arguments)] // the public one's, plus the records
 pub(crate) fn encode_layer_passes_timed(
     compositor: &crate::drawing::compositor::Compositor,
     gpu: &crate::drawing::gpu::GpuContext,
@@ -323,6 +325,7 @@ pub(crate) fn encode_layer_passes_timed(
     dirty_layer_ids: &[crate::drawing::compositor::LayerId],
     encoder: &mut wgpu::CommandEncoder,
     mut stamps: Option<&mut FrameStamps<'_>>,
+    mut drawn: Option<&mut Vec<(crate::drawing::compositor::LayerId, u32)>>,
 ) -> u32 {
     let vw = gpu.surface_config.width;
     let vh = gpu.surface_config.height;
@@ -341,6 +344,7 @@ pub(crate) fn encode_layer_passes_timed(
         let Some((view, resolve_target)) = layer.render_attachment() else {
             continue;
         };
+        let draws_before = draw_calls;
 
         let mut pass = begin_layer_pass(
             encoder,
@@ -352,7 +356,7 @@ pub(crate) fn encode_layer_passes_timed(
                 b: 0.0,
                 a: 0.0,
             }),
-            stamps.as_deref_mut().and_then(FrameStamps::layer_pass),
+            stamps.as_deref_mut().and_then(|s| s.layer_pass(*layer_id)),
         );
 
         let base_scissor = layer
@@ -427,7 +431,7 @@ pub(crate) fn encode_layer_passes_timed(
                         view,
                         resolve_target,
                         wgpu::LoadOp::Load,
-                        stamps.as_deref_mut().and_then(FrameStamps::layer_pass),
+                        stamps.as_deref_mut().and_then(|s| s.layer_pass(*layer_id)),
                     );
                     pass.set_pipeline(&gpu.backdrop_pipeline);
                     pass.set_bind_group(0, &gpu.projection_bind_group, &[]);
@@ -440,6 +444,9 @@ pub(crate) fn encode_layer_passes_timed(
                     bound = None;
                 }
             }
+        }
+        if let Some(drawn) = drawn.as_deref_mut() {
+            drawn.push((*layer_id, draw_calls - draws_before));
         }
     }
     draw_calls

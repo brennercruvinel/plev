@@ -1,0 +1,470 @@
+{
+  "nodes": [
+    {
+      "id": "radio_group_page",
+      "role": "region",
+      "label": "Radio Group"
+    },
+    {
+      "id": "radio_group_page.group[0]",
+      "role": "group",
+      "label": "Radio group",
+      "parent": "radio_group_page"
+    },
+    {
+      "id": "radio_group_page.group[0].card[0][0]",
+      "role": "radio",
+      "label": "Free",
+      "parent": "radio_group_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[0].card[0][1]",
+      "role": "radio",
+      "label": "Pro",
+      "parent": "radio_group_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[0].card[0][2]",
+      "role": "radio",
+      "label": "Team",
+      "parent": "radio_group_page.group[0].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[0].card[0]",
+      "role": "group",
+      "label": "plan",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "radio_group_page.group[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "1"
+        }
+      }
+    },
+    {
+      "id": "radio_group_page.group[0].card[1][0]",
+      "role": "radio",
+      "label": "Free",
+      "parent": "radio_group_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[0].card[1][1]",
+      "role": "radio",
+      "label": "Pro",
+      "parent": "radio_group_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[0].card[1][2]",
+      "role": "radio",
+      "label": "Team",
+      "parent": "radio_group_page.group[0].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[0].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[0].card[1]",
+      "role": "group",
+      "label": "plan",
+      "description": "Disabled",
+      "parent": "radio_group_page.group[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "1"
+        }
+      },
+      "enabled": false
+    },
+    {
+      "id": "radio_group_page.group[1]",
+      "role": "group",
+      "label": "Radio group, in a line",
+      "parent": "radio_group_page"
+    },
+    {
+      "id": "radio_group_page.group[1].card[0][0]",
+      "role": "radio",
+      "label": "Free",
+      "parent": "radio_group_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[1].card[0][1]",
+      "role": "radio",
+      "label": "Pro",
+      "parent": "radio_group_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[1].card[0][2]",
+      "role": "radio",
+      "label": "Team",
+      "parent": "radio_group_page.group[1].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[1].card[0]",
+      "role": "group",
+      "label": "plan",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "radio_group_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "1"
+        }
+      }
+    },
+    {
+      "id": "radio_group_page.group[1].card[1][0]",
+      "role": "radio",
+      "label": "Free",
+      "parent": "radio_group_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[1].card[1][1]",
+      "role": "radio",
+      "label": "Pro",
+      "parent": "radio_group_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[1].card[1][2]",
+      "role": "radio",
+      "label": "Team",
+      "parent": "radio_group_page.group[1].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[1].card[1]:selected"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[1].card[1]",
+      "role": "group",
+      "label": "plan",
+      "description": "Disabled",
+      "parent": "radio_group_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "1"
+        }
+      },
+      "enabled": false
+    },
+    {
+      "id": "radio_group_page.group[2]",
+      "role": "group",
+      "label": "Long content",
+      "parent": "radio_group_page"
+    },
+    {
+      "id": "radio_group_page.group[2].card[0][0]",
+      "role": "radio",
+      "label": "Only this device",
+      "parent": "radio_group_page.group[2].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[2].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[2].card[0][1]",
+      "role": "radio",
+      "label": "Every device signed in to this account, at home and at work",
+      "parent": "radio_group_page.group[2].card[0]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[2].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[2].card[0]",
+      "role": "group",
+      "label": "sync",
+      "description": "Long labels",
+      "parent": "radio_group_page.group[2]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "radio_group_page.group[2].card[1][0]",
+      "role": "radio",
+      "label": "Kostenlos",
+      "parent": "radio_group_page.group[2].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[2].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[2].card[1][1]",
+      "role": "radio",
+      "label": "Professionell",
+      "parent": "radio_group_page.group[2].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[2].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[2].card[1][2]",
+      "role": "radio",
+      "label": "Mannschaft",
+      "parent": "radio_group_page.group[2].card[1]",
+      "state": {
+        "checked": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "radio_group_page.group[2].card[1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "radio_group_page.group[2].card[1]",
+      "role": "group",
+      "label": "Plan",
+      "description": "Translated labels, in a line",
+      "parent": "radio_group_page.group[2]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    }
+  ]
+}

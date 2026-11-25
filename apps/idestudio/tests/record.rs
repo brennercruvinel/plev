@@ -21,7 +21,7 @@
 
 // shared with the other ide tests: this binary uses the rig and a helper.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, Sender};

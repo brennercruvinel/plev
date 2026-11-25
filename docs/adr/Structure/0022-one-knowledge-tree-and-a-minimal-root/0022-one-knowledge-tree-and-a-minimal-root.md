@@ -97,6 +97,7 @@ every crate docstring that cited kdb/adr/ now cites docs/adr/.
 ## Related
 
 - [ADR 0013: engine at root, libraries and apps in crates, demos in examples](../0013-workspace-engine-at-root-libs-in-crates-demos-in-examples/0013-workspace-engine-at-root-libs-in-crates-demos-in-examples.md)
+- [ADR 0091: the tools' contracts live in .config](../0091-tool-contracts-live-in-config/0091-tool-contracts-live-in-config.md)
 - [mon experiment](../../../Research/Importing/mon-experiment-notes.md)
 - [how to build and serve the web target](../../../Research/Workflows/build-and-serve-the-web-target.md)
 <!-- /related -->

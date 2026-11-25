@@ -320,6 +320,8 @@ the shape of the repository and of its apps.
 - [0056](Structure/0056-windows-are-hosts-the-app-owns-the-state/0056-windows-are-hosts-the-app-owns-the-state.md) a window is a host of what dies with it; the app owns the state
 - [0080](Structure/0080-workspace-by-responsibility/0080-workspace-by-responsibility.md) the workspace separates libraries, apps, demos and tools
 - [0081](Structure/0081-a-graph-separates-data-appearance-and-layout/0081-a-graph-separates-data-appearance-and-layout.md) a graph separates data, appearance and layout
+- [0088](Structure/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type.md) libraries are plain, and a mobile build asks for its crate type
+- [0091](Structure/0091-tool-contracts-live-in-config/0091-tool-contracts-live-in-config.md) the tools' contracts live in .config (proposed)
 
 ### Synthesis
 
@@ -345,3 +347,8 @@ how work is done: hot reload, regression, determinism, lint.
 - [0083](Workflows/0083-feature-unification/0083-feature-unification.md) feature unification reduces duplicate compilations
 - [0084](Workflows/0084-web-targets-and-ports/0084-web-targets-and-ports.md) each web target has one command and a port range
 - [0085](Workflows/0085-integration-by-merge-commit/0085-integration-by-merge-commit.md) integration into main is a pull request merged by merge commit
+- [0087](Workflows/0087-a-crates-integration-tests-are-one-executable/0087-a-crates-integration-tests-are-one-executable.md) a crate's integration tests are one executable
+- [0089](Workflows/0089-a-build-directory-belongs-to-one-checkout/0089-a-build-directory-belongs-to-one-checkout.md) a build directory belongs to one checkout, starts from a clone and has a ceiling
+- [0090](Workflows/0090-the-toolchain-is-one-exact-version/0090-the-toolchain-is-one-exact-version.md) the toolchain is one exact version, read from one file
+- [0092](Workflows/0092-every-member-builds-one-engine/0092-every-member-builds-one-engine.md) every member builds one engine, and the gate builds the other shape
+- [0093](Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md) the dev mode is the engine's own: one report a frame, shown once it is whole, in a panel that offers its places as it draws
