@@ -70,6 +70,21 @@ the whole earlier history no longer exists.
 
 The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the first technical plan, were deleted from the tree at some point and recovered from git history. Their recovered versions are historical sources; the exact paths and revisions are in their `source` field.
 
+## 2026-11-25
+
+- task-106 after its review: `.design`, `.devops` and `.secops` are gone
+  from the root and the lychee, nextest and typos contracts live in
+  `.config`; `builddir.sh seed` refuses where it cannot clone; the iOS
+  build finds its library where cargo wrote it and the Android build
+  clears an old engine `.so`; the web build of `graphs` packages to the
+  end. The branch point (task-105) entered `main` and the task's pull
+  request points there; the gate is green at `aac7fb94` on one macOS
+  machine, with CI and the real mobile builds not run. The task's
+  decisions are records of their own, ADRs 0087 to 0092, with what five
+  large Rust repositories do beside them; ADR 0069 carries the corrected
+  tolerance of `text_mid`, and `TERMS.toml` says how a test command of
+  an older page reads today.
+
 ## 2026-11-24
 
 - what a build directory weighs, and a warm start for a new checkout
@@ -83,6 +98,15 @@ The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the
   The 18 tests that failed on the branch point, unseen while no workflow
   ran, were each traced to the commit that left them behind and pass; the
   toolchain is pinned to 1.99.1.
+
+- [task-106: what a build directory weighs, and a warm start for a new checkout](Tasks/task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md)
+- ADR 0087: [a crate's integration tests are one executable](adr/Workflows/0087-a-crates-integration-tests-are-one-executable/0087-a-crates-integration-tests-are-one-executable.md)
+- ADR 0088: [libraries are plain, and a mobile build asks for its crate type](adr/Structure/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type.md)
+- ADR 0089: [a build directory belongs to one checkout, starts from a clone and has a ceiling](adr/Workflows/0089-a-build-directory-belongs-to-one-checkout/0089-a-build-directory-belongs-to-one-checkout.md)
+- ADR 0090: [the toolchain is one exact version, read from one file](adr/Workflows/0090-the-toolchain-is-one-exact-version/0090-the-toolchain-is-one-exact-version.md)
+- ADR 0091 (proposed): [the tools' contracts live in .config](adr/Structure/0091-tool-contracts-live-in-config/0091-tool-contracts-live-in-config.md)
+- ADR 0092: [every member builds one engine, and the gate builds the other shape](adr/Workflows/0092-every-member-builds-one-engine/0092-every-member-builds-one-engine.md)
+- research: [how large rust workspaces keep a build directory small](Research/Ecosystem/build-directories-in-large-rust-workspaces.md)
 
 ## 2026-11-12
 

@@ -135,3 +135,9 @@ comments, written by `tool/tasks/docbase.py index` from the `relations` and `par
 every header: the pages a page names and the pages that name it, as relative links. The
 header is the source; the list is how Quartz, Obsidian, Zola or a reader on GitHub follow
 the same graph, and the check fails when the list and the headers disagree.
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0091: the tools' contracts live in .config](../../adr/Structure/0091-tool-contracts-live-in-config/0091-tool-contracts-live-in-config.md)
+<!-- /related -->

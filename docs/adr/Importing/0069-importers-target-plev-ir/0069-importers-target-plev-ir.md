@@ -11,7 +11,7 @@ topics: [importing, ir, formats]
 relations: [adr-0011, adr-0012, adr-0049, adr-0051, adr-0064, task-68, task-69, task-71, learning-cycle-0069]
 source: docs/adr/importing/0069-importers-target-plev-ir.md
 source_revision: ec0a224c
-revised: 2026-11-02
+revised: 2026-11-25
 review: reviewed
 ---
 
@@ -117,6 +117,11 @@ measured on `Theme::hoff()`:
 | shape `pill` (32) | 4 px | `dropdown` (24) |
 | size `card_w` (368) | 16 px | `modal_max_w` (400), among the widths |
 | `caption_r` (12/15.96) | 1 px | `readout` (10/15) |
+
+correction (2026-11-25): the theme settles `text_dim` to AA since `08e608a1`
+(task-104m), so `text_mid` stands 49.13 levels from it and its tolerance is
+24.56 (`rust/import/tests/plevir.rs`). the row above is as measured when the
+decision was taken.
 
 two IR fields hold one token where the source has several values: the
 padding (four sides) takes the smallest side's token and the stack's gap

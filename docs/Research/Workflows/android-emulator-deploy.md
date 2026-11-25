@@ -46,3 +46,9 @@ adb shell am start -n com.plev.engine/.MainActivity
 - `cargo-apk` não serve, hardcoded para nativeactivity, não suporta workspaces
 - `games-activity:3.0.5` causa `NoSuchMethodError`, android-activity 0.6.0 espera 2.0.2
 - theme.appcompat obrigatório no styles.xml para evitar crash no oncreate
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0088: libraries are plain, and a mobile build asks for its crate type](../../adr/Structure/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type.md)
+<!-- /related -->

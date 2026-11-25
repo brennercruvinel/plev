@@ -204,6 +204,7 @@ worked before this program existed:
 ## Related
 
 - [ADR 0085: integration into main is a pull request merged by merge commit](../../adr/Workflows/0085-integration-by-merge-commit/0085-integration-by-merge-commit.md)
+- [ADR 0089: a build directory belongs to one checkout, starts from a clone and has a ceiling](../../adr/Workflows/0089-a-build-directory-belongs-to-one-checkout/0089-a-build-directory-belongs-to-one-checkout.md)
 - [what the autonomous cycle taught about the way of working](autonomous-cycle-learnings.md)
 - [task-106: what a build directory weighs, and a warm start for a new checkout](../../Tasks/task-106-build-weight-and-reuse/task-106-build-weight-and-reuse.md)
 - [task-57: semantic contract (crate `sem`)](../../Tasks/task-57-semantic-contract/task-57-semantic-contract.md)
