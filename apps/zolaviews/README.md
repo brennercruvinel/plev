@@ -5,8 +5,8 @@ with the [Ametrine](https://codeberg.org/daudix/ametrine) theme, beside
 `apps/quartzweb`. It runs from `apps/zolaviews` inside a plev checkout.
 
 ```
-git submodule update --init --recursive apps/quartzweb apps/zolaviews/themes/ametrine
-node apps/zolaviews/plev/book.mjs --serve --port 1112
+git submodule update --init --recursive
+node plev/book.mjs --serve --port 1112
 ```
 
 `--serve` writes the content, runs `zola serve`, and writes again on every
@@ -17,9 +17,7 @@ restarts `zola serve`, which is faster than its per-file rebuilds).
 ## How it is put together
 
 - `themes/ametrine` is the theme as its author publishes it, a submodule
-  pointing at Codeberg; nothing in it is edited. The rest is a plain folder
-  of plev: a static site, not a crate, which `tool/tests/test_structure.rs`
-  recognizes by its `zola.toml`.
+  pointing at Codeberg; nothing in it is edited.
 - `plev/book.mjs` writes `content/` and `static/docs/` (both generated and
   ignored) from `../../docs` and the monsters' blog in
   `../quartzweb/content/blog`. Zola has no plugin step and accepts only
