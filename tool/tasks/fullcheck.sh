@@ -61,7 +61,7 @@ python3 tool/tasks/docbase.py check
 
 # docs links: every link into the repository resolves (lychee, offline).
 if command -v lychee >/dev/null 2>&1; then
-    lychee --no-progress --config .devops/check/lychee.toml --offline .
+    lychee --no-progress --config .config/lychee.toml --offline .
 else
     echo "warning: skipping the docs links — lychee not installed (brew install lychee)." >&2
     echo "         the leg runs in CI." >&2

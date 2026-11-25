@@ -1,8 +1,8 @@
 # typos contract for the plev workspace (crate-ci/typos).
 #
 # discovery: typos walks up from the path it checks looking for typos.toml.
-# this file lives under .devops/check with the other tool contracts, to keep
-# the root clean; CI passes it with `typos --config .devops/check/typos.toml`. it catches spelling slips in
+# this file lives under .config with the other tool contracts, to keep
+# the root clean; CI passes it with `typos --config .config/typos.toml`. it catches spelling slips in
 # code, comments and docs without flagging the project's domain vocabulary.
 #
 # this repo is bilingual by design (comments in english AND portuguese), so an
@@ -27,9 +27,6 @@ extend-exclude = [
     # docs/ATLAS.toml and docs/TERMS.toml are english-facing, so they stay
     # checked.
     "docs/adr/",
-    "docs/log/",
-    "docs/pub/",
-    "docs/ref/",
     # these markup-macro tests are FULL of deliberate misspellings: they test
     # the did-you-mean / levenshtein suggestion path (buton -> button, scrolll
     # -> scroll). flagging them is exactly backwards.

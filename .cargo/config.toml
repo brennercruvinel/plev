@@ -1,5 +1,5 @@
 # cargo config for the plev workspace.
 #
 # nothing is set here today. clippy runs on its defaults; the contracts of
-# the other tools (nextest, typos, lychee) live in .devops/check and are
+# the other tools (nextest, typos, lychee) live in .config and are
 # passed with --config where a tool runs.

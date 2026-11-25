@@ -1,7 +1,7 @@
 # lychee contract for the plev workspace: every link in the docs resolves.
 #
 # run from the repository root:
-#   lychee --config .devops/check/lychee.toml --offline .
+#   lychee --config .config/lychee.toml --offline .
 # offline: the gate checks links into this repository (files, anchors, the
 # tree's own paths), the ones a move can break. links out to the web are
 # checked on demand without --offline; they come and go on their own.

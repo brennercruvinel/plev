@@ -138,7 +138,7 @@ jobs:
         run: python3 tool/tasks/docbase.py check
       - uses: lycheeverse/lychee-action@v2
         with:
-          args: --config .devops/check/lychee.toml --offline .
+          args: --config .config/lychee.toml --offline .
           fail: true
 
   typos:
@@ -148,10 +148,10 @@ jobs:
     # comments), so an english spell-checker will flag real portuguese words.
     # the job surfaces genuine english typos as annotations without ever
     # failing a PR for portuguese content. recurring false positives go in the
-    # allowlist at .devops/check/typos.toml.
+    # allowlist at .config/typos.toml.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v5
       - uses: crate-ci/typos@master
         with:
-          config: .devops/check/typos.toml
+          config: .config/typos.toml

@@ -95,7 +95,7 @@ The counts are the same on both sides, and so are the names of the tests that fa
 | `import` html and react reports, the `text_mid` tolerance | `08e608a1` (task-104m): the theme settles `text_dim` to AA, the gap to `text_mid` went from 51 levels to 49.13 | the tolerance reads 24.56 where it read 25.5, one line in each golden and the constant |
 | `inspector` and `replay` dependency lists | `540e218d`: every member got the `unions` line | the lists name `unions`, which holds no code |
 | `inspector` commit scenario | `2ca6ded9` (task-104g): the code face is JetBrains Mono, the row wraps | the test reads the drawn text across its rows |
-| `tool/tests` root layout | `205fc5f8` and `f7695626` deleted `.devops`, `.secops` and `.design` | the eight files are restored from `540e218d`; the gate's link check runs again (4056 links, none broken) |
+| `tool/tests` root layout | `205fc5f8` and `f7695626` deleted `.devops`, `.secops` and `.design`, on purpose | the test no longer wants them; the lychee, nextest and typos contracts `.devops/check` held live in `.config`, and the gate's link check runs again (4056 links, none broken) |
 | `tool/tests` crate homes | an empty untracked directory on one machine | the test lists what git tracks, as the rest of its file does |
 | `engine` text audit | `2ca6ded9`: 82644 more bytes of fonts | the golden's first line, the only one that differed |
 | `screen` slider tests (3) | `19fcf1d3` (task-104e): the slider maps its travel by the thumb | the test helpers use the thumb's width |
@@ -142,9 +142,10 @@ A new checkout, through `builddir.sh seed`: the seed took 5 s and no disk, and `
 - `apps/urnadbapp` still builds into a directory of its own (4.0 GB). Sharing the root's, or joining the workspace, is [issue 191](https://github.com/brennercruvinel/plev/issues/191).
 - ADR 0069 still states 25.5 and 51 levels for `text_mid`; the theme makes them 24.56 and 49.13 since task-104m.
 - The engine's image store keeps an image decoded from a PNG and the same pixels given raw in two slots.
-- Whether `.design`, `.devops` and `.secops` were deleted on purpose the history does not say. They are restored because the tree's own test, the gate, CI, the readme and the atlas still name them.
 
 ## Closed in the task
+
+- `.design`, `.devops` and `.secops` are gone from the root for good, the owner's decision. The task first restored them, reading their deletion as an accident because the tree's own test, the gate, CI, the readme and the atlas still named them; that was undone. What `.devops/check` held (the lychee, nextest and typos contracts) is in `.config`, beside hakari's, and every reference points there. nextest finds its file there with no flag.
 
 - The toolchain is pinned: `rust-toolchain.toml` names 1.99.1, the compiler `stable` already was, and every CI job runs `rustup toolchain install`, which reads the same file. The CI change is not verified: no workflow has run on the repository since 2026-10-16.
 - `human_agent`'s commit author in `idestudio` followed `GIT_AUTHOR_NAME` when a session exported it. The test compares with the author git gave the commit, and the gate drops the identity variables before its tests.

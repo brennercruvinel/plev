@@ -1,9 +1,8 @@
 # cargo-nextest contract for the plev workspace.
 #
-# discovery: nextest reads .config/nextest.toml at the workspace root, or the
-# path in NEXTEST_CONFIG_FILE. this file lives under .devops/check with the
-# other tool contracts, to keep the root clean; run it with
-# `cargo nextest run --config-file .devops/check/nextest.toml`. the gate
+# discovery: nextest reads .config/nextest.toml at the workspace root, which
+# is where this file is, with the other tool contracts: `cargo nextest run`
+# finds it with no flag. the gate
 # (tool/tasks/fullcheck.sh) uses `cargo test --workspace`; nextest is the
 # faster optional runner.
 
