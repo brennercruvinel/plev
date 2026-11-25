@@ -54,6 +54,12 @@ pub struct Compositor {
     /// The layer `push` and `bind` draw on: the default one, but inside
     /// [`Compositor::on_layer`].
     target: LayerId,
+    /// The index of the frame being drawn, as the frame's owner counts
+    /// them (see [`Compositor::set_frame_index`]).
+    frame_index: u64,
+    /// The layers the last `window::draw_frame` encoded, in order, with
+    /// the draw calls of their passes; reused frame to frame.
+    pub(crate) drawn: Vec<(LayerId, u32)>,
 }
 
 impl Default for Compositor {
@@ -72,6 +78,8 @@ impl Compositor {
             stats: RenderStats::default(),
             bind_table: binding::BindTable::default(),
             target: LayerId::DEFAULT,
+            frame_index: 0,
+            drawn: Vec::new(),
         };
         comp.layers.push(Layer::new(LayerId::DEFAULT, 0));
         comp
@@ -119,6 +127,26 @@ impl Compositor {
         self.layers
             .iter()
             .any(|l| l.dirty || l.compute_hash() != l.prev_hash)
+    }
+
+    /// Tag the frames drawn from now on with `index` (a window host gives
+    /// its frame counter before each frame): the GPU timestamps of a frame
+    /// carry it, so a reading that comes back later finds its frame.
+    pub fn set_frame_index(&mut self, index: u64) {
+        self.frame_index = index;
+    }
+
+    /// The index given by [`Compositor::set_frame_index`]; 0 until then.
+    pub fn frame_index(&self) -> u64 {
+        self.frame_index
+    }
+
+    /// The layers the last `window::draw_frame` redrew, in encode order,
+    /// each with the draw calls of its layer passes (a backdrop blur's
+    /// included). Empty before the first frame, and for a frame that
+    /// redrew no layer.
+    pub fn drawn_layers(&self) -> &[(LayerId, u32)] {
+        &self.drawn
     }
 
     /// Stats collected for the most recent frame.

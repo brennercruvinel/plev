@@ -153,7 +153,7 @@ impl GpuContext {
     pub async fn new_headless(width: u32, height: u32, mut config: RenderConfig) -> Option<Self> {
         Self::apply_config(&mut config);
 
-        let instance = Self::new_instance();
+        let instance = Self::instance_on(Self::backends(), true);
         let adapter = match instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::HighPerformance,
@@ -261,7 +261,7 @@ impl GpuContext {
     }
 
     fn new_instance() -> wgpu::Instance {
-        Self::instance_on(Self::backends())
+        Self::instance_on(Self::backends(), false)
     }
 
     /// The instance this context's adapter, device and surface came from.
@@ -291,29 +291,50 @@ impl GpuContext {
         }
     }
 
-    pub(super) fn instance_on(backends: wgpu::Backends) -> wgpu::Instance {
+    /// An instance on `backends`, with [`Self::instance_flags`].
+    pub(super) fn instance_on(backends: wgpu::Backends, headless: bool) -> wgpu::Instance {
         wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends,
+            flags: Self::instance_flags(headless),
             ..wgpu::InstanceDescriptor::new_without_display_handle()
         })
     }
 
-    /// No feature, unless `config` asks for GPU timestamps (or the
-    /// `profiler` feature is on, for wgpu-profiler) and the adapter has
-    /// them.
+    /// wgpu's flags for this build (a debug build validates and names
+    /// every object it makes), less the names for a `headless` instance
+    /// off Apple's platforms, where the GPU is reached through the Vulkan
+    /// loader. A window keeps them all.
+    ///
+    /// In loader 1.4.341 (the one Ubuntu 26.04 ships; fixed upstream
+    /// after it, KhronosGroup/Vulkan-Loader#1863), naming an object
+    /// (`vkSetDebugUtilsObjectNameEXT`) walks every driver and every
+    /// device of the process without the lock under which an instance's
+    /// first adapter search unloads each driver that found no device
+    /// (nine were installed and six found none on the machine this was
+    /// found on) and `vkDestroyDevice` frees a device. Tests make headless
+    /// contexts on many threads at once and a debug build names every
+    /// object it makes, so a name met a freed driver and the process
+    /// crashed in the loader, in about one parallel run in four of
+    /// `perf::tests::stages::frame_tail`. A headless context names
+    /// nothing; a window is made and dropped on the thread that draws.
+    pub(super) fn instance_flags(headless: bool) -> wgpu::InstanceFlags {
+        let mut flags = wgpu::InstanceFlags::from_build_config();
+        if headless && cfg!(not(any(target_os = "macos", target_os = "ios"))) {
+            flags.remove(wgpu::InstanceFlags::DEBUG);
+        }
+        flags
+    }
+
+    /// No feature, unless `config` asks for GPU timestamps and the adapter
+    /// has them.
     pub(super) fn device_descriptor(
         adapter: &wgpu::Adapter,
         config: &RenderConfig,
     ) -> wgpu::DeviceDescriptor<'static> {
         let timestamps = crate::runtime::perf::gpu_time::device_features(
             adapter.features(),
-            config.gpu_timestamps || cfg!(feature = "profiler"),
+            config.gpu_timestamps,
         );
-        // Tracy's GPU context syncs its clock with a timestamp written on
-        // the encoder, outside a pass (`perf::profiler`).
-        #[cfg(feature = "profiler")]
-        let timestamps =
-            timestamps | (adapter.features() & wgpu::Features::TIMESTAMP_QUERY_INSIDE_ENCODERS);
         let (required_features, required_limits) = match config.compute {
             None => (timestamps, wgpu::Limits::default()),
             Some(asked) => {

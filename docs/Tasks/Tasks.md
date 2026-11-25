@@ -126,6 +126,6 @@ One folder per task, its note named like the folder: the plan, the execution, th
 | 2026-10-27 | [task-102: reusable builds and web commands](task-102-builds-and-web-commands/task-102-builds-and-web-commands.md) | done |
 | 2026-10-27 | [task-103: runcheck, every executable in the repository runs](task-103-runcheck-every-executable-runs/task-103-runcheck-every-executable-runs.md) | done |
 | 2026-10-31 | [task-104: the 35 empty or borrowed gallery tabs become kit components](task-104-gallery-components-from-the-kit/task-104-gallery-components-from-the-kit.md) | in-review |
-| 2026-11-03 | [task-105: the frame in Puffin and Tracy, from a panel over any gallery tab](task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md) | in-progress |
+| 2026-11-03 | [task-105: a dev mode over any app: the frame, the GPU, the zones, the heap and the page's controls](task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md) | in-progress |
 
 [plev docs](../README.md)

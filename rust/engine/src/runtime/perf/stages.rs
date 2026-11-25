@@ -236,6 +236,17 @@ impl StageFrame {
         (span.calls > 0).then(|| (span.nanos / span.calls + 500) / 1_000)
     }
 
+    /// A frame holding `costs` (the last one of a stage wins), for tests
+    /// that build a frame by hand.
+    #[cfg(test)]
+    pub(crate) fn from_costs(costs: &[(Stage, StageCost)]) -> Self {
+        let mut frame = Self::EMPTY;
+        for &(stage, cost) in costs {
+            frame.costs[stage as usize] = cost;
+        }
+        frame
+    }
+
     fn add(&mut self, stage: Stage, items: u64, nanos: u64) {
         let cost = &mut self.costs[stage as usize];
         cost.calls += 1;
@@ -323,6 +334,7 @@ pub fn span(stage: Stage) -> Span {
 #[inline]
 pub fn gpu_wait(wait: impl FnOnce()) {
     if is_enabled() && GPU_SYNC.with(Cell::get) {
+        crate::zone!("gpu wait");
         let _wait = span(Stage::GpuWait);
         wait();
     }

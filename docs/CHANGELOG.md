@@ -70,6 +70,16 @@ the whole earlier history no longer exists.
 
 The texts on gamma, on apps bypassing the engine and on the HOFF tokens, and the first technical plan, were deleted from the tree at some point and recovered from git history. Their recovered versions are historical sources; the exact paths and revisions are in their `source` field.
 
+## 2026-11-12
+
+- a dev mode over any app, the engine's own and with no dependency
+  ([task-105](Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)):
+  a panel docked in the window reads one report per frame and shows it in
+  seven views (the frame by phase, the GPU by pass and layer, the CPU's
+  zones with a histogram, plots, the heap and GPU memory, the lines code
+  said, and one control of the page). It replaces the Puffin and Tracy
+  POC of 2026-11-03 below, whose features and dependencies left the tree.
+
 ## 2026-11-03
 
 - the frame in Puffin and Tracy from a panel over any gallery tab, a POC
