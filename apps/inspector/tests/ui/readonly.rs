@@ -72,7 +72,12 @@ fn the_crate_holds_nothing_that_runs_an_action_or_sends_anything() -> Fallible {
         .filter(|l| !l.is_empty() && !l.starts_with('#'))
         .filter_map(|l| l.split(['.', ' ', '=']).next())
         .collect();
-    assert_eq!(names, ["engine", "replay", "record", "accord"]);
+    // `unions` is the one name here that is not the crate's own choice:
+    // cargo hakari gives it to every member (.config/hakari.toml) so one
+    // member's build reuses the workspace's. it holds no code and exports
+    // nothing (rust/unions/src/lib.rs), so nothing it lists can be named
+    // from these sources.
+    assert_eq!(names, ["engine", "replay", "record", "accord", "unions"]);
     assert!(
         !manifest.contains("[dev-dependencies]"),
         "nothing more for the tests"
