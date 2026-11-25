@@ -36,6 +36,13 @@ android() {
     CARGO_PROFILE_FLAG="--release"
     [ "$PROFILE" = "debug" ] && CARGO_PROFILE_FLAG=""
 
+    # a jniLibs filled before task-106 still holds libengine.so, from when the
+    # engine was a cdylib of its own. nothing loads it and Gradle packages
+    # whatever the folder holds, so it goes before the build.
+    if [ -d "$JNILIBS" ]; then
+        find "$JNILIBS" -name 'libengine.so' -delete
+    fi
+
     # the crate type is asked for here, not in the manifest: uigallery is a
     # plain rlib for the desktop, and cargo-ndk copies the cdylib it is told
     # about. libuigallery.so statically links engine; GameActivity loads only
@@ -70,7 +77,12 @@ ios() {
     echo ">> building Rust staticlib ($TRIPLE, $PROFILE)"
     ( cd "$REPO_ROOT" && cargo rustc -p uigallery --lib --target "$TRIPLE" $CARGO_PROFILE_FLAG --crate-type staticlib )
 
-    LIBDIR="$REPO_ROOT/target/$TRIPLE/$PROFILE"
+    # where cargo wrote it: target/ unless CARGO_TARGET_DIR or a config says
+    # another directory (an agent's build directory), so cargo is asked.
+    TARGET_DIR="$(cd "$REPO_ROOT" && cargo metadata --no-deps --format-version 1 \
+        | sed -n 's/.*"target_directory":"\([^"]*\)".*/\1/p')"
+    LIBDIR="$TARGET_DIR/$TRIPLE/$PROFILE"
+    [ -f "$LIBDIR/libuigallery.a" ] || { echo ">> no staticlib at $LIBDIR/libuigallery.a" >&2; exit 1; }
     echo ">> staticlib: $LIBDIR/libuigallery.a"
 
     echo ">> generating Xcode project"

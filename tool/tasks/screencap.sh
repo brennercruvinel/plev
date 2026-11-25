@@ -386,9 +386,9 @@ HEIGHT="$(python3 -c "print(repr(${PX_H} / ${SCALE}))")"
 
 mkdir -p "$OUT"
 echo ">> building the gallery for the simulator (tool/tasks/mobileapp.sh ios)"
-# build_ios.sh links the staticlib from target/<triple>/<profile> of the
-# repository: a CARGO_TARGET_DIR elsewhere would leave it looking at nothing
-(unset CARGO_TARGET_DIR; "$REPO_ROOT/tool/tasks/mobileapp.sh" ios)
+# mobileapp.sh asks cargo where the staticlib was written, so a
+# CARGO_TARGET_DIR elsewhere (an agent's build directory) is honored
+"$REPO_ROOT/tool/tasks/mobileapp.sh" ios
 APP="$REPO_ROOT/apps/uigallery/ios/build/Build/Products/Debug-iphonesimulator/UIGallery.app"
 
 echo ">> booting $DEVICE"
