@@ -8,7 +8,8 @@
 #
 # size: what each build directory of the repository weighs: target/ by
 # folder, every agent's under target/agents, and the two workspaces that
-# keep their own (apps/urnadbapp/target, rust/llmrun/target).
+# keep their own (apps/urnadbapp/target, rust/llmrun/target). a seeded
+# directory counts in full here: du cannot tell a clone from a copy.
 #
 # trim: when the build directory (CARGO_TARGET_DIR, else target/) weighs
 # more than --over GB (default 12), removes what the workspace's own crates

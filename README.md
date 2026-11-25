@@ -213,6 +213,20 @@ tool/tasks/runcheck.sh
 tool/tasks/runcheck.sh arcade lottie
 ```
 
+O `builddir.sh` cuida do peso do build: `size` diz quanto pesa cada diretório,
+`trim` remove o que o workspace gravou quando o `target/` passa do limite (as
+dependências ficam) e `seed` dá a outro checkout um diretório já aquecido.
+
+```
+tool/tasks/builddir.sh size
+tool/tasks/builddir.sh trim --yes
+tool/tasks/builddir.sh seed target/agents/<task>
+```
+
+Os testes de integração de um crate são um executável só, `tests/suite.rs`,
+com um módulo por arquivo. Os testes de um arquivo:
+`cargo test -p engine --test suite capture::`.
+
 As ferramentas além dessas (uma página para PNG, o custo de um frame, o agent
 port, o mirror, as sessões gravadas, os importers, o modelo de linguagem)
 estão em [docs/Research/Workflows/run-the-tools.md](docs/Research/Workflows/run-the-tools.md). Uma build de
