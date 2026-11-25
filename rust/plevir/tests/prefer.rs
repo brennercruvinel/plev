@@ -6,7 +6,7 @@
 
 // shared with the other uir tests: this binary uses the registry only.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use std::collections::BTreeSet;
 

@@ -1,6 +1,7 @@
 pub mod dispatch;
 pub mod drop;
 pub mod gesture;
+pub mod reveal;
 pub mod scroll;
 pub mod touch;
 

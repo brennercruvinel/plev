@@ -6,5 +6,6 @@
 mod components;
 mod focus;
 mod matrix;
+mod targets;
 mod wake;
 mod widgets;

@@ -14,7 +14,7 @@
 // shared with the other ide tests: this binary uses the rig and a few
 // helpers, not every one.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use std::sync::{Arc, Mutex};
 

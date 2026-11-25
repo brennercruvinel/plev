@@ -414,9 +414,16 @@ fn the_proposer_sits_beside_the_field_when_wide_and_under_it_when_not() {
             propose[0] >= proposer[0] + proposer[2],
             "{content:?}: the button after"
         );
+        // cancel ends the button's line when it has the room, else it
+        // goes under it
+        let after = cancel[0] >= propose[0] + propose[2] && cancel[1] < propose[1] + propose[3];
         assert!(
-            cancel[1] >= propose[1] + propose[3] - 0.5,
-            "{content:?}: cancel below"
+            after || cancel[1] >= propose[1] + propose[3] - 0.5,
+            "{content:?}: cancel after the button or below it"
+        );
+        assert!(
+            cancel[0] + cancel[2] <= content.x + content.w + 0.5,
+            "{content:?}"
         );
         assert!(
             status[1] >= propose[1],

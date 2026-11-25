@@ -2,19 +2,20 @@
 //! a real Element tree rendered via render_interactive, so its buttons are
 //! REAL engine hit regions (the old demo drew fake buttons via View::render)
 //! and a counter proves reactivity: click, state changes, the tree rebuilds.
-//! The source panel besides it shows the code in Inclusive Sans, the
-//! embedded UI family. Named
-//! builder_tour to not collide with the engine's engine::compose::builder.
+//! The source beside it is a `CodeBlock` (the theme's code recipe), one
+//! row per line, cut at the card's width. Named builder_tour to not
+//! collide with the engine's engine::compose::builder.
 
-use engine::compose::builder::{Element, button, div, text as btext};
+use engine::compose::builder::{Element, div, text as btext};
 use engine::compose::view::ViewContext;
-use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::drawing::compositor::{Compositor, SceneNode};
+use engine::drawing::text::TextMeasurer;
 use engine::styling::color::Color;
-use engine::styling::theme::Theme;
+use engine::styling::theme::{Theme, TypeRole, TypeRun};
+use engine::widgets::content::{CodeBlock, CodeLine, LineKind};
 use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
 
-use super::{group_label, panel};
+use super::group_label;
 
 /// Gap-class constants: card padding, card gap, label band, and the
 /// minimum live-result card width (below it the cards stack).
@@ -24,7 +25,6 @@ const LABEL_H: f32 = 24.0;
 const MIN_DEMO_W: f32 = 320.0;
 /// Layout-engine upper bound; the card takes its natural height (tested).
 const DEMO_MAX_H: f32 = 2048.0;
-const CODE_LINE_H: f32 = 18.0;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum CounterMsg {
@@ -67,36 +67,41 @@ const ACTIONS: [(&str, CounterMsg); 3] = [
 
 /// Source shown in the panel; mirrors `demo_tree` below.
 const CODE: &[&str] = &[
-    "fn counter(n: i64) -> Element {",
+    "fn action(label: &str, ty: &TypographyScale) -> Element {",
+    "    let style = ty.role(TypeRole::Heading);",
+    "    div().px(14).py(8).rounded(8)",
+    "        .child(text(label).text_style(&style))",
+    "}",
+    "fn counter(n: i64, ty: &TypographyScale) -> Element {",
+    "    let title = ty.run(TypeRole::Title.strong());",
+    "    let count = ty.run(TypeRole::TitleLg.strong());",
     "    div().col().gap(10).p(24)",
     "        .bg(glass.surface).rounded(20)",
-    "        .child(text(\"Counter\")",
-    "            .font_size(16).font_weight(600))",
+    "        .child(text(\"Counter\").text_style(&title))",
     "        .child(div().row().wrap().gap(12)",
-    "            .child(button(\"-1\").on_click(|_| send(Dec)))",
+    "            .child(action(\"-1\", ty).on_click(|_| send(Dec)))",
     "            .child(div().px(18).py(6)",
-    "                .child(text(&n.to_string())))",
-    "            .child(button(\"+1\").on_click(|_| send(Inc)))",
-    "            .child(button(\"Reset\").on_click(|_| send(Reset))))",
+    "                .child(text(&n.to_string()).text_style(&count)))",
+    "            .child(action(\"+1\", ty).on_click(|_| send(Inc)))",
+    "            .child(action(\"Reset\", ty).on_click(|_| send(Reset))))",
     "}",
 ];
 
-/// One TextStyle for the code runs, shared by measurement and drawing.
-fn code_style() -> TextStyle {
-    let mut style = TextStyle::new(12.0);
-    style.line_height = CODE_LINE_H;
-    style.font_family = Some("Inclusive Sans".to_string());
-    style
+/// The source as a code block: a row per line, captioned by its language.
+fn code_block() -> CodeBlock {
+    let rows = CODE.iter().map(|l| CodeLine::new(*l, LineKind::Context));
+    CodeBlock::lines(rows.collect()).caption("rust")
 }
 
-/// Natural width of the source card: widest measured line plus padding.
-fn code_panel_width() -> f32 {
-    let style = code_style();
+/// Natural width of the source card: the widest line in the block's
+/// style, and the block's padding.
+fn code_panel_width(theme: &Theme) -> f32 {
+    let style = CodeBlock::text_style(theme);
     let widest = CODE
         .iter()
         .map(|l| TextMeasurer::measure_styled(l, &style, None).0)
         .fold(0.0, f32::max);
-    widest + PAD * 2.0
+    (widest + theme.navigation.code.pad * 2.0).ceil()
 }
 
 /// Push builder output shifted to the card origin (trees lay out at (0,0)).
@@ -119,11 +124,21 @@ fn push_offset(c: &mut Compositor, nodes: Vec<SceneNode>, dx: f32, dy: f32) {
     }
 }
 
-#[derive(Default)]
 pub struct BuilderPage {
     state: CounterState,
     /// Hovered ACTIONS index; the tree is rebuilt with the hover color.
     hover: Option<usize>,
+    code: CodeBlock,
+}
+
+impl Default for BuilderPage {
+    fn default() -> Self {
+        Self {
+            state: CounterState::default(),
+            hover: None,
+            code: code_block(),
+        }
+    }
 }
 
 impl BuilderPage {
@@ -135,30 +150,48 @@ impl BuilderPage {
     /// derives from the content rect; only the row wraps below MIN_DEMO_W.
     fn demo_tree(&self, w: f32, theme: &Theme) -> Element {
         let (g, tc, r) = (&theme.glass, &theme.colors, theme.radius.md);
-        let t = |s: &str, fs: f32, fw: u16, c: Color| {
-            btext(s).font_size(fs).font_weight(fw).text_color(c)
-        };
+        let ty = &theme.typography;
+        let t = |s: &str, run: TypeRun, c: Color| btext(s).text_style(&ty.run(run)).text_color(c);
         let mut row = div().row().wrap().gap(12.0).align_center().pt(4.0);
         for (i, &(label, _)) in ACTIONS.iter().enumerate() {
             let hov = self.hover == Some(i);
             let bg = if hov { g.button_hover } else { g.button };
             // on_click makes render_interactive emit the hit region; the engine
             // has no handler dispatch yet, so handle_event routes zone i.
-            row = row.child(button(label).bg(bg).rounded(r).px(14.0).on_click(|_| {}));
+            // The builder's `button` writes its label in a fixed light
+            // ink, unreadable on a light theme's button: the same box, its
+            // label in the theme's text.
+            let label = t(label, TypeRole::Heading.run(), tc.text);
+            let action = div().bg(bg).rounded(r).px(14.0).py(8.0).child(label);
+            row = row.child(action.on_click(|_| {}));
             if i == 0 {
                 let pill = div().px(18.0).py(6.0).bg(g.surface_active).rounded(r);
-                row = row.child(pill.child(t(&self.state.count.to_string(), 18.0, 700, tc.text)));
+                row = row.child(pill.child(t(
+                    &self.state.count.to_string(),
+                    TypeRole::TitleLg.strong(),
+                    tc.text,
+                )));
             }
         }
         let caption = format!("tree rebuilt from state {} times", self.state.rebuilds);
+        // the card's texts wrap in its width less its padding: a phone, a
+        // larger text or a longer language takes another line
+        let room = (w - PAD * 2.0).max(1.0);
         let card = div().col().gap(10.0).p(PAD).w(w).bg(g.surface);
         card.rounded(theme.radius.lg)
             .border(1.0)
             .border_color(g.edge_soft)
-            .child(t("Counter", 16.0, 600, tc.text))
-            .child(t("State drives the tree.", 13.0, 400, tc.text_dim))
+            .child(t("Counter", TypeRole::Title.strong(), tc.text).max_width(room))
+            .child(
+                t(
+                    "State drives the tree.",
+                    TypeRole::BodyLg.run(),
+                    tc.text_dim,
+                )
+                .max_width(room),
+            )
             .child(row)
-            .child(t(&caption, 12.0, 400, g.text_faint))
+            .child(t(&caption, TypeRole::Body.run(), g.text_faint).max_width(room))
     }
 
     /// Engine geometry for the demo card at origin (ox, oy), width `w`:
@@ -182,14 +215,14 @@ impl BuilderPage {
 
     /// Pure split, side by side when both cards fit, stacked otherwise:
     /// (demo card, code card, total content height for page scroll).
-    fn layout(&self, content: Rect) -> (Rect, Rect, f32) {
-        let code_w = code_panel_width();
+    fn layout(&self, content: Rect, theme: &Theme) -> (Rect, Rect, f32) {
+        let code_w = code_panel_width(theme);
         let side = content.w >= MIN_DEMO_W + GAP + code_w;
         let demo_w = content.w - if side { GAP + code_w } else { 0.0 };
         let demo_y = content.y + LABEL_H;
         let (demo_h, _) = self.demo_geometry(content.x, demo_y, demo_w);
         let demo = Rect::new(content.x, demo_y, demo_w, demo_h);
-        let code_h = CODE.len() as f32 * CODE_LINE_H + PAD * 2.0;
+        let code_h = self.code.height_for(code_w, theme);
         let stack_y = demo_y + demo_h + GAP + LABEL_H;
         let code = if side {
             Rect::new(content.x + demo_w + GAP, demo_y, code_w, code_h)
@@ -200,12 +233,17 @@ impl BuilderPage {
         (demo, code, total)
     }
 
-    pub fn content_height(&self, content: Rect) -> f32 {
-        self.layout(content).2
+    pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
+        self.layout(content, theme).2
     }
 
-    pub fn handle_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
-        let demo = self.layout(content).0;
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+    ) -> EventResult {
+        let demo = self.layout(content, theme).0;
         let (_, zones) = self.demo_geometry(demo.x, demo.y, demo.w);
         match *event {
             WidgetEvent::MouseMove { x, y } => {
@@ -232,7 +270,7 @@ impl BuilderPage {
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let (demo, code, _) = self.layout(content);
+        let (demo, code, _) = self.layout(content, theme);
 
         group_label(c, "LIVE RESULT", demo.x, demo.y - LABEL_H, theme);
         let mut cx = ViewContext::new(demo.w, DEMO_MAX_H).with_theme(theme.clone());
@@ -240,19 +278,7 @@ impl BuilderPage {
         push_offset(c, result.nodes, demo.x, demo.y);
 
         group_label(c, "SOURCE", code.x, code.y - LABEL_H, theme);
-        panel(c, code, theme);
-        let style = code_style();
-        let (x, y, w, h) = (code.x, code.y, code.w, code.h);
-        c.push(SceneNode::PushClip { x, y, w, h });
-        for (i, line) in CODE.iter().enumerate() {
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(line, &style, None),
-                x: code.x + PAD,
-                y: code.y + PAD + i as f32 * CODE_LINE_H,
-                color: theme.colors.text_dim.0,
-            });
-        }
-        c.push(SceneNode::PopClip);
+        self.code.render(c, code, theme);
     }
 }
 
@@ -271,7 +297,7 @@ mod tests {
         WidgetEvent::MouseMove { x, y }
     }
     fn zones(s: &BuilderPage, c: Rect) -> Vec<Rect> {
-        let demo = s.layout(c).0;
+        let demo = s.layout(c, &Theme::hoff()).0;
         s.demo_geometry(demo.x, demo.y, demo.w).1
     }
     fn has_text(c: &Compositor, t: &str) -> bool {
@@ -296,24 +322,27 @@ mod tests {
     fn layout_splits_wide_and_stacks_narrow() {
         let s = BuilderPage::new();
         let wide = content(1132.0);
-        let (demo, code, _) = s.layout(wide);
+        let (demo, code, _) = s.layout(wide, &Theme::hoff());
         assert!(demo.w >= MIN_DEMO_W);
         assert!(code.x >= demo.x + demo.w, "code sits beside the demo");
         assert!(code.x + code.w <= wide.x + wide.w + 0.5);
         assert!(demo.h > 100.0 && demo.h < 500.0, "natural h={}", demo.h);
 
         let narrow = content(232.0);
-        let (demo, code, total) = s.layout(narrow);
+        let (demo, code, total) = s.layout(narrow, &Theme::hoff());
         assert_eq!((demo.w, code.w), (narrow.w, narrow.w), "stacked cards span");
         assert!(code.y >= demo.y + demo.h, "code stacks under demo");
-        assert!(total >= code.y + code.h - narrow.y && s.content_height(narrow) == total);
+        assert!(
+            total >= code.y + code.h - narrow.y
+                && s.content_height(narrow, &Theme::hoff()) == total
+        );
     }
 
     #[test]
     fn clicks_and_hover_on_real_hit_regions_drive_state_and_redraw() {
         let mut s = BuilderPage::new();
         let wide = content(1132.0);
-        let demo = s.layout(wide).0;
+        let demo = s.layout(wide, &Theme::hoff()).0;
         let z = zones(&s, wide);
         assert_eq!(z.len(), ACTIONS.len(), "engine zones in ACTIONS order");
         for z in &z {
@@ -323,31 +352,44 @@ mod tests {
         assert!(z[0].x < z[1].x && z[1].x < z[2].x);
 
         let (x, y) = z[1].center(); // "+1"
-        let r = s.handle_event(&down(x, y), wide);
+        let r = s.handle_event(&down(x, y), wide, &Theme::hoff());
         assert!(r.clicked && r.changed, "click must request a redraw");
         assert_eq!(s.state.count, 1);
 
         let (x, y) = z[0].center(); // "-1"
-        s.handle_event(&down(x, y), wide);
+        s.handle_event(&down(x, y), wide, &Theme::hoff());
         assert_eq!(s.state.count, 0);
-        assert!(s.handle_event(&mv(x, y), wide).changed, "hover in redraws");
-        assert!(!s.handle_event(&mv(x, y), wide).changed, "no hover change");
-        assert!(s.handle_event(&mv(5.0, 5.0), wide).changed, "hover out");
+        assert!(
+            s.handle_event(&mv(x, y), wide, &Theme::hoff()).changed,
+            "hover in redraws"
+        );
+        assert!(
+            !s.handle_event(&mv(x, y), wide, &Theme::hoff()).changed,
+            "no hover change"
+        );
+        assert!(
+            s.handle_event(&mv(5.0, 5.0), wide, &Theme::hoff()).changed,
+            "hover out"
+        );
 
         let (x, y) = z[2].center(); // "Reset" while already 0
-        let r = s.handle_event(&down(x, y), wide);
+        let r = s.handle_event(&down(x, y), wide, &Theme::hoff());
         assert!(r.handled && !r.changed, "no-op click must not redraw");
-        assert_eq!(s.handle_event(&down(5.0, 5.0), wide), EventResult::IGNORED);
+        assert_eq!(
+            s.handle_event(&down(5.0, 5.0), wide, &Theme::hoff()),
+            EventResult::IGNORED
+        );
     }
 
     #[test]
-    fn render_shows_count_updates_after_click_and_mono_code() {
+    fn render_shows_count_updates_after_click_and_the_code_block() {
         let mut s = BuilderPage::new();
         let (wide, theme) = (content(1132.0), Theme::hoff());
         let mut c = Compositor::new();
         s.render(&mut c, wide, &theme);
         assert!(has_text(&c, "0"), "counter starts at 0");
 
+        let style = CodeBlock::text_style(&theme);
         let code_lines = c
             .layer(LayerId::DEFAULT)
             .unwrap()
@@ -355,20 +397,62 @@ mod tests {
             .iter()
             .filter(|n| {
                 matches!(n, SceneNode::Text { key, .. }
-                    if key.font_family.as_deref() == Some("Inclusive Sans"))
+                    if CODE.contains(&key.text.as_str())
+                        && key.font_family == style.font_family)
             })
             .count();
         assert_eq!(
             code_lines,
             CODE.len(),
-            "every code line draws in Inclusive Sans"
+            "every code line draws whole, in the block's style"
         );
 
         let (x, y) = zones(&s, wide)[1].center();
-        assert!(s.handle_event(&down(x, y), wide).changed);
+        assert!(s.handle_event(&down(x, y), wide, &Theme::hoff()).changed);
         let mut c = Compositor::new();
         s.render(&mut c, wide, &theme);
         assert!(has_text(&c, "1"), "rebuilt tree must show the new count");
         assert!(!has_text(&c, "0"), "stale count must be gone");
+    }
+
+    /// The width sweep, 280 to 1600 every 8 px, in core and hoff: both
+    /// cards inside the content and apart, every hit zone inside the demo.
+    #[test]
+    fn nothing_cuts_or_overlaps_from_280_to_1600() {
+        for theme in [Theme::hoff_core(), Theme::hoff()] {
+            let s = BuilderPage::new();
+            for w in (280..=1600).step_by(8) {
+                let c = Rect::new(0.0, 0.0, w as f32, 800.0);
+                let (demo, code, total) = s.layout(c, &theme);
+                for r in [demo, code] {
+                    assert!(r.x >= c.x && r.right() <= c.right() + 0.5, "{w}: {r:?}");
+                }
+                let apart = code.x >= demo.right() || code.y >= demo.bottom();
+                assert!(apart, "{w}: the cards overlap");
+                assert!(total >= code.bottom() - c.y, "{w}");
+                for z in s.demo_geometry(demo.x, demo.y, demo.w).1 {
+                    assert!(z.right() <= demo.right() + 0.5, "{w}: zone out");
+                }
+            }
+        }
+    }
+
+    /// Every action's label is written in the theme's text over its
+    /// button, in a light theme as in a dark one: readable.
+    #[test]
+    fn the_actions_read_in_every_theme() {
+        for theme in [Theme::hoff_core(), Theme::hoff(), Theme::light()] {
+            let s = BuilderPage::new();
+            let mut c = Compositor::new();
+            s.render(&mut c, content(1132.0), &theme);
+            let nodes = c.layer(LayerId::DEFAULT).unwrap().nodes();
+            for (label, _) in ACTIONS {
+                let ink = nodes.iter().find_map(|n| match n {
+                    SceneNode::Text { key, color, .. } if key.text == label => Some(*color),
+                    _ => None,
+                });
+                assert_eq!(ink, Some(theme.colors.text.0), "{label}");
+            }
+        }
     }
 }

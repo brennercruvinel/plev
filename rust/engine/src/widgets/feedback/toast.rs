@@ -1,8 +1,11 @@
-//! HOFF notify toast: a surface-active glass slab at the item radius,
-//! intent icon on the left, base-2r message, stacked bottom-right and
-//! sprung in with the intent's motion. `size.toast_w` wide on a desktop;
-//! on a compact viewport it spans the width minus the gutter, so a
-//! phone gets a full-width banner instead of a clipped card.
+//! The toast of the hoff core kit: the alert's notification row (its
+//! intent's mark in the lead disc, the message beside it, wrapped) on the
+//! kit's dropdown surface (paper, a hairline, a deep drop: `theme.message`),
+//! stacked bottom-right and sprung in with the intent's motion.
+//! `size.toast_w` wide on a desktop; on a compact viewport it spans the
+//! width minus the gutter, so a phone gets a full-width banner instead of a
+//! clipped card. The toast is the passing one; the alert stays in the page
+//! (`feedback::alert`).
 //!
 //! With a [`SemId`] ([`ToastManager::sem`]) the render binds each toast
 //! on screen as `<id>[<toast id>]` to the rect it draws and hit-tests it
@@ -18,50 +21,57 @@ use std::time::Duration;
 use crate::compose::animation::Spring;
 use crate::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
-use crate::styling::theme::{Breakpoint, IconSize, Intent, Theme};
+use crate::styling::theme::{Breakpoint, Intent, Theme};
 use crate::widgets::icons;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
-use crate::widgets::recipe::{rounded_rect, rounded_rect_stroke};
+use crate::styling::color::Color;
+use crate::widgets::recipe::{rounded_rect, shadow_drops};
 use crate::widgets::wake::Wake;
-use crate::widgets::widget::{EventResult, Rect, WidgetEvent, intent_fill, with_alpha};
+use crate::widgets::widget::{EventResult, Rect, WidgetEvent, contrast_text};
 
-/// The per-theme geometry the rects, the hit test and the render share.
+/// The per-theme geometry the rects, the hit test and the render share:
+/// the alert's row in the toast's width.
 struct Metrics {
     width: f32,
-    pad_l: f32,
-    pad_r: f32,
-    pad_y: f32,
-    radius: f32,
+    pad: f32,
+    pad_end: f32,
+    lead: f32,
     gap: f32,
-    margin: f32,
     icon: f32,
-    icon_gap: f32,
+    stack_gap: f32,
+    margin: f32,
 }
 
 impl Metrics {
     fn of(theme: &Theme, vw: f32) -> Self {
         let bp = theme.layout.breakpoint(vw);
-        let margin = theme.layout.gutter(bp).min(theme.spacing.md);
+        let margin = theme.layout.gutter_at(vw).min(theme.spacing.md);
         let width = match bp {
             Breakpoint::Compact => (vw - margin * 2.0).max(0.0),
             _ => theme.size.toast_w.min((vw - margin * 2.0).max(0.0)),
         };
+        Self::at(theme, width, margin)
+    }
+
+    /// The row in a toast `width` wide, `margin` from the viewport's edge.
+    fn at(theme: &Theme, width: f32, margin: f32) -> Self {
+        let a = &theme.message.alert;
         Self {
             width,
-            pad_l: theme.spacing.sm,
-            pad_r: theme.spacing.lg,
-            pad_y: theme.spacing.sm + theme.spacing.xs / 2.0,
-            radius: theme.shape.item,
-            gap: theme.spacing.sm + theme.spacing.xs / 2.0,
+            pad: a.pad,
+            pad_end: a.pad_end,
+            lead: a.lead,
+            gap: a.gap,
+            // the badge's share of its disc, as the alert's lone mark
+            icon: a.lead * a.badge_icon / a.badge,
+            stack_gap: a.action_gap,
             margin,
-            icon: theme.control.icon(IconSize::Sm),
-            icon_gap: theme.control.inline_gap,
         }
     }
 
     fn text_w(&self) -> f32 {
-        (self.width - self.pad_l - self.pad_r - self.icon - self.icon_gap).max(0.0)
+        (self.width - self.pad - self.lead - self.gap - self.pad_end).max(0.0)
     }
 }
 
@@ -85,12 +95,90 @@ impl Toast {
         self.id
     }
 
-    fn icon_name(&self) -> &'static str {
-        match self.intent {
+    /// The glyph on the lead disc of a toast of `intent`.
+    pub fn icon_name(intent: Intent) -> &'static str {
+        match intent {
             Intent::Neutral | Intent::Informational => "info",
             Intent::Constructive => "check",
             Intent::Destructive => "alert-triangle",
         }
+    }
+
+    /// How tall a toast `width` wide is with `message`: as the message
+    /// wraps, never under the lead disc. The queue's toasts and a page's
+    /// drawn one measure the same.
+    pub fn height(message: &str, width: f32, theme: &Theme) -> f32 {
+        ToastManager::toast_height(message, theme, &Metrics::at(theme, width, 0.0))
+    }
+
+    /// One toast drawn in `rect` at `alpha` (its entry and exit fade): the
+    /// kit's drop, paper and hairline, the intent's mark in the lead disc,
+    /// the message beside it. What a toast looks like apart from the
+    /// queue that shows it, so a page can show one at rest.
+    pub fn draw(
+        c: &mut Compositor,
+        layer: LayerId,
+        rect: Rect,
+        message: &str,
+        intent: Intent,
+        alpha: f32,
+        theme: &Theme,
+    ) {
+        let m = Metrics::at(theme, rect.w, 0.0);
+        let t = &theme.message.toast;
+        let a = &theme.message.alert;
+        let style = ToastManager::text_style(theme);
+        let fade = |c: [f32; 4]| [c[0], c[1], c[2], c[3] * alpha];
+        // The surface: the drop, then the paper with its hairline; the
+        // row pushed later stays on top (push order is kept).
+        let mut drop = t.shadow;
+        drop.color = Color(fade(drop.color.0));
+        shadow_drops(c, layer, rect, t.radius, std::slice::from_ref(&drop));
+        c.push_to_layer(
+            layer,
+            SceneNode::RoundedRect {
+                x: rect.x,
+                y: rect.y,
+                w: rect.w,
+                h: rect.h,
+                color: fade(t.fill.0),
+                corner_radius: t.radius,
+                border_width: t.border_width,
+                border_color: fade(t.border.0),
+            },
+        );
+        // The lead: the intent's mark, as the alert without an avatar.
+        let fill = a.intents.of(intent).0;
+        let lead = Rect::new(
+            rect.x + m.pad,
+            rect.y + (rect.h - m.lead) / 2.0,
+            m.lead,
+            m.lead,
+        );
+        c.push_to_layer(
+            layer,
+            rounded_rect(lead.x, lead.y, lead.w, lead.h, lead.w / 2.0, fade(fill)),
+        );
+        let (cx, cy) = lead.center();
+        if let Some(node) = icons::icon_at(
+            Self::icon_name(intent),
+            m.icon,
+            fade(contrast_text(fill)),
+            cx - m.icon / 2.0,
+            cy - m.icon / 2.0,
+        ) {
+            c.push_to_layer(layer, node);
+        }
+        let (_, th) = TextMeasurer::measure_styled(message, &style, Some(m.text_w()));
+        c.push_to_layer(
+            layer,
+            SceneNode::Text {
+                key: TextNodeKey::from_style(message, &style, Some(m.text_w())),
+                x: lead.right() + m.gap,
+                y: rect.y + (rect.h - th.max(style.line_height)) / 2.0,
+                color: fade(a.detail.color.0),
+            },
+        );
     }
 
     pub fn progress(&self) -> f32 {
@@ -288,16 +376,17 @@ impl ToastManager {
             .any(|t| t.anim.is_animating())
     }
 
-    /// Message style: base-2r, the same for measuring and rendering
-    /// (a mismatch here makes multiline toasts overflow their padding).
+    /// The message's style: the alert's detail run, the same for
+    /// measuring and rendering (a mismatch makes a long toast overflow).
     fn text_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_2r()
+        theme.message.alert.detail.style(&theme.typography)
     }
 
+    /// As tall as the message wraps, never under the lead disc.
     fn toast_height(message: &str, theme: &Theme, m: &Metrics) -> f32 {
         let style = Self::text_style(theme);
         let (_, th) = TextMeasurer::measure_styled(message, &style, Some(m.text_w()));
-        th.max(style.line_height) + m.pad_y * 2.0
+        th.max(style.line_height).max(m.lead) + m.pad * 2.0
     }
 
     /// On-screen rects for visible toasts (bottom-right, stacking upward),
@@ -311,8 +400,8 @@ impl ToastManager {
             let h = Self::toast_height(&t.message, theme, &m);
             // Slide up while appearing; the gap collapses as it leaves.
             let progress = t.progress();
-            y -= (h + m.gap) * progress;
-            rects.push(Rect::new(x, y + m.gap * (1.0 - progress), m.width, h));
+            y -= (h + m.stack_gap) * progress;
+            rects.push(Rect::new(x, y + m.stack_gap * (1.0 - progress), m.width, h));
         }
         rects
     }
@@ -346,71 +435,31 @@ impl ToastManager {
         vw: f32,
         vh: f32,
     ) {
-        let m = Metrics::of(theme, vw);
         let rects = self.visible_rects(theme, vw, vh);
-        let glass = &theme.glass;
-        let style = Self::text_style(theme);
-        for (t, rect) in self.visible().zip(rects) {
-            let alpha = t.progress();
+        for (toast, rect) in self.visible().zip(rects) {
+            let alpha = toast.progress();
             if alpha <= 0.01 {
                 continue;
             }
             // A toast binds while it is drawn and a click still dismisses
             // it; a leaving one is already dismissed.
             if let Some(id) = &self.sem
-                && !t.closing
+                && !toast.closing
             {
                 compositor.bind_to_layer(
                     layer,
-                    &id.key(t.id.to_string()),
+                    &id.key(toast.id.to_string()),
                     [rect.x, rect.y, rect.w, rect.h],
                 );
             }
-            let accent = intent_fill(theme, t.intent);
-
-            // Notify surface: surface-active glass; the intent icon pushed
-            // later stays on top (push order is preserved across types).
-            compositor.push_to_layer(
+            Toast::draw(
+                compositor,
                 layer,
-                rounded_rect(
-                    rect.x,
-                    rect.y,
-                    rect.w,
-                    rect.h,
-                    m.radius,
-                    with_alpha(glass.surface_active, glass.surface_active.0[3] * alpha),
-                ),
-            );
-            compositor.push_to_layer(
-                layer,
-                rounded_rect_stroke(
-                    rect.x,
-                    rect.y,
-                    rect.w,
-                    rect.h,
-                    m.radius,
-                    with_alpha(glass.edge_soft, glass.edge_soft.0[3] * alpha),
-                    theme.control.edge_width,
-                ),
-            );
-            if let Some(node) = icons::icon_at(
-                t.icon_name(),
-                m.icon,
-                [accent[0], accent[1], accent[2], accent[3] * alpha],
-                rect.x + m.pad_l,
-                rect.y + m.pad_y,
-            ) {
-                compositor.push_to_layer(layer, node);
-            }
-            let text = glass.text_active;
-            compositor.push_to_layer(
-                layer,
-                SceneNode::Text {
-                    key: TextNodeKey::from_style(&t.message, &style, Some(m.text_w())),
-                    x: rect.x + m.pad_l + m.icon + m.icon_gap,
-                    y: rect.y + m.pad_y,
-                    color: with_alpha(text, text.0[3] * alpha),
-                },
+                rect,
+                &toast.message,
+                toast.intent,
+                alpha,
+                theme,
             );
         }
     }

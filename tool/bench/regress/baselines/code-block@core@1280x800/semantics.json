@@ -1,0 +1,92 @@
+{
+  "nodes": [
+    {
+      "id": "code_block_page",
+      "role": "region",
+      "label": "Code Block"
+    },
+    {
+      "id": "code_block_page.group[0]",
+      "role": "group",
+      "label": "Code block",
+      "parent": "code_block_page"
+    },
+    {
+      "id": "code_block_page.group[0].card[0]",
+      "role": "label",
+      "label": "code",
+      "description": "Default",
+      "parent": "code_block_page.group[0]",
+      "state": {
+        "value": {
+          "kind": "text",
+          "value": "cargo test --workspace"
+        }
+      }
+    },
+    {
+      "id": "code_block_page.group[0].card[1]",
+      "role": "label",
+      "label": "shell",
+      "description": "Caption",
+      "parent": "code_block_page.group[0]",
+      "state": {
+        "value": {
+          "kind": "text",
+          "value": "cargo run -p uigallery -- --render \"Code Block\""
+        }
+      }
+    },
+    {
+      "id": "code_block_page.group[1]",
+      "role": "group",
+      "label": "Diff",
+      "parent": "code_block_page"
+    },
+    {
+      "id": "code_block_page.group[1].card[0]",
+      "role": "label",
+      "label": "diff",
+      "description": "Context, Added, Removed, Header",
+      "parent": "code_block_page.group[1]",
+      "state": {
+        "value": {
+          "kind": "text",
+          "value": "src/lib.rs: @@ -1,4 +1,4 @@\n fn main() {\n-    let theme = Theme::hoff();\n+    let theme = Theme::hoff_core();\n }"
+        }
+      }
+    },
+    {
+      "id": "code_block_page.group[2]",
+      "role": "group",
+      "label": "Long content",
+      "parent": "code_block_page"
+    },
+    {
+      "id": "code_block_page.group[2].card[0]",
+      "role": "label",
+      "label": "shell",
+      "description": "Wrapped",
+      "parent": "code_block_page.group[2]",
+      "state": {
+        "value": {
+          "kind": "text",
+          "value": "cargo run -p regress -- check --page \"Code Block\" --theme core --width 1280 --height 800 --scale 1 && cargo test -p engine widgets"
+        }
+      }
+    },
+    {
+      "id": "code_block_page.group[2].card[1]",
+      "role": "label",
+      "label": "configuração da galeria.toml",
+      "description": "Translated caption",
+      "parent": "code_block_page.group[2]",
+      "state": {
+        "value": {
+          "kind": "text",
+          "value": "tema = \"hoff_core\"\nlargura = 1280"
+        }
+      }
+    }
+  ]
+}

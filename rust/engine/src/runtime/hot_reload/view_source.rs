@@ -1,4 +1,4 @@
-//! View source for pixels (docs/adr/workflows/0048-view-source-for-pixels.md): a point in
+//! View source for pixels (docs/adr/Workflows/0048-view-source-for-pixels/0048-view-source-for-pixels.md): a point in
 //! the window leads to the code that made what shows there. A bound
 //! control (`Compositor::hit`) leads to where its node was projected
 //! (`accord::Node::source`); a text with no id over it leads to the string
@@ -160,6 +160,8 @@ fn text_box(key: &TextNodeKey, x: f32, y: f32) -> [f32; 4] {
         font_weight: key.font_weight,
         letter_spacing: f32::from_bits(key.letter_spacing_bits),
         font_family: key.font_family.clone(),
+        features: key.features,
+        overflow_wrap: key.overflow_wrap,
     };
     let max_width = key.max_width_bits.map(f32::from_bits);
     let (w, h) = TextMeasurer::measure_styled(&key.text, &style, max_width);

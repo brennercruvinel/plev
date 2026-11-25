@@ -36,6 +36,7 @@ mod semantics;
 #[cfg(test)]
 mod tests;
 
+use engine::styling::theme::TypeRole;
 use std::path::PathBuf;
 
 use accord::Value;
@@ -46,12 +47,14 @@ use engine::runtime::platform::alerts::Alerts;
 use engine::runtime::platform::files::FileDialogs;
 use engine::runtime::platform::notify::Notification;
 use engine::styling::theme::{ControlSize, Intent, Theme};
+use engine::widgets::content::Panel;
+use engine::widgets::message::attachment::{AttachmentKind, AttachmentTray};
 use engine::widgets::prelude::{
     Button, EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke,
 };
 
+use super::EditKey;
 use super::todo::TodoPage;
-use super::{EditKey, panel};
 use semantics::{Ids, Target, bounds};
 
 /// What the status line says: what the last request came to.
@@ -108,8 +111,11 @@ struct Layout {
     zone: Rect,
     open: Rect,
     warn: Rect,
+    /// The status: beside the buttons where it fits one line there,
+    /// else under them across the card, wrapped.
     status: Rect,
-    rows: Vec<Rect>,
+    /// The files received, the kit's attachment tray; empty for none.
+    tray: Rect,
 }
 
 impl FilesPage {
@@ -202,15 +208,29 @@ impl FilesPage {
     }
 
     fn hint_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_m()
+        theme.typography.run(TypeRole::BodyLg.medium())
     }
 
     fn status_style(theme: &Theme) -> TextStyle {
-        theme.typography.caption_r()
+        theme.typography.run(TypeRole::Caption.regular())
     }
 
-    fn path_style(theme: &Theme) -> TextStyle {
-        theme.typography.mono()
+    /// The files received as the kit's attachment tiles: each its name,
+    /// its folder under it.
+    fn tray(&self) -> AttachmentTray {
+        let mut tray = AttachmentTray::new();
+        for path in &self.received {
+            let name = path.file_name().map_or_else(
+                || path.display().to_string(),
+                |n| n.to_string_lossy().into_owned(),
+            );
+            let folder = path
+                .parent()
+                .map(|p| p.display().to_string())
+                .unwrap_or_default();
+            tray.push(name, folder, AttachmentKind::File);
+        }
+        tray
     }
 
     /// The card fills the readable width, centered; the zone is as tall
@@ -228,25 +248,40 @@ impl FilesPage {
         let (bw, bh) = self.open.preferred_size(theme);
         let open = Rect::new(x + pad, y, bw, bh);
         let (ww, wh) = self.warn.preferred_size(theme);
-        let warn = Rect::new(open.right() + theme.spacing.sm, y, ww, wh.max(bh));
-        let status_h = Self::status_style(theme).line_height;
-        let status = Rect::new(
-            warn.right() + theme.spacing.md,
-            y + ((bh - status_h) / 2.0).floor(),
-            (inner_w - (warn.right() - open.x) - theme.spacing.md).max(0.0),
-            status_h,
-        );
-        y += bh;
-        let row_h = Self::path_style(theme).line_height + theme.spacing.xs;
-        let rows: Vec<Rect> = if self.received.is_empty() {
-            Vec::new()
+        let end = x + pad + inner_w;
+        // The second button beside the first where it fits, under it where
+        // not; the status then beside the last.
+        let warn = if open.right() + theme.spacing.sm + ww <= end {
+            Rect::new(open.right() + theme.spacing.sm, y, ww, wh.max(bh))
+        } else {
+            Rect::new(x + pad, open.bottom() + theme.spacing.sm, ww, wh.max(bh))
+        };
+        let row_h = warn.bottom() - y;
+        let style = Self::status_style(theme);
+        let text = self.status_text();
+        let beside_x = warn.right() + theme.spacing.md;
+        let beside_w = (end - beside_x).max(0.0);
+        let (tw, _) = TextMeasurer::measure_styled(&text, &style, None);
+        let status = if tw <= beside_w {
+            let sy = warn.y + ((warn.h - style.line_height) / 2.0).floor();
+            y += row_h;
+            Rect::new(beside_x, sy, beside_w, style.line_height)
+        } else {
+            y += row_h + theme.spacing.sm;
+            let (_, th) = TextMeasurer::measure_styled(&text, &style, Some(inner_w));
+            let at = Rect::new(x + pad, y, inner_w, th.max(style.line_height));
+            y += at.h;
+            at
+        };
+        let tray = if self.received.is_empty() {
+            Rect::new(x + pad, y, inner_w, 0.0)
         } else {
             y += theme.spacing.lg;
-            (0..self.received.len())
-                .map(|i| Rect::new(x + pad, y + i as f32 * row_h, inner_w, row_h))
-                .collect()
+            let h = self.tray().height(inner_w, theme);
+            let at = Rect::new(x + pad, y, inner_w, h);
+            y += h;
+            at
         };
-        y += rows.len() as f32 * row_h;
         let panel = Rect::new(x, content.y, w, y - content.y + pad);
         Layout {
             panel,
@@ -254,7 +289,7 @@ impl FilesPage {
             open,
             warn,
             status,
-            rows,
+            tray,
         }
     }
 
@@ -407,38 +442,37 @@ impl FilesPage {
     /// itself.
     pub fn render(&mut self, c: &mut Compositor, content: Rect, theme: &Theme) {
         let l = self.layout(content, theme);
-        panel(c, l.panel, theme);
+        Panel::new().render(c, l.panel, theme);
         if let Some(ids) = &self.ids {
             c.bind(&ids.region, bounds(l.panel));
             c.bind(&ids.drop, bounds(l.zone));
             c.bind(&ids.status, bounds(l.status));
         }
+        // The zone in the kit's file tile (`theme.message.attachment`):
+        // its fill, its border at its radius; the accent rim while files
+        // hover over it.
+        let t = &theme.message.attachment;
+        let radius = t.radius.min(l.zone.h / 2.0);
         c.push(rounded_rect(
             l.zone.x,
             l.zone.y,
             l.zone.w,
             l.zone.h,
-            theme.radius.md,
-            theme.glass.field.0,
+            radius,
+            t.file_fill.0,
         ));
         let (edge, width, ink) = if self.hovering {
             let accent = theme.colors.accent.0;
             (accent, theme.control.edge_width_strong, accent)
         } else {
             (
-                theme.glass.edge.0,
-                theme.control.edge_width,
-                theme.glass.text_faint.0,
+                t.file_border.0,
+                t.file_border_width,
+                theme.colors.text_mid.0,
             )
         };
         c.push(rounded_rect_stroke(
-            l.zone.x,
-            l.zone.y,
-            l.zone.w,
-            l.zone.h,
-            theme.radius.md,
-            edge,
-            width,
+            l.zone.x, l.zone.y, l.zone.w, l.zone.h, radius, edge, width,
         ));
         let hint = if self.hovering {
             "release to receive"
@@ -462,20 +496,13 @@ impl FilesPage {
             _ => theme.colors.text_mid.0,
         };
         c.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&status, &style, None),
+            key: TextNodeKey::from_style(&status, &style, Some(l.status.w)),
             x: l.status.x,
             y: l.status.y,
             color,
         });
-        let style = Self::path_style(theme);
-        for (path, row) in self.received.iter().zip(&l.rows) {
-            let text = path.display().to_string();
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(&text, &style, None),
-                x: row.x,
-                y: row.y,
-                color: theme.colors.text.0,
-            });
+        if !self.received.is_empty() {
+            self.tray().render(c, l.tray, theme);
         }
     }
 }

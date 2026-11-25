@@ -6,6 +6,7 @@
 
 use crate::domain::silences::Segment;
 use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{ControlSize, Theme};
 use engine::widgets::prelude::{Badge, Button, ButtonSize, Rect, Stat, StatSize};
 
@@ -13,7 +14,7 @@ use super::super::SilencesPage;
 
 /// The frame's aspect, width over height: the test video's, and the
 /// common one.
-const ASPECT: f32 = 16.0 / 9.0;
+pub(crate) const ASPECT: f32 = 16.0 / 9.0;
 
 /// One frame of geometry.
 pub(crate) struct Layout {
@@ -68,28 +69,34 @@ pub(crate) struct RowParts {
     pub reject: Rect,
 }
 
+/// A slider's name: the kit's form label.
 pub(super) fn label_style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_sm()
+    theme.typography.run(theme.form.label.text)
+}
+
+/// The side card's heading: the kit's caption label.
+pub(super) fn caption_style(theme: &Theme) -> TextStyle {
+    theme.typography.run(theme.form.label.caption)
 }
 
 pub(super) fn value_style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_r()
+    theme.typography.run(TypeRole::Caption.regular())
 }
 
 pub(super) fn range_style(theme: &Theme) -> TextStyle {
-    theme.typography.base_m()
+    theme.typography.run(TypeRole::BodyLg.medium())
 }
 
 pub(super) fn detail_style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_r()
+    theme.typography.run(TypeRole::Caption.regular())
 }
 
 pub(super) fn status_style(theme: &Theme) -> TextStyle {
-    theme.typography.caption_r()
+    theme.typography.run(TypeRole::Caption.regular())
 }
 
 pub(super) fn time_style(theme: &Theme) -> TextStyle {
-    theme.typography.small_r()
+    theme.typography.role(TypeRole::Small)
 }
 
 /// The band's height: a control's, so a mark is a target.
@@ -127,15 +134,31 @@ pub(super) fn stacked_rows(cuts_w: f32, theme: &Theme) -> bool {
     cuts_w < one_line
 }
 
-/// A row's height: the thumbnail with its gaps, plus a line of controls
-/// when stacked.
-pub(super) fn row_h(theme: &Theme, stacked: bool) -> f32 {
+/// True when a stacked row `w` wide cannot hold the badge and the two
+/// buttons on one line (a phone, a larger text, a longer language): the
+/// badge takes a line of its own over the buttons.
+fn controls_wrap(w: f32, theme: &Theme) -> bool {
+    controls_w(theme) > w
+}
+
+/// The badge's height (a caption line and its padding).
+fn badge_h(theme: &Theme) -> f32 {
+    theme.typography.run(TypeRole::Caption.strong()).line_height + theme.spacing.xs * 1.5
+}
+
+/// A row's height in a list `w` wide: the thumbnail with its gaps, plus
+/// a line of controls when stacked, and a line for the badge when those
+/// do not fit one.
+pub(super) fn row_h(theme: &Theme, stacked: bool, w: f32) -> f32 {
     let th = thumb_size(theme).1 + theme.spacing.sm * 2.0;
-    if stacked {
-        th + ButtonSize::Sm.height(theme) + theme.spacing.sm
-    } else {
-        th
+    if !stacked {
+        return th;
     }
+    let mut h = th + ButtonSize::Sm.height(theme) + theme.spacing.sm;
+    if controls_wrap(w, theme) {
+        h += badge_h(theme) + theme.spacing.sm;
+    }
+    h
 }
 
 /// The counts as four readouts.
@@ -197,7 +220,7 @@ pub(crate) fn compute(page: &SilencesPage, content: Rect, theme: &Theme) -> Layo
     let inner_w = side_w - pad * 2.0;
     let mut y = side_y + pad;
     let side_title = (inner_x, y);
-    y += label_style(theme).line_height + md;
+    y += caption_style(theme).line_height + md;
     let slider_row = |y: &mut f32| {
         let label = (inner_x, *y);
         *y += label_style(theme).line_height + theme.spacing.xs;
@@ -245,7 +268,7 @@ pub(crate) fn compute(page: &SilencesPage, content: Rect, theme: &Theme) -> Layo
     let stacked = stacked_rows(cuts_w, theme);
     let rows: Vec<Rect> = (0..page.model.cuts().len())
         .map(|_| {
-            let r = Rect::new(cuts_x, y, cuts_w, row_h(theme, stacked));
+            let r = Rect::new(cuts_x, y, cuts_w, row_h(theme, stacked, cuts_w));
             y += r.h;
             r
         })
@@ -311,11 +334,17 @@ pub(crate) fn row_parts(
     let (tw, th) = thumb_size(theme);
     let (aw, ah) = apply.preferred_size(theme);
     let (rw, rh) = reject.preferred_size(theme);
-    let badge_h = theme.typography.caption_sm().line_height + theme.spacing.xs * 1.5;
-    // the band the controls are centered in: the row, or its second line
+    let badge_h = badge_h(theme);
+    // the band the controls are centered in: the row, or its second line;
+    // the badge on a line of its own over them where they do not fit one
+    let mut badge_line = None;
     let (thumb, controls) = if stacked {
         let thumb = Rect::new(row.x, row.y + theme.spacing.sm, tw, th);
-        let y = thumb.bottom() + theme.spacing.sm;
+        let mut y = thumb.bottom() + theme.spacing.sm;
+        if controls_wrap(row.w, theme) {
+            badge_line = Some(Rect::new(row.x, y, badge_w, badge_h));
+            y += badge_h + theme.spacing.sm;
+        }
         (thumb, Rect::new(row.x, y, row.w, row.bottom() - y))
     } else {
         (Rect::new(row.x, row.y + (row.h - th) / 2.0, tw, th), row)
@@ -332,12 +361,12 @@ pub(crate) fn row_parts(
         aw,
         ah,
     );
-    let badge = Rect::new(
+    let badge = badge_line.unwrap_or(Rect::new(
         apply.x - theme.spacing.md - badge_w,
         controls.y + (controls.h - badge_h) / 2.0,
         badge_w,
         badge_h,
-    );
+    ));
     let two = range_style(theme).line_height + theme.spacing.xs + detail_style(theme).line_height;
     let text = (
         thumb.right() + theme.spacing.md,

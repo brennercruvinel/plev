@@ -11,8 +11,10 @@
 //! [`ButtonTokens::derive`], so the widgets render under all of them.
 
 use crate::styling::color::Color;
+use crate::styling::theme::legibility::{TEXT_AA, fill_under};
 use crate::styling::theme::scales::ShadowSpec;
 use crate::styling::theme::tokens::ColorTokens;
+use crate::styling::theme::{TypeRole, TypeRun};
 
 /// One surface state: fill, shadow list, label color.
 #[derive(Clone, Debug, PartialEq)]
@@ -47,10 +49,9 @@ pub struct ButtonMetrics {
     pub height: f32,
     pub pad_x: f32,
     pub radius: f32,
-    /// Label size and line height in px (14/20, 12/16...).
-    pub font_size: f32,
-    pub line_height: f32,
-    pub font_weight: u16,
+    /// The label's run (the kit's 14/20 and 12/16 semibold): the same
+    /// role in every theme, its size the theme's.
+    pub text: TypeRun,
     /// Leading icon edge.
     pub icon: f32,
     /// Gap between icon and label.
@@ -63,6 +64,24 @@ pub struct IconButtonMetrics {
     pub size: f32,
     pub radius: f32,
     pub icon: f32,
+}
+
+/// The submit button (`SubmitButton`): two stacked surfaces, the pale
+/// one at rest and the dark one that fades in over it hovered, pressed
+/// or while a request is in flight.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SubmitRecipe {
+    /// Idle, the pointer away: the pale surface (`before:`).
+    pub rest: ButtonSurface,
+    /// Hovered, pressed or busy: the dark surface (`after:` at 100%).
+    pub lit: ButtonSurface,
+    /// Busy and hovered: the dark surface eased back over the pale one
+    /// (`hover:after:!opacity-90`).
+    pub busy_hover: ButtonSurface,
+    /// Opacity of the whole button when disabled (`opacity-40`).
+    pub disabled_alpha: f32,
+    /// Md 32 (`isMedium`) / Lg 40 (the default), square.
+    pub sizes: [IconButtonMetrics; 2],
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -81,6 +100,8 @@ pub struct ButtonTokens {
     pub toolbar: ButtonRecipe,
     /// Toolbar item when its tool is selected: bordered, filled, pressed in.
     pub toolbar_active: ButtonRecipe,
+    /// The submit arrow: pale at rest, dark when lit.
+    pub submit: SubmitRecipe,
     /// Labeled ladder: Xs 28 / Sm 36 / Md 40 / Lg 44.
     pub sizes: [ButtonMetrics; 4],
     /// Icon-only ladder: Sm 24 / Md 36 / Lg 40.
@@ -109,6 +130,38 @@ fn flat(color: Color) -> [Color; 2] {
 }
 
 const NONE: Color = Color::rgba(0.0, 0.0, 0.0, 0.0);
+
+/// `top` at `alpha` over the opaque `under`, per gradient stop.
+fn over(top: [Color; 2], alpha: f32, under: [Color; 2]) -> [Color; 2] {
+    let mix = |t: Color, u: Color| {
+        let a = t.0[3] * alpha;
+        Color([0, 1, 2, 3].map(|i| {
+            if i == 3 {
+                a + u.0[3] * (1.0 - a)
+            } else {
+                t.0[i] * a + u.0[i] * (1.0 - a)
+            }
+        }))
+    };
+    [mix(top[0], under[0]), mix(top[1], under[1])]
+}
+
+/// The submit button's ladder: `isMedium` (size-8 rounded-[0.625rem])
+/// and the default (size-10 rounded-xl), both with the size-4 arrow.
+fn submit_sizes() -> [IconButtonMetrics; 2] {
+    [
+        IconButtonMetrics {
+            size: 32.0,
+            radius: 10.0,
+            icon: 16.0,
+        },
+        IconButtonMetrics {
+            size: 40.0,
+            radius: 12.0,
+            icon: 16.0,
+        },
+    ]
+}
 
 impl ButtonTokens {
     /// The hoff core kit, values as written in the tailwind classes.
@@ -192,8 +245,12 @@ impl ButtonTokens {
         // isOrange: E36323 -> DF5A18, top key-light white/33, ring
         // BF4A0F and an orange glow 0 3px 4px -1px rgba(252,96,16,.95);
         // hover washes white/10.
+        // Its paper label reads 3.4:1 on the orange, 2.7:1 under the
+        // hover's wash: each end deepens the least it must for the label
+        // to read at AA (1.4.3) bare and washed (`legibility::fill_under`).
+        let deep = |end: Color| fill_under(end, paper, TEXT_AA, paper, &[white(0.10)]);
         let warning_rest = ButtonSurface {
-            fill: [hex(0xE36323), hex(0xDF5A18)],
+            fill: [hex(0xE36323), hex(0xDF5A18)].map(deep),
             overlay: NONE,
             shadow: vec![
                 ShadowSpec::inset([0.0, 1.0], 0.0, 0.0, white(0.33)),
@@ -311,6 +368,20 @@ impl ButtonTokens {
             disabled_alpha: 0.40,
         };
 
+        // SubmitButton: the isPrimary surface under the isSecondary one,
+        // which shows on hover and while active, at 90% hovered while
+        // active; the arrow goes paper on the dark one; opacity-40 off.
+        let submit = SubmitRecipe {
+            rest: primary.rest.clone(),
+            lit: secondary.rest.clone(),
+            busy_hover: ButtonSurface {
+                fill: over(secondary.rest.fill, 0.90, primary.rest.fill),
+                ..secondary.rest.clone()
+            },
+            disabled_alpha: 0.40,
+            sizes: submit_sizes(),
+        };
+
         Self {
             primary,
             secondary,
@@ -319,15 +390,14 @@ impl ButtonTokens {
             ghost,
             toolbar,
             toolbar_active,
+            submit,
             sizes: [
                 // Xs: the like-comment chip, h-7 px-2 rounded-lg 13/16.
                 ButtonMetrics {
                     height: 28.0,
                     pad_x: 8.0,
                     radius: 8.0,
-                    font_size: 13.0,
-                    line_height: 16.0,
-                    font_weight: 600,
+                    text: TypeRole::BodyLg.strong(),
                     icon: 16.0,
                     gap: 8.0,
                 },
@@ -336,9 +406,7 @@ impl ButtonTokens {
                     height: 36.0,
                     pad_x: 20.0,
                     radius: 10.0,
-                    font_size: 12.0,
-                    line_height: 16.0,
-                    font_weight: 600,
+                    text: TypeRole::BodyStrong.run(),
                     icon: 20.0,
                     gap: 8.0,
                 },
@@ -347,9 +415,7 @@ impl ButtonTokens {
                     height: 40.0,
                     pad_x: 24.0,
                     radius: 12.0,
-                    font_size: 14.0,
-                    line_height: 20.0,
-                    font_weight: 600,
+                    text: TypeRole::Heading.strong(),
                     icon: 20.0,
                     gap: 8.0,
                 },
@@ -358,9 +424,7 @@ impl ButtonTokens {
                     height: 44.0,
                     pad_x: 14.0,
                     radius: 12.0,
-                    font_size: 12.0,
-                    line_height: 16.0,
-                    font_weight: 600,
+                    text: TypeRole::BodyStrong.run(),
                     icon: 16.0,
                     gap: 8.0,
                 },
@@ -389,19 +453,35 @@ impl ButtonTokens {
     }
 
     /// Flat recipes from a palette, for the themes that are not the core
-    /// kit: the accent as the primary fill, the panel tone as the
-    /// secondary, the warning color as the warning, dividers as rings.
-    /// Same ladder as the kit.
+    /// kit, in the kit's order of strength: the panel tone as the primary
+    /// (a step off the page), the accent as the secondary (the call to
+    /// action, the strongest), the warning color as the warning, dividers
+    /// as rings. Same ladder as the kit.
     pub fn derive(colors: &ColorTokens) -> Self {
         let kit = Self::hoff_core();
         let text_on = |fill: Color| {
-            // Pick the readable label for a fill by luminance.
-            let c = fill.0;
-            let l = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
-            if l > 0.5 { colors.bg } else { colors.text }
+            // The page's text or the page's own tone, whichever contrasts
+            // more with the fill as the page shows it (a translucent fill
+            // is mostly the page).
+            let lum = |c: [f32; 4]| 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+            let (f, b, a) = (fill.0, colors.bg.0, fill.0[3]);
+            let seen = lum([0, 1, 2, 3].map(|i| f[i] * a + b[i] * (1.0 - a)));
+            let ratio = |c: Color| {
+                let l = lum(c.0);
+                (l.max(seen) + 0.05) / (l.min(seen) + 0.05)
+            };
+            if ratio(colors.bg) > ratio(colors.text) {
+                colors.bg
+            } else {
+                colors.text
+            }
         };
         let tint = |c: Color, a: f32| Color([c.0[0], c.0[1], c.0[2], a]);
+        // A fill its label does not read on (AA, 1.4.3) moves the least
+        // it must away from the label (`legibility::fill_under`).
+        let legible = |fill: Color| fill_under(fill, text_on(fill), TEXT_AA, colors.bg, &[]);
         let solid = |fill: Color, hover: Color, disabled_alpha: f32| {
+            let (fill, hover) = (legible(fill), legible(hover));
             let rest = ButtonSurface {
                 fill: flat(fill),
                 overlay: NONE,
@@ -448,9 +528,22 @@ impl ButtonTokens {
             shadow: vec![ring(colors.border_active)],
             text: colors.text,
         };
+        // The kit's order of strength, whatever the palette: the pale
+        // `isPrimary` is a step off the page, the dark `isSecondary` (the
+        // call to action: a modal's confirm) the most contrasted fill the
+        // theme has. The submit arrow lights from the one to the other.
+        let primary = solid(colors.bg_panel, colors.bg_hover, 0.30);
+        let secondary = solid(colors.accent, tint(colors.accent, 0.85), 0.30);
+        let submit = SubmitRecipe {
+            rest: primary.rest.clone(),
+            lit: secondary.rest.clone(),
+            busy_hover: secondary.hover.clone(),
+            disabled_alpha: kit.submit.disabled_alpha,
+            sizes: kit.submit.sizes,
+        };
         Self {
-            primary: solid(colors.accent, tint(colors.accent, 0.85), 0.30),
-            secondary: solid(colors.bg_panel, colors.bg_hover, 0.30),
+            primary,
+            secondary,
             warning: solid(colors.warning, tint(colors.warning, 0.85), 0.30),
             outline: quiet(colors.divider, colors.text, 0.50),
             ghost: quiet(NONE, colors.text_mid, 0.50),
@@ -461,6 +554,7 @@ impl ButtonTokens {
                 active: toolbar_active_surface,
                 disabled_alpha: 0.40,
             },
+            submit,
             sizes: kit.sizes,
             icon_sizes: kit.icon_sizes,
         }

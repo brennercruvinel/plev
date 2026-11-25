@@ -27,6 +27,9 @@ pub mod resizable;
 pub mod scroll_area;
 pub mod select;
 pub mod separator;
+/// The showcase mold the kit's component pages share (groups, cards,
+/// chips), from the ButtonsPage.
+pub(crate) mod showcase;
 pub mod sidebar;
 pub mod skeleton;
 pub mod slider;
@@ -36,11 +39,67 @@ pub mod switch;
 pub mod table;
 pub mod tabs;
 pub mod toast;
+pub mod toolbar;
 pub mod tooltip;
 pub mod tree;
 
+// task-104: each front adds its page modules under its anchor, a group of
+// its own (the blank lines keep rustfmt from sorting one front into another)
+// task-104 front A, fields (#154)
+pub mod combobox;
+pub mod command;
+pub mod field;
+pub mod input_group;
+pub mod input_otp;
+pub mod label;
+pub mod textarea;
+
+// task-104 front B, overlays (#155)
+pub mod alert_dialog;
+pub mod drawer;
+pub mod dropdown_menu;
+pub mod hover_card;
+pub mod menubar;
+pub mod modals;
+pub mod popover;
+pub mod sheet;
+
+// task-104 front C, conversation and feedback (#156)
+pub mod alert;
+pub mod attachment;
+pub mod bubble;
+pub mod comments;
+pub mod marker;
+pub mod message;
+pub mod message_scroller;
+pub mod notifications;
+pub mod prompt_input;
+
+// task-104 front D, disclosure and display (#157)
+pub mod accordion;
+pub mod aspect_ratio;
+pub mod carousel;
+pub mod collapsible;
+pub mod item;
+pub mod kbd;
+pub mod pagination;
+pub mod table_static;
+
+// task-104 front E, selection and dates (#158)
+pub mod button_group;
+pub mod calendar;
+pub mod date_picker;
+pub mod menus;
+pub mod radio_group;
+pub mod toggle;
+pub mod toggle_group;
+
+// task-104 front F, kit foundation
+pub mod home;
+pub mod topbar;
+
 pub(in crate::views) use super::dispatcher::component::{After, Component, under};
-pub(crate) use super::{EditKey, group_label, panel, text};
+pub(crate) use super::{EditKey, panel, text};
 
 use accord::SemId;
 

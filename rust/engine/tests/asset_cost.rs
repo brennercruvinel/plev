@@ -1,6 +1,6 @@
 //! What the engine parses, validates and decodes at runtime, measured
 //! (task-72 phase 1, the probe behind the inventory in
-//! docs/tasks/task-72-ui-asset-compiler/README.md): each WGSL
+//! docs/Tasks/task-72-ui-asset-compiler/task-72-ui-asset-compiler.md): each WGSL
 //! shader through naga (the parse and the validation `wgpu-core` runs in
 //! `create_shader_module` before the backend sees the module), the
 //! phases of a headless renderer (device, the context's pipelines, the
@@ -9,7 +9,7 @@
 //! PNG of the engine's assets through `image`.
 //!
 //! ```text
-//! cargo test -p engine --test asset_cost -- --ignored --nocapture
+//! cargo test -p engine --test suite asset_cost:: -- --ignored --nocapture
 //! ```
 //!
 //! The numbers are the debug profile's (the workspace at opt-level 0, its
@@ -266,7 +266,7 @@ fn images() {
 }
 
 #[test]
-#[ignore = "a measurement: cargo test -p engine --test asset_cost -- --ignored --nocapture"]
+#[ignore = "a measurement: cargo test -p engine --test suite asset_cost:: -- --ignored --nocapture"]
 fn what_the_runtime_parses_validates_and_decodes() {
     fonts();
     renderer();

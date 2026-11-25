@@ -15,6 +15,7 @@ use engine::drawing::compositor::Compositor;
 use engine::drawing::gpu::image::{ImageHandle, load_image_rgba};
 use engine::drawing::text::TextMeasurer;
 use engine::styling::theme::Theme;
+use engine::styling::theme::TypeRole;
 use engine::widgets::prelude::Rect;
 
 use super::super::super::fixed_page::worker::Worker;
@@ -32,6 +33,8 @@ const RULES: &str = "the list with the video and the counts";
 /// frame and transition settled: the view and its last frame.
 fn gallery(intent: &str) -> (ShowcaseView, Compositor) {
     let mut view = ShowcaseView::new(1200.0, 800.0);
+    // the window the fixture saw: the sidebar pinned beside the page
+    view.pin_sidebar(true);
     view.jump_to_page("silences");
     view.panes
         .silences
@@ -87,7 +90,7 @@ fn inside(c: &Compositor, root: &str) {
 /// Each text of `ids` at least as wide as its longest word, as the page
 /// projects what it shows.
 fn whole_words(c: &Compositor, snap: &Snapshot, theme: &Theme, ids: &[String]) {
-    let style = theme.typography.body();
+    let style = theme.typography.role(TypeRole::BodyLg);
     for id in ids {
         let shown = &snap.get(&sid(id)).expect("projected").label;
         let word = shown
@@ -110,13 +113,13 @@ fn rules_texts(cut: u32) -> Vec<String> {
 }
 
 /// The acceptance of the layout: the rules' review at 1200x800 (the
-/// surface in the right half, a card 420 wide): every node inside the
+/// surface in the right half, a card 424 wide): every node inside the
 /// card, the buttons of a cut included, and every text of a cut whole.
 #[test]
 fn the_rules_review_fits_its_column_at_the_default_window() {
     let (view, c) = gallery(RULES);
     let card = rect(&c, "proposed.card");
-    assert_eq!((card.x, card.w), (740.0, 420.0), "the right half");
+    assert_eq!((card.x, card.w), (736.0, 426.0), "the right half");
     inside(&c, "proposed.card");
     let snap = view.semantics().expect("the page projects");
     for cut in [1, 2] {
@@ -161,6 +164,8 @@ fn wash(ms: u64) -> Result<ImageHandle, String> {
 /// for nothing) is never asked.
 fn claude_review() -> (ShowcaseView, Compositor) {
     let mut view = ShowcaseView::new(1200.0, 800.0);
+    // the window the fixture saw: the sidebar pinned beside the page
+    view.pin_sidebar(true);
     view.jump_to_page("silences");
     let filled = view.stage_silences_frames(&mut wash);
     assert_eq!(filled, [0, 4017, 9009], "the instant shown and each cut's");
@@ -256,15 +261,25 @@ fn the_claudes_review_fixture_is_the_first_rounds_structure() {
         Some(("label", "duration (s)"))
     );
     // the observation's rects of the round, above the sliders (the
-    // sliders are taller now: their label and value)
+    // sliders are taller now: their label and value), as the gallery
+    // draws them today: the page's head the core kit's Layout title, as
+    // tall as its blurb wraps, and the content lg below it (task-104d), and the duration the core kit's stat (task-104g,
+    // the medium readout, 32 + 4 + 16 px tall, where the round saw 58 by
+    // 43), which grows its card by 9; the page past the kit's sidebar,
+    // `w-60` (task-104h), 8 px wider than the old 248, the half 4 more;
+    // the text without a style in the scale's body role, 12/16 in the
+    // core (task-104f), so the title and the file name are one 16 line;
+    // the page's gutter fluid with the page's width, between the kit's
+    // p-5 and p-12 (38 here, the half 2 narrower), and no lg under a head
+    // that bleeds, the head itself fluid (task-104j): a pixel lower
     for (id, [x, y, w, h]) in [
-        ("review.root", [740.0, 234.2, 420.0, f32::NAN]),
-        ("review.title", [740.0, 234.2, 420.0, 23.0]),
-        ("review.video_card", [740.0, 269.2, 420.0, 369.0]),
-        ("review.video_file", [740.0, 269.2, 420.0, 22.0]),
-        ("review.video_duration", [740.0, 300.2, 58.0, 43.0]),
-        ("review.video_original", [740.0, 350.2, 420.0, 140.0]),
-        ("review.video_result", [740.0, 498.2, 420.0, 140.0]),
+        ("review.root", [736.0, 222.0, 426.0, f32::NAN]),
+        ("review.title", [736.0, 222.0, 426.0, 16.0]),
+        ("review.video_card", [736.0, 250.0, 426.0, 372.0]),
+        ("review.video_file", [736.0, 250.0, 426.0, 16.0]),
+        ("review.video_duration", [736.0, 274.0, 63.0, 52.0]),
+        ("review.video_original", [736.0, 334.0, 426.0, 140.0]),
+        ("review.video_result", [736.0, 482.0, 426.0, 140.0]),
     ] {
         let r = rect(&c, id);
         let near = |a: f32, b: f32| b.is_nan() || (a - b).abs() < 0.5;

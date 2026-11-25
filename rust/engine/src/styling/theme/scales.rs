@@ -4,11 +4,14 @@
 // layout (breakpoints, gutters, density) and elevation (shadow stacks).
 //
 // Every number here was a literal somewhere in a widget, an app theme or a
-// showcase section (docs/ref/architecture/component-catalog.md, section 3). A widget never restates a
+// showcase section (docs/Research/Structure/component-catalog.md, section 3). A widget never restates a
 // value from this file; it reads it from `&Theme`.
 // ============================================================================
 
 use crate::styling::color::Color;
+
+use super::roles::FLUID_RANGE;
+use super::tokens::SpacingScale;
 
 // ----------------------------------------------------------------------------
 // Shape: corner radius by role
@@ -137,8 +140,11 @@ pub struct ControlTokens {
     pub pad_x: [f32; 5],
     /// Icon edge for Sm / Md / Lg (HOFF: 16 / 20 / 24).
     pub icons: [f32; 3],
-    /// Smallest hit target on touch (WCAG 2.5.8 / apple HIG: 44).
+    /// Smallest hit target on touch (WCAG 2.5.5 AAA / apple HIG: 44).
     pub min_touch_target: f32,
+    /// Smallest hit target with a pointer (WCAG 2.5.8 AA: 24): a control
+    /// drawn smaller presses in this much around it (`widgets::hit`).
+    pub min_target: f32,
     /// Edge-light rim width on cards and modals.
     pub edge_width: f32,
     /// Edge-light rim width on buttons and active nav items.
@@ -185,6 +191,7 @@ impl ControlTokens {
             pad_x: [16.0, 12.0, 24.0, 16.0, 32.0],
             icons: [16.0, 20.0, 24.0],
             min_touch_target: 44.0,
+            min_target: 24.0,
             edge_width: 1.0,
             edge_width_strong: 1.5,
             focus_ring_width: 2.0,
@@ -269,6 +276,10 @@ pub struct SizeTokens {
     /// narrowest a grid column may shrink one to.
     pub card_w: f32,
     pub card_min_w: f32,
+    /// The least height of a card that shares its row with others (the
+    /// kit's showcase card, `h-50`): what lines a row's stages up. A card
+    /// alone in its row is as tall as what it holds.
+    pub card_min_h: f32,
     /// Widest a column of body text should grow.
     pub readable_max_w: f32,
     /// Narrowest useful text field.
@@ -290,6 +301,7 @@ impl SizeTokens {
             sidebar_rail_w: 72.0,
             card_w: 368.0,
             card_min_w: 280.0,
+            card_min_h: 200.0,
             readable_max_w: 720.0,
             field_min_w: 160.0,
             toast_w: 320.0,
@@ -381,14 +393,32 @@ impl Density {
     }
 }
 
+/// A value `values[0]` at `range[0]` and below, `values[1]` at
+/// `range[1]` and above, and on the straight line between them in
+/// between: a css `clamp()` of a linear `calc()`, the one interpolation
+/// every fluid measure (gutter, padding, page head) shares.
+pub fn fluid(at: f32, range: [f32; 2], values: [f32; 2]) -> f32 {
+    let [from, to] = range;
+    let k = ((at - from) / (to - from).max(1.0)).clamp(0.0, 1.0);
+    values[0] + (values[1] - values[0]) * k
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct LayoutTokens {
     /// Widths below this are Compact.
     pub compact_max_w: f32,
     /// Widths below this (and at least `compact_max_w`) are Medium.
     pub medium_max_w: f32,
-    /// Page gutter per breakpoint (Compact / Medium / Expanded).
-    pub gutters: [f32; 3],
+    /// Page gutter at its narrowest and widest: it grows on a straight
+    /// line between them as the page goes from `gutter_range[0]` to
+    /// `gutter_range[1]` wide ([`LayoutTokens::gutter_at`]). The core
+    /// writes the kit's; every other theme derives it from its spacing
+    /// ramp ([`LayoutTokens::gutter_of`]), the ends the showcase's group
+    /// padding grows between, so the page's sides and its groups' padding
+    /// are one measure.
+    pub gutter: [f32; 2],
+    /// The page widths the gutter grows between.
+    pub gutter_range: [f32; 2],
     /// Grid columns per breakpoint.
     pub columns: [u8; 3],
     /// Gap between grid cells.
@@ -400,7 +430,8 @@ impl LayoutTokens {
         Self {
             compact_max_w: 600.0,
             medium_max_w: 1024.0,
-            gutters: [16.0, 24.0, 40.0],
+            gutter: [16.0, 40.0],
+            gutter_range: FLUID_RANGE,
             columns: [4, 8, 12],
             grid_gap: 16.0,
         }
@@ -424,8 +455,25 @@ impl LayoutTokens {
         }
     }
 
-    pub fn gutter(&self, bp: Breakpoint) -> f32 {
-        self.gutters[Self::index(bp)]
+    /// The hoff core kit's layout: its gutter the Group's padding, `p-5`
+    /// narrow and `p-12` wide (components/Group/index.tsx:7).
+    pub fn hoff_core() -> Self {
+        Self {
+            gutter: [20.0, 48.0],
+            ..Self::hoff()
+        }
+    }
+
+    /// A derived theme's gutter ends: its spacing's `lg` and `xxl`.
+    pub fn gutter_of(spacing: &SpacingScale) -> [f32; 2] {
+        [spacing.lg, spacing.xxl]
+    }
+
+    /// The gutter of a page `width` wide: fluid between the token's ends,
+    /// on whole pixels, read from the space the page gets and not from
+    /// the window's class (ADR 0073).
+    pub fn gutter_at(&self, width: f32) -> f32 {
+        fluid(width, self.gutter_range, self.gutter).round()
     }
 
     pub fn columns(&self, bp: Breakpoint) -> u8 {
@@ -516,19 +564,22 @@ pub enum Elevation {
     Hint,
 }
 
-/// The HOFF shadow stacks (Modal.module.sass, Actions, Tabs, Tooltip).
+/// The shadow stacks by elevation, each listed bottom layer first (the
+/// reverse of a css `box-shadow` list, whose first entry is on top): the
+/// HOFF ones (Modal.module.sass, Actions, Tabs, Tooltip) are one layer but
+/// the modal's; the core kit's run to three.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ShadowTokens {
     /// Active tabs block: `0 8px 16px -4px rgba(18,18,18,.20)`.
-    pub raised: ShadowSpec,
+    pub raised: Vec<ShadowSpec>,
     /// Floating menu: `0 24px 32px -12px rgba(18,18,18,.10)`.
-    pub floating: ShadowSpec,
-    /// Deep stack under modal / nav / options, four layers.
-    pub overlay: [ShadowSpec; 4],
+    pub floating: Vec<ShadowSpec>,
+    /// Deep stack under modal / nav / options.
+    pub overlay: Vec<ShadowSpec>,
     /// Tooltip: `0 1.5px 2px rgba(24,24,24,.15)`.
-    pub hint: ShadowSpec,
+    pub hint: Vec<ShadowSpec>,
     /// Deck card lift: `0 32px 24px -16px rgba(0,0,0,.40)`.
-    pub card: ShadowSpec,
+    pub card: Vec<ShadowSpec>,
 }
 
 const fn shade(v: f32, alpha: f32) -> Color {
@@ -538,16 +589,16 @@ const fn shade(v: f32, alpha: f32) -> Color {
 impl ShadowTokens {
     pub fn hoff() -> Self {
         Self {
-            raised: ShadowSpec::new([0.0, 8.0], 16.0, -4.0, shade(18.0, 0.20)),
-            floating: ShadowSpec::new([0.0, 24.0], 32.0, -12.0, shade(18.0, 0.10)),
-            overlay: [
+            raised: vec![ShadowSpec::new([0.0, 8.0], 16.0, -4.0, shade(18.0, 0.20))],
+            floating: vec![ShadowSpec::new([0.0, 24.0], 32.0, -12.0, shade(18.0, 0.10))],
+            overlay: vec![
                 ShadowSpec::new([0.0, 24.0], 24.0, -16.0, shade(5.0, 0.09)),
                 ShadowSpec::new([0.0, 6.0], 13.0, 0.0, shade(5.0, 0.10)),
                 ShadowSpec::new([0.0, 6.0], 4.0, -4.0, shade(5.0, 0.10)),
                 ShadowSpec::new([0.0, 5.0], 2.0, -4.0, shade(5.0, 0.25)),
             ],
-            hint: ShadowSpec::new([0.0, 1.5], 2.0, 0.0, shade(24.0, 0.15)),
-            card: ShadowSpec::new([0.0, 32.0], 24.0, -16.0, shade(0.0, 0.40)),
+            hint: vec![ShadowSpec::new([0.0, 1.5], 2.0, 0.0, shade(24.0, 0.15))],
+            card: vec![ShadowSpec::new([0.0, 32.0], 24.0, -16.0, shade(0.0, 0.40))],
         }
     }
 
@@ -556,16 +607,16 @@ impl ShadowTokens {
     pub fn derive(color: Color) -> Self {
         let tint = |a: f32| Color([color.0[0], color.0[1], color.0[2], a]);
         Self {
-            raised: ShadowSpec::new([0.0, 8.0], 16.0, -4.0, tint(0.20)),
-            floating: ShadowSpec::new([0.0, 24.0], 32.0, -12.0, tint(0.25)),
-            overlay: [
+            raised: vec![ShadowSpec::new([0.0, 8.0], 16.0, -4.0, tint(0.20))],
+            floating: vec![ShadowSpec::new([0.0, 24.0], 32.0, -12.0, tint(0.25))],
+            overlay: vec![
                 ShadowSpec::new([0.0, 24.0], 24.0, -16.0, tint(0.20)),
                 ShadowSpec::new([0.0, 6.0], 13.0, 0.0, tint(0.20)),
                 ShadowSpec::new([0.0, 6.0], 4.0, -4.0, tint(0.20)),
                 ShadowSpec::new([0.0, 5.0], 2.0, -4.0, tint(0.35)),
             ],
-            hint: ShadowSpec::new([0.0, 1.5], 2.0, 0.0, tint(0.30)),
-            card: ShadowSpec::new([0.0, 32.0], 24.0, -16.0, tint(0.40)),
+            hint: vec![ShadowSpec::new([0.0, 1.5], 2.0, 0.0, tint(0.30))],
+            card: vec![ShadowSpec::new([0.0, 32.0], 24.0, -16.0, tint(0.40))],
         }
     }
 
@@ -573,10 +624,10 @@ impl ShadowTokens {
     pub fn stack(&self, elevation: Elevation) -> &[ShadowSpec] {
         match elevation {
             Elevation::Base => &[],
-            Elevation::Raised => std::slice::from_ref(&self.raised),
-            Elevation::Floating => std::slice::from_ref(&self.floating),
+            Elevation::Raised => &self.raised,
+            Elevation::Floating => &self.floating,
             Elevation::Overlay => &self.overlay,
-            Elevation::Hint => std::slice::from_ref(&self.hint),
+            Elevation::Hint => &self.hint,
         }
     }
 }

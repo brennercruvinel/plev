@@ -1,12 +1,20 @@
-//! Theme section: the HOFF token strip, palette cards, typography ramp.
+//! Theme page, the hoff core kit's ColorsPage: groups with a title and a
+//! bottom rule, one swatch card per color, its name and its hex under the
+//! swatch. The colors are the active theme's: its own named palette
+//! where it has one (`colors.swatches`: the core kit's Shades and
+//! Colors), its role tokens otherwise (its neutrals, then its intents),
+//! so the page reads the same under every theme; the last
+//! group is every built-in palette, painted in its own colors: a click
+//! applies it (the shell's `shell.theme`, the same capability as the T
+//! key and the menu).
 
 use engine::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use engine::drawing::text::TextStyle;
+use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::styling::color::Color;
 use engine::styling::theme::Theme;
-use engine::widgets::icons;
-use engine::widgets::prelude::{EventResult, Rect, WidgetEvent};
+use engine::widgets::prelude::{EventResult, Rect, WidgetEvent, rounded_rect, rounded_rect_stroke};
 
-use super::{group_label, text};
+use super::super::components::showcase::{self, Grid, GroupLayout};
 
 pub const THEMES: &[&str] = &[
     "core",
@@ -34,12 +42,133 @@ pub fn resolve(name: &str) -> Option<Theme> {
     }
 }
 
-const CARD_W: f32 = 168.0;
-const CARD_H: f32 = 84.0;
-const GAP: f32 = 12.0;
-const LABEL_H: f32 = 24.0;
-/// Height of the HOFF token strip above the palette grid.
-const TOKENS_H: f32 = 110.0;
+/// Swatches to a row at full width (`w-[calc(20%-1rem)]`).
+const SPAN: usize = 5;
+/// The swatch's name, 14/1.25 medium, and its hex, 10/16: the ratios of
+/// the kit's `text-[0.875rem] leading-[1.25]` and `leading-[1rem]`.
+const NAME_LINE: f32 = 1.25;
+const NAME_WEIGHT: u16 = 500;
+const HEX_LINE_H: f32 = 16.0;
+
+/// One swatch: the names of the tokens that hold it and its color.
+struct Swatch {
+    name: String,
+    color: Color,
+}
+
+/// The theme's neutrals, surface to ink, each color once with every
+/// token that holds it.
+fn neutrals(theme: &Theme) -> Vec<Swatch> {
+    let c = &theme.colors;
+    let roles = [
+        ("bg", c.bg),
+        ("surface", c.surface),
+        ("bg panel", c.bg_panel),
+        ("bg hover", c.bg_hover),
+        ("divider", c.divider),
+        ("border active", c.border_active),
+        ("text dim", c.text_dim),
+        ("text mid", c.text_mid),
+        ("accent dim", c.accent_dim),
+        ("text", c.text),
+    ];
+    merged(&roles)
+}
+
+/// The theme's intents: the accent and the four status colors.
+fn intents(theme: &Theme) -> Vec<Swatch> {
+    let c = &theme.colors;
+    merged(&[
+        ("accent", c.accent),
+        ("success", c.success),
+        ("info", c.info),
+        ("warning", c.warning),
+        ("danger", c.danger),
+    ])
+}
+
+/// The color groups of the page: the theme's own palette, named, where it
+/// has one (the core kit's Shades and Colors, as its ColorsPage); its
+/// roles otherwise, the neutrals then the intents.
+fn color_groups(theme: &Theme) -> Vec<(&'static str, Vec<Swatch>)> {
+    let palette = theme.colors.swatches;
+    if palette.is_empty() {
+        return vec![("Neutrals", neutrals(theme)), ("Colors", intents(theme))];
+    }
+    palette
+        .iter()
+        .map(|g| {
+            let colors = g
+                .colors
+                .iter()
+                .map(|(name, color)| Swatch {
+                    name: (*name).to_string(),
+                    color: *color,
+                })
+                .collect();
+            (g.title, colors)
+        })
+        .collect()
+}
+
+/// `roles` with the ones of the same color folded into one swatch.
+fn merged(roles: &[(&str, Color)]) -> Vec<Swatch> {
+    let mut out: Vec<Swatch> = Vec::new();
+    for (name, color) in roles {
+        match out.iter_mut().find(|s| s.color == *color) {
+            Some(s) => s.name = format!("{} · {name}", s.name),
+            None => out.push(Swatch {
+                name: (*name).to_string(),
+                color: *color,
+            }),
+        }
+    }
+    out
+}
+
+/// `RRGGBB`, and the opacity after it when the color is not opaque.
+pub(crate) fn hex(color: Color) -> String {
+    let [r, g, b, a] = color.0.map(|v| (v.clamp(0.0, 1.0) * 255.0).round() as u8);
+    if a == 255 {
+        format!("{r:02X}{g:02X}{b:02X}")
+    } else {
+        format!("{r:02X}{g:02X}{b:02X} · {}%", (a as f32 / 2.55).round())
+    }
+}
+
+/// The swatch card's measures, from the theme: `p-1.5`, the `h-15`
+/// swatch, `mb-1.5`, the `p-2` caption.
+struct Metrics {
+    pad: f32,
+    swatch_h: f32,
+    caption_pad: f32,
+    name: TextStyle,
+    hex: TextStyle,
+}
+
+impl Metrics {
+    fn of(theme: &Theme) -> Self {
+        let t = &theme.typography;
+        // The kit's 14 is not a step of the ramp: the nearest, `body_sm`.
+        let name_size = t.body_sm;
+        Self {
+            pad: theme.spacing.xs * 1.5,
+            swatch_h: theme.spacing.xxl + theme.spacing.md,
+            caption_pad: theme.spacing.sm,
+            name: t.exact(name_size, name_size * NAME_LINE, NAME_WEIGHT),
+            hex: t.exact(t.small, HEX_LINE_H, 400),
+        }
+    }
+
+    fn card_h(&self) -> f32 {
+        self.pad * 2.0
+            + self.swatch_h
+            + self.pad
+            + self.caption_pad * 2.0
+            + self.name.line_height
+            + self.hex.line_height
+    }
+}
 
 pub struct ThemePage {
     hovered: Option<usize>,
@@ -50,243 +179,274 @@ impl ThemePage {
         Self { hovered: None }
     }
 
-    fn card_rects(&self, content: Rect) -> Vec<Rect> {
-        let cols = ((content.w + GAP) / (CARD_W + GAP)).floor().max(1.0) as usize;
-        THEMES
+    /// The narrowest a swatch card gets: half the theme's narrowest card.
+    fn min_w(theme: &Theme) -> f32 {
+        theme.size.card_min_w / 2.0
+    }
+
+    /// The color groups, then the palettes.
+    fn layout(content: Rect, theme: &Theme) -> Vec<GroupLayout> {
+        let h = Metrics::of(theme).card_h();
+        let groups = color_groups(theme);
+        let counts = groups
             .iter()
-            .enumerate()
-            .map(|(i, _)| {
-                let col = i % cols;
-                let row = i / cols;
-                Rect::new(
-                    content.x + col as f32 * (CARD_W + GAP),
-                    content.y + TOKENS_H + LABEL_H + row as f32 * (CARD_H + GAP),
-                    CARD_W,
-                    CARD_H,
-                )
-            })
-            .collect()
+            .map(|(title, colors)| (*title, colors.len()))
+            .chain([("Palettes", THEMES.len())])
+            .collect::<Vec<(&str, usize)>>();
+        let grids = counts
+            .into_iter()
+            .map(|(t, n)| Grid::new(t, SPAN, Self::min_w(theme), vec![h; n]));
+        showcase::layout_grids(grids, content, theme)
     }
 
-    /// The HOFF signature strip: the canonical white-alpha ramp and the
-    /// four chromatic accents, drawn with the current theme's glass.
-    fn render_hoff_tokens(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        use engine::styling::theme::hoff;
-        group_label(c, "HOFF ALPHAS — #F8F8F8", content.x, content.y, theme);
-        let alphas: [(f32, &str); 7] = [
-            (0.02, ".02"),
-            (0.05, ".05"),
-            (0.10, ".10"),
-            (0.25, ".25"),
-            (0.40, ".40"),
-            (0.70, ".70"),
-            (0.95, ".95"),
-        ];
-        let sw = 56.0;
-        let y = content.y + LABEL_H;
-        for (i, (a, label)) in alphas.iter().enumerate() {
-            let x = content.x + i as f32 * (sw + 8.0);
-            c.push(SceneNode::RoundedRect {
-                x,
-                y,
-                w: sw,
-                h: 36.0,
-                color: [hoff::N2.0[0], hoff::N2.0[1], hoff::N2.0[2], *a],
-                corner_radius: theme.radius.sm,
-                border_width: 1.0,
-                border_color: theme.glass.edge_soft.0,
-            });
-            text(
-                c,
-                label,
-                12.0,
-                600,
-                x + 16.0,
-                y + 40.0,
-                theme.glass.text_faint.0,
-            );
-        }
-
-        // Accents: the only chromatic tokens in the system.
-        let accents = [
-            (hoff::RED, "red"),
-            (hoff::GREEN, "green"),
-            (hoff::GREEN_LIGHT, "repost"),
-            (hoff::ORANGE, "heart"),
-        ];
-        let ax = content.x + alphas.len() as f32 * (sw + 8.0) + 24.0;
-        for (i, (color, label)) in accents.iter().enumerate() {
-            let x = ax + i as f32 * (sw + 8.0);
-            c.push(SceneNode::RoundedRect {
-                x: x + sw / 2.0 - 9.0,
-                y: y + 9.0,
-                w: 18.0,
-                h: 18.0,
-                color: color.0,
-                corner_radius: 9.0,
-                border_width: 0.0,
-                border_color: [0.0; 4],
-            });
-            text(
-                c,
-                label,
-                12.0,
-                400,
-                x + 12.0,
-                y + 40.0,
-                theme.glass.text_faint.0,
-            );
-        }
-    }
-
-    /// The type-ramp specimens drawn under the palette grid.
-    fn type_ramp(theme: &Theme) -> [(&'static str, f32, u16); 6] {
-        [
-            ("Display", theme.typography.display, 700u16),
-            ("Title", theme.typography.title, 700),
-            ("Title sm", theme.typography.title_sm, 600),
-            ("Body", theme.typography.body, 400),
-            ("Body sm", theme.typography.body_sm, 400),
-            ("Caption", theme.typography.caption, 400),
-        ]
-    }
-
-    /// Natural height of tokens + palettes + typography (page scrolling
-    /// needs it).
+    /// Natural height of the page (page scrolling needs it).
     pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
-        let cards_bottom = self
-            .card_rects(content)
-            .last()
-            .map(|r| r.y + r.h)
-            .unwrap_or(content.y);
-        let ramp_h: f32 = Self::type_ramp(theme)
-            .iter()
-            .map(|(_, size, _)| size * 1.3 + 6.0)
-            .sum();
-        cards_bottom + 34.0 + LABEL_H + ramp_h + GAP - content.y
+        showcase::content_height(&Self::layout(content, theme), content)
     }
 
-    /// Returns the picked theme name, if a card was clicked.
+    /// Returns the picked theme name, if a palette card was clicked.
     pub fn handle_event(
         &mut self,
         event: &WidgetEvent,
         content: Rect,
+        theme: &Theme,
     ) -> (EventResult, Option<&'static str>) {
-        let rects = self.card_rects(content);
+        let layout = Self::layout(content, theme);
+        let Some(palettes) = layout.last() else {
+            return (EventResult::IGNORED, None);
+        };
+        let hit = |x: f32, y: f32| palettes.cards.iter().position(|r| r.contains(x, y));
         match *event {
             WidgetEvent::MouseMove { x, y } => {
-                let hit = rects.iter().position(|r| r.contains(x, y));
-                if hit != self.hovered {
-                    self.hovered = hit;
-                    (EventResult::changed(), None)
-                } else {
-                    (EventResult::IGNORED, None)
+                let at = hit(x, y);
+                if at == self.hovered {
+                    return (EventResult::IGNORED, None);
                 }
+                self.hovered = at;
+                (EventResult::changed(), None)
             }
-            WidgetEvent::MouseDown { x, y } => {
-                if let Some(i) = rects.iter().position(|r| r.contains(x, y)) {
-                    (EventResult::clicked(), Some(THEMES[i]))
-                } else {
-                    (EventResult::IGNORED, None)
-                }
-            }
+            WidgetEvent::MouseDown { x, y } => match hit(x, y) {
+                Some(i) => (EventResult::clicked(), Some(THEMES[i])),
+                None => (EventResult::IGNORED, None),
+            },
             _ => (EventResult::IGNORED, None),
         }
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme, current: &str) {
-        self.render_hoff_tokens(c, content, theme);
-        group_label(c, "PALETTES", content.x, content.y + TOKENS_H, theme);
-
-        let rects = self.card_rects(content);
-        let mut bottom = content.y;
-        for (i, (name, rect)) in THEMES.iter().zip(&rects).enumerate() {
-            let Some(t) = resolve(name) else { continue };
-            let is_current = *name == current;
-            let hovered = self.hovered == Some(i);
-
-            // Card painted with the *target* theme's own colors; the
-            // current-theme check icon pushed later stacks on top.
-            c.push(engine::widgets::prelude::rounded_rect(
-                rect.x,
-                rect.y,
-                rect.w,
-                rect.h,
-                theme.radius.lg,
-                t.colors.bg_panel.0,
-            ));
-            c.push(engine::widgets::prelude::rounded_rect_stroke(
-                rect.x,
-                rect.y,
-                rect.w,
-                rect.h,
-                theme.radius.lg,
-                if is_current {
-                    theme.colors.accent.0
-                } else if hovered {
-                    theme.colors.border_active.0
-                } else {
-                    theme.colors.divider.0
-                },
-                if is_current { 1.5 } else { 1.0 },
-            ));
-            c.push(SceneNode::Text {
-                key: TextNodeKey::from_style(name, &TextStyle::new(12.0).with_weight(600), None),
-                x: rect.x + 12.0,
-                y: rect.y + 10.0,
-                color: t.colors.text.0,
-            });
-            if is_current
-                && let Some(node) = icons::icon_at(
-                    "check",
-                    12.0,
-                    theme.colors.accent.0,
-                    rect.x + rect.w - 22.0,
-                    rect.y + 11.0,
-                )
-            {
-                c.push(node);
+        let layout = Self::layout(content, theme);
+        let m = Metrics::of(theme);
+        let colors = color_groups(theme);
+        let last = layout.len().saturating_sub(1);
+        for (g, group) in layout.iter().enumerate() {
+            match colors.get(g) {
+                Some((title, swatches)) => {
+                    showcase::title(c, title, content, group.title_y, theme);
+                    for (s, rect) in swatches.iter().zip(&group.cards) {
+                        let caption = hex(s.color);
+                        swatch_card(c, *rect, &[s.color], &s.name, &caption, false, &m, theme);
+                    }
+                }
+                None => {
+                    showcase::title(c, "Palettes", content, group.title_y, theme);
+                    for (i, (name, rect)) in THEMES.iter().zip(&group.cards).enumerate() {
+                        let Some(t) = resolve(name) else { continue };
+                        let colors = [
+                            t.colors.bg,
+                            t.colors.bg_panel,
+                            t.colors.accent,
+                            t.colors.success,
+                            t.colors.danger,
+                            t.colors.text,
+                        ];
+                        let state = if *name == current {
+                            "current"
+                        } else if self.hovered == Some(i) {
+                            "apply"
+                        } else {
+                            ""
+                        };
+                        let lit = *name == current || self.hovered == Some(i);
+                        swatch_card(c, *rect, &colors, name, state, lit, &m, theme);
+                    }
+                }
             }
-
-            // Swatch row: bg / accent / success / danger / text.
-            let swatches = [
-                t.colors.bg.0,
-                t.colors.accent.0,
-                t.colors.success.0,
-                t.colors.danger.0,
-                t.colors.text.0,
-            ];
-            for (si, color) in swatches.iter().enumerate() {
-                c.push(SceneNode::RoundedRect {
-                    x: rect.x + 12.0 + si as f32 * 24.0,
-                    y: rect.y + rect.h - 30.0,
-                    w: 18.0,
-                    h: 18.0,
-                    color: *color,
-                    corner_radius: 5.0,
-                    border_width: 1.0,
-                    border_color: t.colors.divider.0,
-                });
+            if g < last {
+                showcase::rule(c, content, group.rule_y, theme);
             }
-            bottom = bottom.max(rect.y + rect.h);
         }
+    }
+}
 
-        // Typography ramp with the *current* theme. The page clips and
-        // scrolls, so the full ramp is always emitted.
-        let mut y = bottom + 34.0;
-        group_label(c, "TYPOGRAPHY", content.x, y, theme);
-        y += LABEL_H;
-        for (name, size, weight) in Self::type_ramp(theme) {
-            text(
-                c,
-                &format!("{name} — quick brown fox {size}px"),
-                size,
-                weight,
-                content.x,
-                y,
-                theme.colors.text.0,
-            );
-            y += size * 1.3 + 6.0;
+/// A ColorsPage card: the rounded shell, the swatch (one color, or a strip
+/// of a palette's), the name and the caption under it. `lit` draws the
+/// shell in the theme's active border (the current or hovered palette).
+#[allow(clippy::too_many_arguments)]
+fn swatch_card(
+    c: &mut Compositor,
+    rect: Rect,
+    colors: &[Color],
+    name: &str,
+    caption: &str,
+    lit: bool,
+    m: &Metrics,
+    theme: &Theme,
+) {
+    let edge = theme.control.edge_width;
+    let border = if lit {
+        theme.colors.border_active
+    } else {
+        theme.colors.divider
+    };
+    c.push(rounded_rect_stroke(
+        rect.x,
+        rect.y,
+        rect.w,
+        rect.h,
+        theme.shape.nav,
+        border.0,
+        edge,
+    ));
+    let well = Rect::new(
+        rect.x + m.pad,
+        rect.y + m.pad,
+        rect.w - m.pad * 2.0,
+        m.swatch_h,
+    );
+    let radius = theme.shape.cluster;
+    swatch_strip(c, well, radius, colors);
+    c.push(rounded_rect_stroke(
+        well.x,
+        well.y,
+        well.w,
+        well.h,
+        radius,
+        theme.colors.divider.0,
+        edge,
+    ));
+    let x = well.x + m.caption_pad;
+    let room = well.w - m.caption_pad * 2.0;
+    let y = well.bottom() + m.pad + m.caption_pad;
+    let name = TextMeasurer::truncate_to_width(name, &m.name, room);
+    c.push(SceneNode::Text {
+        key: TextNodeKey::from_style(&name, &m.name, None),
+        x,
+        y,
+        color: theme.colors.text.0,
+    });
+    let caption = TextMeasurer::truncate_to_width(caption, &m.hex, room);
+    c.push(SceneNode::Text {
+        key: TextNodeKey::from_style(&caption, &m.hex, None),
+        x,
+        y: y + m.name.line_height,
+        color: theme.colors.text_mid.0,
+    });
+}
+
+/// `colors` side by side across `well`, its outer corners at `radius`:
+/// the first fills the whole rounded well, the middle ones are square
+/// bands over it, the last a rounded band whose left round a square band
+/// covers.
+fn swatch_strip(c: &mut Compositor, well: Rect, radius: f32, colors: &[Color]) {
+    let Some((first, rest)) = colors.split_first() else {
+        return;
+    };
+    c.push(rounded_rect(
+        well.x, well.y, well.w, well.h, radius, first.0,
+    ));
+    let band = well.w / colors.len() as f32;
+    for (i, color) in rest.iter().enumerate() {
+        let x = well.x + (i + 1) as f32 * band;
+        if i + 1 == rest.len() {
+            let w = well.right() - x;
+            c.push(rounded_rect(x, well.y, w, well.h, radius, color.0));
+            c.push(rounded_rect(x, well.y, radius.min(w), well.h, 0.0, color.0));
+        } else {
+            c.push(rounded_rect(x, well.y, band, well.h, 0.0, color.0));
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The core page is the ColorsPage: its nine shades and six colors,
+    /// under the kit's names, Shade 8, Yellow and Purple included.
+    #[test]
+    fn the_core_colors_are_the_colors_page() {
+        let theme = Theme::hoff_core();
+        let groups = color_groups(&theme);
+        let titles: Vec<&str> = groups.iter().map(|(t, _)| *t).collect();
+        assert_eq!(titles, ["Shades", "Colors"]);
+        let hexes =
+            |g: usize| -> Vec<String> { groups[g].1.iter().map(|s| hex(s.color)).collect() };
+        assert_eq!(
+            hexes(0),
+            [
+                "FCFCFC", "F8F7F7", "F1F1F1", "ECECEC", "E2E2E2", "7B7B7B", "323232", "222222",
+                "121212"
+            ]
+        );
+        assert_eq!(
+            hexes(1),
+            ["49BA61", "3582FF", "E36323", "FFB73A", "FE5938", "8755E9"]
+        );
+        assert_eq!(groups[0].1[7].name, "Shade 8");
+        assert_eq!(groups[1].1[5].name, "Purple");
+    }
+
+    /// A theme with no palette of its own shows its roles, each color once.
+    #[test]
+    fn a_theme_without_a_palette_shows_its_roles() {
+        let theme = Theme::hoff();
+        let groups = color_groups(&theme);
+        assert_eq!(groups[0].0, "Neutrals");
+        assert_eq!(groups[1].0, "Colors");
+        assert!(groups[0].1[0].name.contains("bg"));
+    }
+
+    #[test]
+    fn a_hex_names_its_opacity_when_it_has_one() {
+        assert_eq!(hex(Color::hex(0x49BA61)), "49BA61");
+        assert_eq!(hex(Color::rgba(0.0, 0.0, 0.0, 0.5)), "000000 · 50%");
+    }
+
+    /// The swatches stay inside the content, one column at the narrowest,
+    /// five at full width, under every theme.
+    #[test]
+    fn swatches_fit_from_narrow_to_wide() {
+        for theme in [Theme::hoff_core(), Theme::hoff(), Theme::dark()] {
+            for w in (280..=1600).step_by(8) {
+                let content = Rect::new(0.0, 0.0, w as f32, 800.0);
+                for group in ThemePage::layout(content, &theme) {
+                    for r in &group.cards {
+                        assert!(r.right() <= content.right() + 0.5, "{w}: {r:?}");
+                        assert!(r.w >= ThemePage::min_w(&theme).min(content.w) - 0.5);
+                    }
+                }
+            }
+            let wide = Rect::new(0.0, 0.0, 1200.0, 800.0);
+            let group = &ThemePage::layout(wide, &theme)[2];
+            assert_eq!(group.cards[0].y, group.cards[SPAN - 1].y);
+        }
+    }
+
+    /// A palette card picks its theme; a swatch picks nothing.
+    #[test]
+    fn a_palette_card_picks_its_theme() {
+        let theme = Theme::hoff_core();
+        let content = Rect::new(0.0, 0.0, 1000.0, 800.0);
+        let layout = ThemePage::layout(content, &theme);
+        let mut page = ThemePage::new();
+        let at = |r: Rect| WidgetEvent::MouseDown {
+            x: r.x + r.w / 2.0,
+            y: r.y + r.h / 2.0,
+        };
+        let (_, picked) = page.handle_event(&at(layout[2].cards[2]), content, &theme);
+        assert_eq!(picked, Some(THEMES[2]));
+        let (r, picked) = page.handle_event(&at(layout[0].cards[0]), content, &theme);
+        assert_eq!(picked, None);
+        assert_eq!(r, EventResult::IGNORED);
     }
 }

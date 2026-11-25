@@ -1,8 +1,14 @@
-# pins the toolchain for everyone (rustup reads this). the workspace needs
-# 1.87+ (rust-version in Cargo.toml, the floor of wgpu 29), and stable is
-# always above it. wasm32 ships with the toolchain because the gate checks
-# the web build on every change.
+# pins the toolchain for everyone (rustup reads this), to an exact version
+# since task-106. with `stable`, each new release left an older copy of every
+# artifact in every build directory, and two machines could compile the same
+# commit with two compilers. a bump is this one line, on purpose, with a
+# `tool/tasks/builddir.sh trim` after it. the workspace needs 1.87+
+# (rust-version in Cargo.toml, the floor of wgpu 29). wasm32 ships with the
+# toolchain because the gate checks the web build on every change. the
+# minimal profile leaves the html docs out; rust-src is what an editor's
+# rust-analyzer reads the standard library from.
 [toolchain]
-channel = "stable"
-components = ["rustfmt", "clippy"]
+channel = "1.99.1"
+profile = "minimal"
+components = ["rustfmt", "clippy", "rust-src"]
 targets = ["wasm32-unknown-unknown"]

@@ -15,6 +15,7 @@ struct TextProps<'a> {
     line_height: f32,
     max_width: Option<f32>,
     truncate_chars: Option<&'a usize>,
+    family: Option<&'a str>,
 }
 
 /// Walk the element tree in the same preorder as `collect_layout_items`
@@ -66,6 +67,7 @@ fn emit_element(
                     line_height: *line_height,
                     max_width: *max_width,
                     truncate_chars: truncate_chars.as_ref(),
+                    family: theme.and_then(|t| t.typography.family),
                 },
                 out,
             );
@@ -309,6 +311,7 @@ pub(crate) fn resolved_text_style(
     element: &Element,
     font_size: f32,
     line_height: f32,
+    family: Option<&str>,
 ) -> TextStyle {
     TextStyle {
         font_size,
@@ -319,9 +322,12 @@ pub(crate) fn resolved_text_style(
             element.style.font_weight
         },
         letter_spacing: element.style.letter_spacing,
-        // The builder Style has no font-family modifier yet; when it grows
-        // one, threading it here propagates to measure AND draw at once.
-        font_family: None,
+        // The theme's face (`theme.typography.family`): the builder Style
+        // has no font-family modifier, so a builder view draws in the face
+        // of the theme around it, measured and drawn alike.
+        font_family: family.map(str::to_owned),
+        features: crate::drawing::text::TextFeatures::NONE,
+        overflow_wrap: crate::drawing::text::OverflowWrap::Normal,
     }
 }
 
@@ -336,7 +342,7 @@ fn emit_text(
     let actual: &str = &actual;
 
     if !actual.is_empty() {
-        let style = resolved_text_style(element, props.font_size, props.line_height);
+        let style = resolved_text_style(element, props.font_size, props.line_height, props.family);
         out.push(SceneNode::Text {
             key: TextNodeKey::from_style(actual, &style, props.max_width),
             x: b.x,

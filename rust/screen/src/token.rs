@@ -3,6 +3,7 @@
 //! the theme stops the build here, not at a surface on screen.
 
 use engine::drawing::text::TextStyle;
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{self, Intent, Theme};
 use engine::widgets::buttons::ButtonSize;
 use engine::widgets::content::{LineKind as Row, StatSize};
@@ -38,26 +39,26 @@ pub(crate) fn spacing(t: SpacingToken, theme: &Theme) -> f32 {
 pub(crate) fn typography(t: TypographyRole, theme: &Theme) -> TextStyle {
     let ty = &theme.typography;
     match t {
-        TypographyRole::H4 => ty.h4(),
-        TypographyRole::Headline => ty.headline(),
-        TypographyRole::Title => ty.title(),
-        TypographyRole::BaseR => ty.base_r(),
-        TypographyRole::BaseM => ty.base_m(),
-        TypographyRole::Base2r => ty.base_2r(),
-        TypographyRole::Base2m => ty.base_2m(),
-        TypographyRole::Base2sm => ty.base_2sm(),
-        TypographyRole::Base2b => ty.base_2b(),
-        TypographyRole::CaptionR => ty.caption_r(),
-        TypographyRole::CaptionSm => ty.caption_sm(),
-        TypographyRole::SmallR => ty.small_r(),
-        TypographyRole::SmallSm => ty.small_sm(),
-        TypographyRole::Body => ty.body(),
-        TypographyRole::Body2r => ty.body_2r(),
-        TypographyRole::Body2m => ty.body_2m(),
-        TypographyRole::Body2b => ty.body_2b(),
-        TypographyRole::Hairline => ty.hairline(),
-        TypographyRole::Mono => ty.mono(),
-        TypographyRole::Readout => ty.readout(),
+        TypographyRole::H4 => ty.role(TypeRole::Display),
+        TypographyRole::Headline => ty.role(TypeRole::H3),
+        TypographyRole::Title => ty.role(TypeRole::Title),
+        TypographyRole::BaseR => ty.role(TypeRole::BodyLg),
+        TypographyRole::BaseM => ty.run(TypeRole::BodyLg.medium()),
+        TypographyRole::Base2r => ty.role(TypeRole::Body),
+        TypographyRole::Base2m => ty.run(TypeRole::Body.medium()),
+        TypographyRole::Base2sm => ty.role(TypeRole::BodyStrong),
+        TypographyRole::Base2b => ty.role(TypeRole::BodyStrong),
+        TypographyRole::CaptionR => ty.run(TypeRole::Caption.regular()),
+        TypographyRole::CaptionSm => ty.run(TypeRole::Caption.strong()),
+        TypographyRole::SmallR => ty.role(TypeRole::Small),
+        TypographyRole::SmallSm => ty.run(TypeRole::Small.strong()),
+        TypographyRole::Body => ty.role(TypeRole::BodyLg),
+        TypographyRole::Body2r => ty.role(TypeRole::Paragraph),
+        TypographyRole::Body2m => ty.run(TypeRole::Paragraph.medium()),
+        TypographyRole::Body2b => ty.run(TypeRole::Paragraph.medium()),
+        TypographyRole::Hairline => ty.role(TypeRole::Caption),
+        TypographyRole::Mono => ty.role(TypeRole::Code),
+        TypographyRole::Readout => ty.role(TypeRole::Small),
     }
 }
 
@@ -201,7 +202,7 @@ mod tests {
         assert_eq!(spacing(SpacingToken::Md, &theme), theme.spacing.md);
         assert_eq!(
             typography(TypographyRole::Title, &theme),
-            theme.typography.title()
+            theme.typography.role(TypeRole::Title)
         );
         assert_eq!(color(ColorRole::BgPanel, &theme), theme.colors.bg_panel.0);
         assert_eq!(shape(ShapeRole::Card, &theme), theme.shape.card);
@@ -224,10 +225,12 @@ mod tests {
             let b = button_size(*t, &theme);
             assert!(b.height(&theme) <= theme.control.height(control(*t)));
         }
-        // hoff core: controls 36/40/44/48/52, buttons 28/36/40/44.
-        assert_eq!(button_size(ControlSize::Xs, &theme), ButtonSize::Sm);
-        assert_eq!(button_size(ControlSize::Sm, &theme), ButtonSize::Md);
-        assert_eq!(button_size(ControlSize::Md, &theme), ButtonSize::Lg);
+        // hoff core: controls 28/36/40/44/48, the button ladder 28/36/40/44
+        // plus the field; each step is its own button, the field the Lg.
+        assert_eq!(button_size(ControlSize::Xs, &theme), ButtonSize::Xs);
+        assert_eq!(button_size(ControlSize::Sm, &theme), ButtonSize::Sm);
+        assert_eq!(button_size(ControlSize::Md, &theme), ButtonSize::Md);
+        assert_eq!(button_size(ControlSize::Lg, &theme), ButtonSize::Lg);
         assert_eq!(button_size(ControlSize::Xl, &theme), ButtonSize::Lg);
     }
 }

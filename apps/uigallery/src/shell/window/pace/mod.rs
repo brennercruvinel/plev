@@ -4,6 +4,7 @@
 //! when the session is), and the answer sets each window's deadline and
 //! the loop's wait (see the shell's module doc).
 
+use engine::runtime::perf::stages::{self, Stage};
 use engine::widgets::prelude::Wake;
 use web_time::Instant;
 use winit::event_loop::{ActiveEventLoop, ControlFlow};
@@ -28,7 +29,11 @@ impl App {
         // The real time since the last tick: a deadline the loop
         // slept through arrives whole (`dt` is clamped for motion).
         let since_last = self.clock.tick().since_last;
-        let wake = self.frame_wake(since_last);
+        let mut wake = {
+            engine::zone!("tick");
+            let _tick = stages::span(Stage::Tick);
+            self.frame_wake(since_last)
+        };
         let page_wake = self.view.detached_wake();
         log::debug!(
             "frame: {:.3} s since the last tick, wake now {} next {:?}, page {:?}",
@@ -39,43 +44,10 @@ impl App {
         );
         let clear = self.view.theme.colors.bg.to_linear_array();
         if Some(id) == self.main {
-            let Some(host) = self.windows.get_mut(id) else {
+            let Some(drawn) = self.main_frame(id, wake, clear) else {
                 return;
             };
-            host.begin_frame();
-            // Build the scene (includes compositor.begin_frame()), then
-            // the shared frame tail.
-            self.view.render(host.compositor_mut());
-            // a literal edited in place, over the frame (`source`)
-            #[cfg(all(
-                debug_assertions,
-                any(target_os = "macos", target_os = "linux", target_os = "windows")
-            ))]
-            self.source
-                .draw(id, host.compositor_mut(), &self.view.theme);
-            host.present(clear, "showcase_frame");
-            // The tree of this frame, placed by the bindings it just drew;
-            // what a reader is shown (the page, the toasts and the overlay
-            // over it, what only a reader hears) is projected only while a
-            // reader listens.
-            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-            if let (Some(bridge), Some(window)) = (self.access.bridge.as_mut(), host.window()) {
-                let view = &self.view;
-                bridge.update(window, host.compositor(), || view.reader_semantics());
-            }
-            // The frame just drawn, where each bound control shows in it,
-            // and the state it was drawn from.
-            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-            self.record_frame();
-            // The frame to whoever watches this window's scene (task-79).
-            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-            self.offer_scene(id);
-            // The bar and the tray follow what this frame was drawn from.
-            #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-            {
-                self.sync_menu();
-                self.sync_tray();
-            }
+            wake = drawn;
         } else if self.is_page_window(id) {
             let Some(host) = self.windows.get_mut(id) else {
                 return;
@@ -95,6 +67,95 @@ impl App {
         // `wake.now` is carried by this frame: the scene was built after
         // the tick, so a flipped caret is already in it.
         self.pace(event_loop, wake, page_wake);
+    }
+
+    /// The main window's frame: the whole view built into window `id`'s
+    /// compositor and the dev mode over it, the frame drawn, then handed
+    /// to who reads it (the dev mode's recorder, a screen reader, the
+    /// recording, the mirror, the bar and the tray). `wake` is what the
+    /// tick asked, returned with what the frame itself asks; `None` when
+    /// the window is gone. Apart from the loop, so a test draws it into a
+    /// host that has no window.
+    pub(super) fn main_frame(
+        &mut self,
+        id: WindowId,
+        mut wake: Wake,
+        clear: [f32; 4],
+    ) -> Option<Wake> {
+        let host = self.windows.get_mut(id)?;
+        // the dev mode reads the frames its host records, while its
+        // panel is open
+        host.dev_mut().set_on(self.dev.is_open());
+        host.begin_frame();
+        // Build the scene (includes compositor.begin_frame()), then
+        // the shared frame tail.
+        {
+            engine::zone!("scene build");
+            let build = stages::span(Stage::SceneBuild);
+            self.view.render(host.compositor_mut());
+            let layers = host.compositor().layers();
+            build.end(|| layers.iter().map(|l| l.nodes().len() as u64).sum());
+        }
+        if host.dev().is_on() {
+            engine::plot!("controls bound", host.compositor().bindings().count());
+        }
+        if self.dev.is_available() {
+            engine::zone!("dev mode");
+            let size = host.logical_size();
+            let snapshot = if self.dev.is_open() {
+                self.view.semantics()
+            } else {
+                None
+            };
+            let (compositor, recorder) = host.compositor_and_dev();
+            self.dev.draw(
+                compositor,
+                &self.view.theme,
+                size,
+                recorder,
+                snapshot.as_ref(),
+            );
+        }
+        // the frame found a focus out of view and started the glide
+        // to it: the next frames carry it (`views/compositor/reveal.rs`)
+        wake = wake.merge(Wake::moving(self.view.revealing()));
+        // a literal edited in place, over the frame (`source`)
+        #[cfg(all(
+            debug_assertions,
+            any(target_os = "macos", target_os = "linux", target_os = "windows")
+        ))]
+        self.source
+            .draw(id, host.compositor_mut(), &self.view.theme);
+        host.present(clear, "showcase_frame");
+        // the panel shows a frame once it is whole: it asks for the
+        // few frames that bring it, marked as its own
+        if self.dev.wants_frame(host.dev()) {
+            host.dev_mut().mark_tool();
+            wake = wake.merge(Wake::moving(true));
+        }
+        // The tree of this frame, placed by the bindings it just drew;
+        // what a reader is shown (the page, the toasts and the overlay
+        // over it, what only a reader hears) is projected only while a
+        // reader listens.
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        if let (Some(bridge), Some(window)) = (self.access.bridge.as_mut(), host.window()) {
+            let view = &self.view;
+            bridge.update(window, host.compositor(), || view.reader_semantics());
+        }
+        // The frame just drawn, where each bound control shows in it,
+        // and the state it was drawn from.
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        self.record_frame();
+        // The frame to whoever watches this window's scene (task-79).
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        self.offer_scene(id);
+        // The bar and the tray follow what this frame was drawn from.
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+        {
+            self.sync_menu();
+            self.sync_tray();
+        }
+        Some(wake)
     }
 
     /// Advances what animates to now, before anything from outside the

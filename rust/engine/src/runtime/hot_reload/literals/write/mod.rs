@@ -1,5 +1,5 @@
 //! A literal written back (task-65 phase c,
-//! docs/adr/workflows/0048-view-source-for-pixels.md): the text the person typed over a
+//! docs/adr/Workflows/0048-view-source-for-pixels/0048-view-source-for-pixels.md): the text the person typed over a
 //! literal in the window replaces exactly that literal in its file, the
 //! bytes of its token and nothing else, escaped for the form it had.
 //!

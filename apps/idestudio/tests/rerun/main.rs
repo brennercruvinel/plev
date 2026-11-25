@@ -1,5 +1,5 @@
 //! sessions become regression tests (task-64 phase c,
-//! docs/adr/recording/0050-sessions-become-regression-tests.md).
+//! docs/adr/Recording/0050-sessions-become-regression-tests/0050-sessions-become-regression-tests.md).
 //!
 //! an excerpt of a recorded session (the `.monster` a bug report is) and a
 //! small file of marks sit in `tests/fixtures/sessions/`; the harness

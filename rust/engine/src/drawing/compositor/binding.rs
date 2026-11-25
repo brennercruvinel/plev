@@ -11,7 +11,7 @@
 //! between two frames it answers for the frame on screen, which is what a
 //! person clicking saw.
 //!
-//! See docs/adr/semantics/0035-semantic-binding-beside-the-scene.md.
+//! See docs/adr/Semantics/0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md.
 
 use accord::SemId;
 use indexmap::IndexMap;
@@ -36,6 +36,10 @@ pub struct Binding {
     /// Position among this frame's bindings. Within one layer a higher
     /// order was bound later, so it sits on top.
     pub order: u32,
+    /// How many nodes `layer` held at the bind: a node pushed before it
+    /// is under what the widget draws, a node pushed from it on is the
+    /// widget's own or over it.
+    pub nodes: usize,
     /// The temporary render identity, when the widget registered a hit
     /// region under one this frame (`Compositor::set_binding_view`).
     pub view: Option<ViewId>,
@@ -126,11 +130,11 @@ fn contains(r: [f32; 4], x: f32, y: f32) -> bool {
 }
 
 impl Compositor {
-    /// Binds `id` to `rect` on the default layer, the way `push` draws on
-    /// it. `rect` is `(x, y, w, h)` in logical window pixels, the same
+    /// Binds `id` to `rect` on the layer `push` draws on (the default
+    /// one, but inside [`Compositor::on_layer`]). `rect` is `(x, y, w, h)` in logical window pixels, the same
     /// rect the widget draws and hit-tests with.
     pub fn bind(&mut self, id: &SemId, rect: [f32; 4]) {
-        self.bind_to_layer(LayerId::DEFAULT, id, rect);
+        self.bind_to_layer(self.target, id, rect);
     }
 
     /// Binds `id` to `rect` on `layer`, with the clip open in that layer
@@ -159,6 +163,7 @@ impl Compositor {
                 layer,
                 clip,
                 order,
+                nodes: target.nodes.len(),
                 view: None,
             },
         );

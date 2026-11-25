@@ -9,6 +9,7 @@
 
 use accord::{Request, SemId, SnapshotBuilder};
 use engine::drawing::compositor::Compositor;
+use engine::styling::theme::TypeRole;
 use engine::styling::theme::{ControlSize, Theme};
 use engine::widgets::prelude::{EventResult, Rect, Switch, WidgetEvent};
 
@@ -100,7 +101,8 @@ impl SwitchPage {
     }
 
     pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let style = theme.typography.base_2r();
+        let run = TypeRole::Body.run();
+        let style = theme.typography.run(run);
         for ((s, rect), label) in self
             .switches
             .iter()
@@ -111,15 +113,17 @@ impl SwitchPage {
             text(
                 c,
                 label,
-                style.font_size,
-                style.font_weight,
-                rect.right() + theme.spacing.md,
-                rect.y + (rect.h - style.line_height) / 2.0,
+                run,
+                (
+                    rect.right() + theme.spacing.md,
+                    rect.y + (rect.h - style.line_height) / 2.0,
+                ),
                 if s.disabled {
                     theme.colors.text_dim.0
                 } else {
                     theme.colors.text.0
                 },
+                theme,
             );
         }
     }

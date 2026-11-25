@@ -345,6 +345,8 @@ mod tests {
     /// first item's row (its checkbox side).
     fn todo() -> App {
         let mut view = ShowcaseView::new(1200.0, 800.0);
+        // the sidebar pinned: its logo is a text that is no literal
+        view.pin_sidebar(true);
         view.jump_to_page("Todo");
         view.resize(1200.0, 800.0, 1.0);
         let mut app = App::with_bare_window(view);
@@ -687,7 +689,7 @@ mod tests {
         let [x, y, w, h] = compositor(&app).binding(&input).unwrap().rect;
         edit_at(&mut app, (x + w / 2.0, y + h / 2.0));
         assert!(app.source.edit.is_none());
-        // a text several literals hold
+        // the brand is the sidebar's logo now, a link home: a control too
         let brand = on_text(&app, "plev");
         edit_at(&mut app, brand);
         assert!(app.source.edit.is_none());
@@ -695,8 +697,20 @@ mod tests {
         assert_eq!(told.len(), 2, "{told:?}");
         assert!(told[0].contains("todo.input is a control"), "{told:?}");
         assert!(
-            told[1].contains("literals hold it; edit it in the file"),
+            told[1].contains("shell.sidebar.logo is a control"),
             "{told:?}"
+        );
+        // a text several literals hold is told so; this frame leaves none
+        // of them unbound, so the line is checked alone
+        let sites = literals::sites_of("Active");
+        assert!(sites.len() > 1, "{sites:?}");
+        let line = not_one_literal(&Origin::Literal {
+            text: "Active".into(),
+            sites,
+        });
+        assert!(
+            line.contains("literals hold it; edit it in the file"),
+            "{line}"
         );
     }
 }

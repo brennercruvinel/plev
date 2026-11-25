@@ -1,0 +1,2442 @@
+{
+  "nodes": [
+    {
+      "id": "prompt_input_page",
+      "role": "region",
+      "label": "Prompt Input"
+    },
+    {
+      "id": "prompt_input_page.group[0]",
+      "role": "group",
+      "label": "Prompt Input",
+      "parent": "prompt_input_page"
+    },
+    {
+      "id": "prompt_input_page.group[0].card[0]",
+      "role": "group",
+      "label": "Default, Hover, Voice Input, Upload, Select AI Model",
+      "parent": "prompt_input_page.group[0]"
+    },
+    {
+      "id": "prompt_input_page.group[0].card[0].prompt.text",
+      "role": "text_input",
+      "label": "Prompt",
+      "parent": "prompt_input_page.group[0].card[0].prompt",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "prompt_input_page.group[0].card[0].prompt.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[0].prompt.add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "prompt_input_page.group[0].card[0].prompt",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[0].card[0].prompt.add:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[0].prompt.setting",
+      "role": "select",
+      "label": "Setting",
+      "parent": "prompt_input_page.group[0].card[0].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Inspiration"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[0].card[0].prompt.setting:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[0].card[0].prompt.setting:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[0].card[0].prompt.setting:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Inspiration",
+          "Describe"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[0].prompt.model",
+      "role": "select",
+      "label": "AI model",
+      "parent": "prompt_input_page.group[0].card[0].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Hoff Research App 2.5"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[0].card[0].prompt.model:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[0].card[0].prompt.model:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[0].card[0].prompt.model:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Hoff Research App 2.5",
+          "Sora 4",
+          "Kling AI",
+          "Spline AI"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[0].prompt.voice",
+      "role": "toggle",
+      "label": "Voice input",
+      "parent": "prompt_input_page.group[0].card[0].prompt",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "prompt_input_page.group[0].card[0].prompt.voice:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[0].prompt.submit",
+      "role": "button",
+      "label": "Send",
+      "description": "send the prompt",
+      "parent": "prompt_input_page.group[0].card[0].prompt",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[0].card[0].prompt.submit:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[0].prompt",
+      "role": "group",
+      "label": "Prompt input",
+      "parent": "prompt_input_page.group[0].card[0]",
+      "state": {
+        "voice": {
+          "kind": "bool",
+          "value": false
+        },
+        "added": {
+          "kind": "int",
+          "value": 0
+        },
+        "sent": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1]",
+      "role": "group",
+      "label": "Collapsed, Premade Prompt",
+      "parent": "prompt_input_page.group[0]"
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "prompt_input_page.group[0].card[1].prompt",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[0].card[1].prompt.add:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.setting",
+      "role": "select",
+      "label": "Setting",
+      "parent": "prompt_input_page.group[0].card[1].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Inspiration"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[0].card[1].prompt.setting:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[0].card[1].prompt.setting:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[0].card[1].prompt.setting:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Inspiration",
+          "Describe"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.model",
+      "role": "select",
+      "label": "AI model",
+      "parent": "prompt_input_page.group[0].card[1].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Hoff Research App 2.5"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[0].card[1].prompt.model:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[0].card[1].prompt.model:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[0].card[1].prompt.model:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Hoff Research App 2.5",
+          "Sora 4",
+          "Kling AI",
+          "Spline AI"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.voice",
+      "role": "toggle",
+      "label": "Voice input",
+      "parent": "prompt_input_page.group[0].card[1].prompt",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "prompt_input_page.group[0].card[1].prompt.voice:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.submit",
+      "role": "button",
+      "label": "Send",
+      "description": "send the prompt",
+      "parent": "prompt_input_page.group[0].card[1].prompt",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[0].card[1].prompt.submit:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.premade",
+      "role": "list",
+      "label": "Premade prompts",
+      "parent": "prompt_input_page.group[0].card[1].prompt",
+      "state": {
+        "count": {
+          "kind": "int",
+          "value": 4
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.premade[0]",
+      "role": "list_item",
+      "label": "Create a 3D model of a sleek, futuristic car with neon accents.",
+      "parent": "prompt_input_page.group[0].card[1].prompt.premade",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.premade[1]",
+      "role": "list_item",
+      "label": "Design a 3D medieval sword with intricate engravings on the blade.",
+      "parent": "prompt_input_page.group[0].card[1].prompt.premade",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.premade[2]",
+      "role": "list_item",
+      "label": "Generate a 3D low-poly tree with a vibrant, autumn color palette.",
+      "parent": "prompt_input_page.group[0].card[1].prompt.premade",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.premade[3]",
+      "role": "list_item",
+      "label": "Build a 3D cozy wooden cabin with a detailed, textured roof.",
+      "parent": "prompt_input_page.group[0].card[1].prompt.premade",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.surprise",
+      "role": "button",
+      "label": "Surprise me",
+      "parent": "prompt_input_page.group[0].card[1].prompt",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.categories",
+      "role": "group",
+      "label": "Categories",
+      "parent": "prompt_input_page.group[0].card[1].prompt"
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.categories[0]",
+      "role": "button",
+      "label": "Characters",
+      "parent": "prompt_input_page.group[0].card[1].prompt.categories",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.categories[1]",
+      "role": "button",
+      "label": "Objects",
+      "parent": "prompt_input_page.group[0].card[1].prompt.categories",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.categories[2]",
+      "role": "button",
+      "label": "Backgrounds",
+      "parent": "prompt_input_page.group[0].card[1].prompt.categories",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.categories[3]",
+      "role": "button",
+      "label": "Characters",
+      "parent": "prompt_input_page.group[0].card[1].prompt.categories",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt.categories[4]",
+      "role": "button",
+      "label": "Cute",
+      "parent": "prompt_input_page.group[0].card[1].prompt.categories",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[1].prompt",
+      "role": "group",
+      "label": "Prompt input",
+      "parent": "prompt_input_page.group[0].card[1]",
+      "state": {
+        "voice": {
+          "kind": "bool",
+          "value": false
+        },
+        "added": {
+          "kind": "int",
+          "value": 0
+        },
+        "sent": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2]",
+      "role": "group",
+      "label": "Prompt box with Toolbar",
+      "parent": "prompt_input_page.group[0]"
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2].prompt.text",
+      "role": "text_input",
+      "label": "Prompt",
+      "parent": "prompt_input_page.group[0].card[2].prompt",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "prompt_input_page.group[0].card[2].prompt.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2].prompt.add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "prompt_input_page.group[0].card[2].prompt",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[0].card[2].prompt.add:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2].prompt.setting",
+      "role": "select",
+      "label": "Setting",
+      "parent": "prompt_input_page.group[0].card[2].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Inspiration"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[0].card[2].prompt.setting:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[0].card[2].prompt.setting:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[0].card[2].prompt.setting:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Inspiration",
+          "Describe"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2].prompt.model",
+      "role": "select",
+      "label": "AI model",
+      "parent": "prompt_input_page.group[0].card[2].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Hoff Research App 2.5"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[0].card[2].prompt.model:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[0].card[2].prompt.model:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[0].card[2].prompt.model:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Hoff Research App 2.5",
+          "Sora 4",
+          "Kling AI",
+          "Spline AI"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2].prompt.voice",
+      "role": "toggle",
+      "label": "Voice input",
+      "parent": "prompt_input_page.group[0].card[2].prompt",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "prompt_input_page.group[0].card[2].prompt.voice:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2].prompt.submit",
+      "role": "button",
+      "label": "Send",
+      "description": "send the prompt",
+      "parent": "prompt_input_page.group[0].card[2].prompt",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[0].card[2].prompt.submit:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2].prompt.view",
+      "role": "group",
+      "label": "View",
+      "parent": "prompt_input_page.group[0].card[2].prompt"
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2].prompt.view.back",
+      "role": "button",
+      "label": "Orbit left",
+      "parent": "prompt_input_page.group[0].card[2].prompt.view",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2].prompt.view.forward",
+      "role": "button",
+      "label": "Orbit right",
+      "parent": "prompt_input_page.group[0].card[2].prompt.view",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[0].card[2].prompt",
+      "role": "group",
+      "label": "Prompt input",
+      "parent": "prompt_input_page.group[0].card[2]",
+      "state": {
+        "voice": {
+          "kind": "bool",
+          "value": false
+        },
+        "added": {
+          "kind": "int",
+          "value": 0
+        },
+        "sent": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[1]",
+      "role": "group",
+      "label": "States",
+      "parent": "prompt_input_page"
+    },
+    {
+      "id": "prompt_input_page.group[1].card[0]",
+      "role": "group",
+      "label": "Hover",
+      "parent": "prompt_input_page.group[1]"
+    },
+    {
+      "id": "prompt_input_page.group[1].card[0].prompt.text",
+      "role": "text_input",
+      "label": "Prompt",
+      "parent": "prompt_input_page.group[1].card[0].prompt",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "prompt_input_page.group[1].card[0].prompt.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[0].prompt.add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "prompt_input_page.group[1].card[0].prompt",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[0].prompt.add:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[0].prompt.setting",
+      "role": "select",
+      "label": "Setting",
+      "parent": "prompt_input_page.group[1].card[0].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Inspiration"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[0].prompt.setting:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[0].prompt.setting:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[0].prompt.setting:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Inspiration",
+          "Describe"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[0].prompt.model",
+      "role": "select",
+      "label": "AI model",
+      "parent": "prompt_input_page.group[1].card[0].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Hoff Research App 2.5"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[0].prompt.model:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[0].prompt.model:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[0].prompt.model:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Hoff Research App 2.5",
+          "Sora 4",
+          "Kling AI",
+          "Spline AI"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[0].prompt.voice",
+      "role": "toggle",
+      "label": "Voice input",
+      "parent": "prompt_input_page.group[1].card[0].prompt",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "prompt_input_page.group[1].card[0].prompt.voice:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[0].prompt.submit",
+      "role": "button",
+      "label": "Send",
+      "description": "send the prompt",
+      "parent": "prompt_input_page.group[1].card[0].prompt",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[0].prompt.submit:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[0].prompt",
+      "role": "group",
+      "label": "Prompt input",
+      "parent": "prompt_input_page.group[1].card[0]",
+      "state": {
+        "voice": {
+          "kind": "bool",
+          "value": false
+        },
+        "added": {
+          "kind": "int",
+          "value": 0
+        },
+        "sent": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[1].card[1]",
+      "role": "group",
+      "label": "Voice Input",
+      "parent": "prompt_input_page.group[1]"
+    },
+    {
+      "id": "prompt_input_page.group[1].card[1].prompt.text",
+      "role": "text_input",
+      "label": "Prompt",
+      "parent": "prompt_input_page.group[1].card[1].prompt",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "prompt_input_page.group[1].card[1].prompt.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[1].prompt.add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "prompt_input_page.group[1].card[1].prompt",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[1].prompt.add:expanded"
+          ]
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[1].prompt.setting",
+      "role": "select",
+      "label": "Setting",
+      "parent": "prompt_input_page.group[1].card[1].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Inspiration"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[1].prompt.setting:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[1].prompt.setting:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[1].prompt.setting:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Inspiration",
+          "Describe"
+        ]
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[1].prompt.model",
+      "role": "select",
+      "label": "AI model",
+      "parent": "prompt_input_page.group[1].card[1].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Hoff Research App 2.5"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[1].prompt.model:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[1].prompt.model:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[1].prompt.model:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Hoff Research App 2.5",
+          "Sora 4",
+          "Kling AI",
+          "Spline AI"
+        ]
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[1].prompt.voice",
+      "role": "toggle",
+      "label": "Voice input",
+      "parent": "prompt_input_page.group[1].card[1].prompt",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "prompt_input_page.group[1].card[1].prompt.voice:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[1].prompt.submit",
+      "role": "button",
+      "label": "Send",
+      "description": "send the prompt",
+      "parent": "prompt_input_page.group[1].card[1].prompt",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[1].prompt.submit:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[1].prompt",
+      "role": "group",
+      "label": "Prompt input",
+      "parent": "prompt_input_page.group[1].card[1]",
+      "state": {
+        "voice": {
+          "kind": "bool",
+          "value": true
+        },
+        "added": {
+          "kind": "int",
+          "value": 0
+        },
+        "sent": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2]",
+      "role": "group",
+      "label": "Upload",
+      "parent": "prompt_input_page.group[1]"
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt.text",
+      "role": "text_input",
+      "label": "Prompt",
+      "parent": "prompt_input_page.group[1].card[2].prompt",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt.add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "prompt_input_page.group[1].card[2].prompt",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt.add:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt.files",
+      "role": "menu",
+      "label": "Add files",
+      "parent": "prompt_input_page.group[1].card[2].prompt.add"
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt.files[0]",
+      "role": "menu_item",
+      "label": "Add photos or videos",
+      "parent": "prompt_input_page.group[1].card[2].prompt.files",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt:added"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt.files[1]",
+      "role": "menu_item",
+      "label": "Add 3D objects",
+      "parent": "prompt_input_page.group[1].card[2].prompt.files",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt:added"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt.files[2]",
+      "role": "menu_item",
+      "label": "Add files (docs, txt...)",
+      "parent": "prompt_input_page.group[1].card[2].prompt.files",
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt:added"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt.setting",
+      "role": "select",
+      "label": "Setting",
+      "parent": "prompt_input_page.group[1].card[2].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Inspiration"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt.setting:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt.setting:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt.setting:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Inspiration",
+          "Describe"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt.model",
+      "role": "select",
+      "label": "AI model",
+      "parent": "prompt_input_page.group[1].card[2].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Hoff Research App 2.5"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt.model:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt.model:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt.model:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Hoff Research App 2.5",
+          "Sora 4",
+          "Kling AI",
+          "Spline AI"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt.voice",
+      "role": "toggle",
+      "label": "Voice input",
+      "parent": "prompt_input_page.group[1].card[2].prompt",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt.voice:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt.submit",
+      "role": "button",
+      "label": "Send",
+      "description": "send the prompt",
+      "parent": "prompt_input_page.group[1].card[2].prompt",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[2].prompt.submit:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[2].prompt",
+      "role": "group",
+      "label": "Prompt input",
+      "parent": "prompt_input_page.group[1].card[2]",
+      "state": {
+        "voice": {
+          "kind": "bool",
+          "value": false
+        },
+        "added": {
+          "kind": "int",
+          "value": 0
+        },
+        "sent": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3]",
+      "role": "group",
+      "label": "Select AI Model",
+      "parent": "prompt_input_page.group[1]"
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt.text",
+      "role": "text_input",
+      "label": "Prompt",
+      "parent": "prompt_input_page.group[1].card[3].prompt",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt.add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "prompt_input_page.group[1].card[3].prompt",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.add:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt.setting",
+      "role": "select",
+      "label": "Setting",
+      "parent": "prompt_input_page.group[1].card[3].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Inspiration"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.setting:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.setting:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.setting:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Inspiration",
+          "Describe"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt.model[0]",
+      "role": "option",
+      "label": "Hoff Research App 2.5",
+      "description": "Great for 3D modeling",
+      "parent": "prompt_input_page.group[1].card[3].prompt.model",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.model:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt.model[1]",
+      "role": "option",
+      "label": "Sora 4",
+      "description": "Great for video generation",
+      "parent": "prompt_input_page.group[1].card[3].prompt.model",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.model:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt.model[2]",
+      "role": "option",
+      "label": "Kling AI",
+      "description": "Great for video generation",
+      "parent": "prompt_input_page.group[1].card[3].prompt.model",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.model:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt.model[3]",
+      "role": "option",
+      "label": "Spline AI",
+      "description": "Great for pre-made scenes",
+      "parent": "prompt_input_page.group[1].card[3].prompt.model",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.model:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt.model",
+      "role": "select",
+      "label": "AI model",
+      "parent": "prompt_input_page.group[1].card[3].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Hoff Research App 2.5"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.model:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.model:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.model:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Hoff Research App 2.5",
+          "Sora 4",
+          "Kling AI",
+          "Spline AI"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt.voice",
+      "role": "toggle",
+      "label": "Voice input",
+      "parent": "prompt_input_page.group[1].card[3].prompt",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.voice:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt.submit",
+      "role": "button",
+      "label": "Send",
+      "description": "send the prompt",
+      "parent": "prompt_input_page.group[1].card[3].prompt",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[3].prompt.submit:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[3].prompt",
+      "role": "group",
+      "label": "Prompt input",
+      "parent": "prompt_input_page.group[1].card[3]",
+      "state": {
+        "voice": {
+          "kind": "bool",
+          "value": false
+        },
+        "added": {
+          "kind": "int",
+          "value": 0
+        },
+        "sent": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[1].card[4]",
+      "role": "group",
+      "label": "Typed, a long prompt",
+      "parent": "prompt_input_page.group[1]"
+    },
+    {
+      "id": "prompt_input_page.group[1].card[4].prompt.text",
+      "role": "text_input",
+      "label": "Prompt",
+      "parent": "prompt_input_page.group[1].card[4].prompt",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "A low-poly fox curled up asleep in a misty pine forest at dawn, soft rim light"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "prompt_input_page.group[1].card[4].prompt.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[4].prompt.add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "prompt_input_page.group[1].card[4].prompt",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[4].prompt.add:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[4].prompt.setting",
+      "role": "select",
+      "label": "Setting",
+      "parent": "prompt_input_page.group[1].card[4].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Inspiration"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[4].prompt.setting:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[4].prompt.setting:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[4].prompt.setting:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Inspiration",
+          "Describe"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[4].prompt.model",
+      "role": "select",
+      "label": "AI model",
+      "parent": "prompt_input_page.group[1].card[4].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Hoff Research App 2.5"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[4].prompt.model:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[4].prompt.model:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[4].prompt.model:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Hoff Research App 2.5",
+          "Sora 4",
+          "Kling AI",
+          "Spline AI"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[4].prompt.voice",
+      "role": "toggle",
+      "label": "Voice input",
+      "parent": "prompt_input_page.group[1].card[4].prompt",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "prompt_input_page.group[1].card[4].prompt.voice:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[4].prompt.submit",
+      "role": "button",
+      "label": "Send",
+      "description": "send the prompt",
+      "parent": "prompt_input_page.group[1].card[4].prompt",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[4].prompt.submit:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[4].prompt",
+      "role": "group",
+      "label": "Prompt input",
+      "parent": "prompt_input_page.group[1].card[4]",
+      "state": {
+        "voice": {
+          "kind": "bool",
+          "value": false
+        },
+        "added": {
+          "kind": "int",
+          "value": 0
+        },
+        "sent": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[1].card[5]",
+      "role": "group",
+      "label": "Mixed scripts",
+      "parent": "prompt_input_page.group[1]"
+    },
+    {
+      "id": "prompt_input_page.group[1].card[5].prompt.text",
+      "role": "text_input",
+      "label": "Prompt",
+      "parent": "prompt_input_page.group[1].card[5].prompt",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "سيارة كلاسيكية 🚗 古典的な車 Классика"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "prompt_input_page.group[1].card[5].prompt.text:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[5].prompt.add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "prompt_input_page.group[1].card[5].prompt",
+      "state": {
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[5].prompt.add:expanded"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[5].prompt.setting",
+      "role": "select",
+      "label": "Setting",
+      "parent": "prompt_input_page.group[1].card[5].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Inspiration"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[5].prompt.setting:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[5].prompt.setting:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[5].prompt.setting:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Inspiration",
+          "Describe"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[5].prompt.model",
+      "role": "select",
+      "label": "AI model",
+      "parent": "prompt_input_page.group[1].card[5].prompt",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Hoff Research App 2.5"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "prompt_input_page.group[1].card[5].prompt.model:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "prompt_input_page.group[1].card[5].prompt.model:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "prompt_input_page.group[1].card[5].prompt.model:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Hoff Research App 2.5",
+          "Sora 4",
+          "Kling AI",
+          "Spline AI"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[5].prompt.voice",
+      "role": "toggle",
+      "label": "Voice input",
+      "parent": "prompt_input_page.group[1].card[5].prompt",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "prompt_input_page.group[1].card[5].prompt.voice:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[5].prompt.submit",
+      "role": "button",
+      "label": "Send",
+      "description": "send the prompt",
+      "parent": "prompt_input_page.group[1].card[5].prompt",
+      "state": {
+        "busy": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[1].card[5].prompt.submit:busy"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[1].card[5].prompt",
+      "role": "group",
+      "label": "Prompt input",
+      "parent": "prompt_input_page.group[1].card[5]",
+      "state": {
+        "voice": {
+          "kind": "bool",
+          "value": false
+        },
+        "added": {
+          "kind": "int",
+          "value": 0
+        },
+        "sent": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[2]",
+      "role": "group",
+      "label": "Select AI",
+      "parent": "prompt_input_page"
+    },
+    {
+      "id": "prompt_input_page.group[2].card[0]",
+      "role": "group",
+      "label": "Models",
+      "parent": "prompt_input_page.group[2]"
+    },
+    {
+      "id": "prompt_input_page.group[2].card[0].models[0]",
+      "role": "menu_item",
+      "label": "Hoff Research App 2.5",
+      "description": "Great for 3D modeling",
+      "parent": "prompt_input_page.group[2].card[0].models",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[2].card[0].models:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[2].card[0].models[1]",
+      "role": "menu_item",
+      "label": "Sora 4",
+      "description": "Great for video generation",
+      "parent": "prompt_input_page.group[2].card[0].models",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[2].card[0].models:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[2].card[0].models[2]",
+      "role": "menu_item",
+      "label": "Kling AI",
+      "description": "Great for video generation",
+      "parent": "prompt_input_page.group[2].card[0].models",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[2].card[0].models:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[2].card[0].models[3]",
+      "role": "menu_item",
+      "label": "Spline AI",
+      "description": "Great for pre-made scenes",
+      "parent": "prompt_input_page.group[2].card[0].models",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[2].card[0].models:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[2].card[0].models",
+      "role": "menu",
+      "label": "AI models",
+      "parent": "prompt_input_page.group[2].card[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    },
+    {
+      "id": "prompt_input_page.group[2].card[1]",
+      "role": "group",
+      "label": "Chosen",
+      "parent": "prompt_input_page.group[2]"
+    },
+    {
+      "id": "prompt_input_page.group[2].card[1].models[0]",
+      "role": "menu_item",
+      "label": "Hoff Research App 2.5",
+      "description": "Great for 3D modeling",
+      "parent": "prompt_input_page.group[2].card[1].models",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[2].card[1].models:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[2].card[1].models[1]",
+      "role": "menu_item",
+      "label": "Sora 4",
+      "description": "Great for video generation",
+      "parent": "prompt_input_page.group[2].card[1].models",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[2].card[1].models:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[2].card[1].models[2]",
+      "role": "menu_item",
+      "label": "Kling AI",
+      "description": "Great for video generation",
+      "parent": "prompt_input_page.group[2].card[1].models",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[2].card[1].models:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[2].card[1].models[3]",
+      "role": "menu_item",
+      "label": "Spline AI",
+      "description": "Great for pre-made scenes",
+      "parent": "prompt_input_page.group[2].card[1].models",
+      "state": {
+        "selected": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate",
+          "reads": [
+            "prompt_input_page.group[2].card[1].models:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "prompt_input_page.group[2].card[1].models",
+      "role": "menu",
+      "label": "AI models",
+      "parent": "prompt_input_page.group[2].card[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Sora 4"
+        }
+      }
+    }
+  ]
+}

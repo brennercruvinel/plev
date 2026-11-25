@@ -197,7 +197,10 @@ pub(crate) fn by_agent(page: &str, name: &str, asks: Vec<Ask>) -> Gallery {
     let path = port.path().to_owned();
     let agent = thread::spawn(move || {
         let mut c = Client::connect(&path).expect("the agent connects");
-        c.set_timeout(Some(20_000)).expect("a timeout");
+        // one bound for the whole exchange: the loop below gives the agent
+        // 60 s, and a client timeout under that failed the act alone when
+        // the host was busy (a flake seen once, "the act answers", 2026-11-01)
+        c.set_timeout(Some(60_000)).expect("a timeout");
         c.hello("claude").expect("hello");
         let mut ends = Vec::new();
         for ask in asks {

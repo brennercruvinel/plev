@@ -2,6 +2,7 @@
 
 use crate::drawing::text::backend::TextStyle;
 use crate::styling::theme::Theme;
+use crate::styling::theme::TypeRole;
 
 /// Visual and behavioral configuration of an [`EditorView`](super::EditorView).
 #[derive(Clone, Debug, PartialEq)]
@@ -11,7 +12,8 @@ pub struct EditorConfig {
     /// Height of one text line in logical pixels. Every line has this exact
     /// height — that uniformity is what makes line virtualization O(visible).
     pub line_height: f32,
-    /// Font family for code; `None` uses the engine default (Inclusive Sans).
+    /// Font family for code: the theme's mono family; `None` uses the
+    /// engine default (Inclusive Sans).
     pub font_family: Option<String>,
     /// Whether to draw the line-number gutter.
     pub show_gutter: bool,
@@ -42,7 +44,7 @@ impl EditorConfig {
     /// Configuration from the theme: the mono ramp style sets the font and
     /// the line height, the caret blinks at the platform half-period.
     pub fn from_theme(theme: &Theme) -> Self {
-        let style = theme.typography.mono();
+        let style = theme.typography.role(TypeRole::Code);
         Self {
             font_size: style.font_size,
             line_height: style.line_height,

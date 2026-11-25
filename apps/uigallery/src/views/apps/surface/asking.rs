@@ -447,6 +447,11 @@ impl Pending {
         if let Some(answer) = self.start_held() {
             return (true, Some(answer));
         }
+        // Where nothing is held (web, mobile) the match has one arm.
+        #[cfg_attr(
+            any(target_arch = "wasm32", target_os = "android", target_os = "ios"),
+            allow(clippy::infallible_destructuring_match)
+        )]
         let rx = match &self.work {
             Work::Running(rx) => rx,
             // asleep still: the ask waits, nothing moves

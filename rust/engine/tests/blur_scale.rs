@@ -5,7 +5,7 @@
 //! its profile in logical px is from the one at scale 1:
 //!
 //! ```text
-//! cargo test -p engine --test blur_scale -- --ignored --nocapture --test-threads=1
+//! cargo test -p engine --test suite blur_scale:: -- --ignored --nocapture --test-threads=1
 //! ```
 //!
 //! The tests hold what the fix of phase 1b promises: at the fractional

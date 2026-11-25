@@ -78,7 +78,7 @@ impl GpuContext {
             message: "recovery asked for on a live device".to_string(),
         });
         let instance = match self.recovery_backends {
-            Some(backends) if self.surface.is_none() => Self::instance_on(backends),
+            Some(backends) if self.surface.is_none() => Self::instance_on(backends, true),
             _ => self.instance.clone(),
         };
         let adapter = instance
@@ -187,7 +187,10 @@ pub(crate) fn recover_or_skip(
     #[cfg(not(target_arch = "wasm32"))]
     {
         match recover_frame_resources(compositor, gpu, text_system, effects, texture_pool) {
-            Ok(_) => true,
+            Ok(_) => {
+                crate::message!("{label}: GPU device recovered");
+                true
+            }
             Err(e) => {
                 if gpu.first_loss_report() {
                     log::error!(

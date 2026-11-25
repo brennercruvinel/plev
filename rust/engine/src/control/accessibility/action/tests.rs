@@ -352,6 +352,21 @@ fn set_value_increment_and_decrement_reach_the_app() {
     assert_eq!(shop.qty, 7.0);
 }
 
+/// `ScrollIntoView` (macOS's `AXScrollToVisible`) on any node a reader
+/// stands on, focusable or not: the app scrolls it into view, the focus
+/// stays (task-104 front I).
+#[test]
+fn scroll_into_view_comes_back_as_a_reveal_on_any_node() {
+    let shown = Shop::default().shown();
+    for id in ["shop.buy", "shop.qty", "shop"] {
+        assert_eq!(
+            ask(&shown, id, Action::ScrollIntoView, None),
+            Assist::Reveal(sid(id)),
+            "{id}"
+        );
+    }
+}
+
 #[test]
 fn focus_comes_back_as_a_focus_move_not_a_request() {
     let shown = Shop::default().shown();
@@ -416,8 +431,8 @@ fn a_request_that_maps_to_nothing_says_why() {
         Err(Unmapped::NoValue(sid("shop.qty")))
     );
     assert_eq!(
-        at(node("shop.qty"), Action::ScrollIntoView, None),
-        Err(Unmapped::Unsupported(Action::ScrollIntoView))
+        at(node("shop.qty"), Action::ShowContextMenu, None),
+        Err(Unmapped::Unsupported(Action::ShowContextMenu))
     );
     assert!(matches!(
         at(node("shop.buy"), Action::Increment, None),

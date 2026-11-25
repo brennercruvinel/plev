@@ -1,25 +1,33 @@
 //! the session container: a `.monster` file whose magic is `MONS`
 //! (an animation keeps `MON0`; tools dispatch on the magic, see `probe`).
 //! little-endian, byte-aligned, a sha256 per section, the discipline of
-//! the monster container (docs/adr/recording/0037-session-recording-replay-not-reexecution.md).
+//! the monster container (docs/adr/Recording/0037-session-recording-replay-not-reexecution/0037-session-recording-replay-not-reexecution.md).
 //!
 //! file := header section_payload*
 //! header :=
 //!   magic        4   "MONS"
-//!   version      u16 0, or 1 when the file carries section B
+//!   version      u16 2, as this build writes; 0 and 1 still read
 //!   flags        u16 0
 //!   start_ms     u64 the first time the file holds, on the recorder's clock
 //!   crate        u8 len, utf8   the rec version that wrote it
 //!   git          u8 len, utf8   the commit it was built from, or "unknown"
 //!   sec_count    u16
-//!   sec_entry*   49  tag u8 ('S'|'I'|'C'|'A', and 'B' in version 1),
+//!   sec_entry*   49  tag u8 ('S'|'I'|'C'|'A', and 'B' from version 1),
 //!                    offset u64, len u64, sha256 of the payload (32 bytes)
 //!
 //! the payloads follow the index in index order and tile the rest of the
-//! file; each tag of the version appears exactly once. version 0 is the
-//! layout before bindings were recorded, and a window without bindings is
-//! still written in it, byte for byte; version 1 adds section B and
-//! nothing else, so a reader of version 0 refuses it by its version.
+//! file; no tag appears twice. version 0 is the layout before bindings
+//! were recorded: S, I, C and A. version 1 adds section B and nothing
+//! else, and requires it. version 2 (task-104) is what this build writes:
+//! the sections of version 1, B only when the window has bindings, and a
+//! text asset that ends with its wrap rule and OpenType features when
+//! they are not the engine's defaults (the `style` byte, see `payload`),
+//! so a window of default texts and no bindings costs version 0's bytes
+//! but for the version field. every file of version 0 and 1 reads as
+//! before, its texts with the defaults; a reader built before a version
+//! refuses that version by its number (`unsupported session version 2`),
+//! never reads it in part, since a strict reader cannot skip a byte it
+//! does not know.
 //!
 //! S := one `record::Event` per line, the serde json form, in time order
 //! I := chunk_count u32, chunk*; chunk := start u64, frame_count u32,
@@ -42,6 +50,9 @@ pub const VERSION: u16 = 0;
 /// the version of a session with bindings (task-63 phase d): the sections
 /// of version 0 and B.
 pub const VERSION_BINDINGS: u16 = 1;
+/// the version this build writes (task-104): version 1's sections, B only
+/// with bindings, and each text's wrap rule and OpenType features.
+pub const VERSION_TEXT_STYLE: u16 = 2;
 
 pub(crate) const SEC_EVENTS: u8 = b'S';
 pub(crate) const SEC_INDEX: u8 = b'I';
@@ -49,7 +60,7 @@ pub(crate) const SEC_CHUNKS: u8 = b'C';
 pub(crate) const SEC_ASSETS: u8 = b'A';
 pub(crate) const SEC_BINDINGS: u8 = b'B';
 /// the sections of every session, in the order the writer lays them out;
-/// version 1 adds `SEC_BINDINGS` after them.
+/// from version 1, `SEC_BINDINGS` may follow them.
 pub(crate) const SECTIONS: [u8; 4] = [SEC_EVENTS, SEC_INDEX, SEC_CHUNKS, SEC_ASSETS];
 const SEC_ENTRY_LEN: usize = 1 + 8 + 8 + 32;
 
@@ -89,9 +100,11 @@ impl Build {
     }
 }
 
-/// a header read back: when the file starts, who wrote it, and each
-/// section's payload; `bindings` is section B, in a version 1 file.
+/// a header read back: its version, when the file starts, who wrote it,
+/// and each section's payload; `bindings` is section B, when the file has
+/// one.
 pub(crate) struct Parsed<'a> {
+    pub(crate) version: u16,
     pub(crate) start: u64,
     pub(crate) build: Build,
     pub(crate) sections: [&'a [u8]; 4],
@@ -128,7 +141,8 @@ fn put_short_text(buf: &mut Vec<u8>, text: &str) {
 
 /// the whole file: header, index with sha256 per section, payloads.
 /// `sections` are the payloads of `SECTIONS`, in that order; `bindings`,
-/// when there is one, is section B, and makes the file version 1.
+/// when there is one, is section B. the version is always
+/// `VERSION_TEXT_STYLE`.
 pub(crate) fn assemble(
     start: u64,
     build: &Build,
@@ -136,16 +150,12 @@ pub(crate) fn assemble(
     bindings: Option<&[u8]>,
 ) -> Vec<u8> {
     let mut tagged: Vec<(u8, &[u8])> = SECTIONS.iter().copied().zip(sections).collect();
-    let version = match bindings {
-        Some(payload) => {
-            tagged.push((SEC_BINDINGS, payload));
-            VERSION_BINDINGS
-        }
-        None => VERSION,
-    };
+    if let Some(payload) = bindings {
+        tagged.push((SEC_BINDINGS, payload));
+    }
     let mut head = Vec::new();
     head.extend_from_slice(&MAGIC);
-    put_u16(&mut head, version);
+    put_u16(&mut head, VERSION_TEXT_STYLE);
     put_u16(&mut head, 0);
     put_u64(&mut head, start);
     put_short_text(&mut head, &build.version);
@@ -268,7 +278,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Parsed<'_>, FileError> {
         return Err(FileError::BadMagic);
     }
     let version = c.u16("version")?;
-    if version != VERSION && version != VERSION_BINDINGS {
+    if !matches!(version, VERSION | VERSION_BINDINGS | VERSION_TEXT_STYLE) {
         return Err(FileError::UnsupportedVersion(version));
     }
     let flags = c.u16("flags")?;
@@ -289,9 +299,10 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Parsed<'_>, FileError> {
         let digest: [u8; 32] = c.arr("section sha256")?;
         entries.push((tag, offset, len, digest));
     }
-    // the tags this version has: section B only in version 1.
+    // the tags this version has: section B from version 1, which version
+    // 1 requires and version 2 has only with bindings.
     let mut tags = SECTIONS.to_vec();
-    if version == VERSION_BINDINGS {
+    if version != VERSION {
         tags.push(SEC_BINDINGS);
     }
     let mut sections: Vec<Option<&[u8]>> = vec![None; tags.len()];
@@ -325,16 +336,17 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Parsed<'_>, FileError> {
     }
     let mut out: [&[u8]; 4] = [&[]; 4];
     for (slot, tag) in tags.iter().enumerate() {
-        let payload = sections[slot].ok_or(FileError::MissingSection(char::from(*tag)))?;
-        if let Some(at) = out.get_mut(slot) {
-            *at = payload;
+        let optional = *tag == SEC_BINDINGS && version == VERSION_TEXT_STYLE;
+        match (sections[slot], out.get_mut(slot)) {
+            (Some(payload), Some(at)) => *at = payload,
+            (Some(_), None) => {}
+            (None, _) if optional => {}
+            (None, _) => return Err(FileError::MissingSection(char::from(*tag))),
         }
     }
-    let bindings = match version {
-        VERSION_BINDINGS => sections.get(SECTIONS.len()).copied().flatten(),
-        _ => None,
-    };
+    let bindings = sections.get(SECTIONS.len()).copied().flatten();
     Ok(Parsed {
+        version,
         start,
         build,
         sections: out,

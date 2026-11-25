@@ -101,3 +101,105 @@ fn test_text_leaf_wraps_in_narrow_container() {
         bounds[1].height
     );
 }
+
+fn text_leaf_wrapping(content: &str, wrap: crate::drawing::text::OverflowWrap) -> LayoutItem {
+    let mut leaf = text_leaf(content, 14.0);
+    if let Some(spec) = leaf.text.as_mut() {
+        spec.style = spec.style.clone().with_overflow_wrap(wrap);
+    }
+    leaf
+}
+
+/// A row narrower than a word: the text's min-content is the word
+/// (`Normal`), so it keeps one line and runs past the row; only an
+/// `Anywhere` text shrinks to the row, a letter or so a line.
+#[test]
+fn a_word_keeps_its_min_content_width_unless_it_may_break_anywhere() {
+    use crate::drawing::text::{OverflowWrap, TextMeasurer};
+    let row = |child| {
+        container(
+            LayoutStyle {
+                direction: Direction::Row,
+                align: Align::Start,
+                width: Some(30.0),
+                ..Default::default()
+            },
+            vec![child],
+        )
+    };
+    let mut engine = LayoutEngine::new();
+    let normal = text_leaf_wrapping("Collapsible", OverflowWrap::Normal);
+    let line = normal.text.as_ref().map_or(0.0, |t| t.style.line_height);
+    let (word_w, _) =
+        TextMeasurer::measure_styled("Collapsible", &normal.text.as_ref().unwrap().style, None);
+    let bounds = engine.compute(&[row(1), normal], 800.0, 600.0);
+    assert!(
+        (bounds[1].width - word_w).abs() < 1.0,
+        "{} vs {word_w}",
+        bounds[1].width
+    );
+    assert!(
+        (bounds[1].height - line).abs() < 0.5,
+        "one line: {}",
+        bounds[1].height
+    );
+
+    let anywhere = text_leaf_wrapping("Collapsible", OverflowWrap::Anywhere);
+    let bounds = engine.compute(&[row(1), anywhere], 800.0, 600.0);
+    assert!(bounds[1].width <= 30.5, "{}", bounds[1].width);
+    assert!(
+        bounds[1].height > line * 1.5,
+        "it breaks: {}",
+        bounds[1].height
+    );
+}
+
+/// `BreakWord` beside a sibling that takes the rest of a row: its
+/// min-content is its longest word, so the row never shrinks it below
+/// "Materials" (no line of a letter or two); `Anywhere` beside the same
+/// sibling shrinks to a glyph. The row: a 200 px row, the text and a
+/// 190 px box that does not shrink.
+#[test]
+fn break_word_keeps_its_longest_word_as_min_content() {
+    use crate::drawing::text::{OverflowWrap, TextMeasurer};
+    let text = "Materials imported from the shared library";
+    let row = || {
+        container(
+            LayoutStyle {
+                direction: Direction::Row,
+                align: Align::Start,
+                width: Some(200.0),
+                ..Default::default()
+            },
+            vec![1, 2],
+        )
+    };
+    let wide = || {
+        container(
+            LayoutStyle {
+                width: Some(190.0),
+                height: Some(10.0),
+                flex_shrink: 0.0,
+                ..Default::default()
+            },
+            vec![],
+        )
+    };
+    let mut engine = LayoutEngine::new();
+    let brk = text_leaf_wrapping(text, OverflowWrap::BreakWord);
+    let style = brk.text.as_ref().unwrap().style.clone();
+    let (word_w, _) = TextMeasurer::measure_styled("Materials", &style, None);
+    let bounds = engine.compute(&[row(), brk, wide()], 800.0, 600.0);
+    assert!(
+        bounds[1].width >= word_w - 0.5,
+        "{} under the word's {word_w}",
+        bounds[1].width
+    );
+    let any = text_leaf_wrapping(text, OverflowWrap::Anywhere);
+    let bounds = engine.compute(&[row(), any, wide()], 800.0, 600.0);
+    assert!(
+        bounds[1].width < word_w - 0.5,
+        "anywhere shrinks below the word: {}",
+        bounds[1].width
+    );
+}

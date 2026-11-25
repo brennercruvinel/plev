@@ -27,6 +27,7 @@ use accord::{
     Snapshot, SnapshotBuilder,
 };
 use engine::styling::theme::Intent;
+use engine::widgets::overlay::sheet::Edge;
 
 use super::super::apps::todo::TodoPage;
 use super::super::components::toast::ToastPage;
@@ -44,6 +45,13 @@ pub(in crate::views) enum After {
     Toast(Intent),
     /// The Dialog page's modal: the destructive one or the plain one.
     Modal { destructive: bool },
+    // task-104 front B, overlays (#155)
+    /// The Sheet page's sheet, held to this edge of the window.
+    Sheet(Edge),
+    /// The Drawer page's drawer.
+    Drawer,
+    /// The Context Menu page's menu, at the middle of its area.
+    ContextMenu,
 }
 
 /// A component page as the view's projection and the gallery's
@@ -125,6 +133,69 @@ components! {
     Toast => toast,
     Tooltip => tooltip,
     Tree => tree,
+    // task-104: each front's component pages under its anchor
+    // task-104 front A, fields (#154)
+    Field => field,
+    Label => label,
+    InputGroup => input_group,
+    InputOtp => input_otp,
+    Textarea => textarea,
+    Combobox => combobox,
+    Command => command,
+    // task-104 front B, overlays (#155)
+    AlertDialog => alert_dialog,
+    ContextMenu => context_menu,
+    Drawer => drawer,
+    DropdownMenu => dropdown_menu,
+    HoverCard => hover_card,
+    Menubar => menubar,
+    Modals => modals,
+    Popover => popover,
+    Sheet => sheet,
+    // task-104 front C, conversation and feedback (#156)
+    Alert => alert,
+    Avatar => avatar,
+    Attachment => attachment,
+    Badge => badge,
+    Bubble => bubble,
+    Comments => comments,
+    Marker => marker,
+    Message => message,
+    MessageScroller => message_scroller,
+    PromptInput => prompt_input,
+    Notifications => notifications,
+    Progress => progress,
+    Skeleton => skeleton,
+    // task-104 front D, disclosure and display (#157)
+    Accordion => accordion,
+    AspectRatio => aspect_ratio,
+    Card => card,
+    Carousel => carousel,
+    Collapsible => collapsible,
+    Item => item,
+    Kbd => kbd,
+    Pagination => pagination,
+    StaticTable => table_static,
+    Panel => panel,
+    PanelHeader => panel_header,
+    // task-104 front E, selection and dates (#158)
+    ButtonGroup => button_group,
+    Calendar => calendar,
+    DatePicker => date_picker,
+    Menus => menus,
+    RadioGroup => radio_group,
+    Toggle => toggle,
+    ToggleGroup => toggle_group,
+    // task-104 front F, kit foundation
+    Home => home,
+    Topbar => topbar,
+    // task-104 front G, navigation and data
+    Chart => chart,
+    CodeBlock => code_block,
+    Graph => graph,
+    Stat => stat,
+    Toolbar => toolbar,
+    Sidebar => sidebar,
 }
 
 /// The page's region, named by the page's title, inert while an overlay
@@ -221,6 +292,10 @@ impl ShowcaseView {
                     .push(ToastPage::message(intent), intent, &self.theme);
             }
             After::Modal { destructive } => self.open_modal(destructive),
+            // task-104 front B, overlays (#155)
+            After::Sheet(edge) => self.open_sheet(edge),
+            After::Drawer => self.open_drawer(),
+            After::ContextMenu => self.open_page_menu(),
         }
     }
 

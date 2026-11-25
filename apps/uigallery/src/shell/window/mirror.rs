@@ -1,5 +1,5 @@
 //! The windows' scenes over the agent port (task-79,
-//! docs/adr/recording/0065-scene-travels-as-data.md), desktop only, like the port.
+//! docs/adr/Recording/0065-scene-travels-as-data/0065-scene-travels-as-data.md), desktop only, like the port.
 //!
 //! The app's side: when a connection watches a window (`main`, or `page`
 //! for the page's own window), the shell writes that window's frame
@@ -36,6 +36,7 @@ use accord::redactor::is_secret;
 use accord::{ActionName, Actor, Change, Rejection, Revision, SemId, Snapshot, Stage};
 use engine::control::accessibility::primary;
 use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::text::OverflowWrap;
 use record::scene::{Brought, Frame, Head, Incoming, Mask, Mirror, Sender};
 use socket::{
     Act, AgentPort, Bound, Client, LayerBody, Observe, Offer, OfferLayer, Reply, SceneReader,
@@ -334,6 +335,8 @@ impl Viewer {
                 font_weight: 500,
                 letter_spacing_bits: 0.0f32.to_bits(),
                 font_family: None,
+                features: engine::drawing::text::TextFeatures::NONE,
+                overflow_wrap: OverflowWrap::Normal,
             };
             let width = 6.0 * label.text.chars().count() as f32 + 6.0;
             c.push_to_layer(

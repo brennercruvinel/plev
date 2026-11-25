@@ -1,5 +1,5 @@
 //! the scene as data that travels (task-79,
-//! docs/adr/recording/0065-scene-travels-as-data.md): a window's frame written layer by
+//! docs/adr/Recording/0065-scene-travels-as-data/0065-scene-travels-as-data.md): a window's frame written layer by
 //! layer, so what did not change does not travel, and read back into a
 //! compositor of another process that draws the same pixels.
 //!
@@ -29,7 +29,10 @@
 //!           backdrop blur x y w h radius sigma | 10 shadow x y w h
 //!           radius blur_radius offset(2) color inset u8
 //! key    := text str, font_size u32, line_height u32, max_width opt u32,
-//!           weight u16, letter_spacing u32, family opt str
+//!           weight u16, letter_spacing u32, family opt str, style u8
+//!           (bit 0 tabular figures, bit 1 `OverflowWrap::Anywhere`,
+//!           bit 2 `OverflowWrap::BreakWord`;
+//!           the byte the session file's text asset ends with, task-104)
 //! asset  := 1 image: id u32, atlas_x u32, atlas_y u32, width u32,
 //!           height u32, pixels u8 (0 none, 1 then width * height * 4 of
 //!           RGBA8, 2 a stream's: never, and its id written 0)
@@ -45,8 +48,15 @@
 //! never travels with its pixels, whoever watches: the capture ADR keeps
 //! a camera's frames from every agent, and a watcher is an agent. the
 //! receiver draws a box in its place that says so ([`LIVE_LABEL`]). a
-//! text travels as its key, the string and the typography: the receiver
-//! shapes and rasterizes it with the same embedded fonts.
+//! text travels as its key, the string and the typography, its wrap rule
+//! and OpenType features included: the receiver shapes and rasterizes it
+//! with the same embedded fonts.
+//!
+//! the codec has no version of its own, unlike the session file: a
+//! mirror reads the frames of an app of its own build (`apps/mirroring`
+//! links the gallery's crates), and nothing keeps these bytes. a receiver
+//! built before a field was added (the style byte, task-104) does not
+//! read a sender built after it.
 //!
 //! a secret never travels either (task-79 phase 2): the app names the
 //! places its secrets are bound to ([`Mask`]), and the sender leaves what

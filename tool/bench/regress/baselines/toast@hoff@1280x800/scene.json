@@ -11,20 +11,20 @@
     "settled": true
   },
   "semantics": {
-    "revision": "95b6c6c1c1d5c9d4",
-    "nodes": 5
+    "revision": "871e204d9b1142ca",
+    "nodes": 21
   },
   "layers": [
     {
       "name": "toast_page",
       "z": 0,
-      "hash": "3395b5ee5006b114",
-      "nodes": 16,
+      "hash": "ca2850cbccbb1f2c",
+      "nodes": 72,
       "bounds": [
-        283.0,
-        49.0,
-        404.5,
-        125.100006
+        25.584782,
+        35.810867,
+        1222.4152,
+        732.18915
       ]
     },
     {
@@ -37,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "318e36033b90becd",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -59,64 +61,160 @@
       "id": "toast_page.button[neutral]",
       "layer": "toast_page",
       "rect": [
-        288.0,
-        131.6,
-        98.0,
+        430.0,
+        239.0,
+        106.0,
         40.0
       ],
       "clip": [
-        248.0,
-        131.6,
-        1032.0,
-        628.4
+        0.0,
+        124.0,
+        1280.0,
+        644.0
       ]
     },
     {
       "id": "toast_page.button[success]",
       "layer": "toast_page",
       "rect": [
-        398.0,
-        131.6,
-        103.0,
+        548.0,
+        239.0,
+        111.0,
         40.0
       ],
       "clip": [
-        248.0,
-        131.6,
-        1032.0,
-        628.4
+        0.0,
+        124.0,
+        1280.0,
+        644.0
       ]
     },
     {
       "id": "toast_page.button[error]",
       "layer": "toast_page",
       "rect": [
-        513.0,
-        131.6,
-        82.0,
+        671.0,
+        239.0,
+        86.0,
         40.0
       ],
       "clip": [
-        248.0,
-        131.6,
-        1032.0,
-        628.4
+        0.0,
+        124.0,
+        1280.0,
+        644.0
       ]
     },
     {
       "id": "toast_page.button[info]",
       "layer": "toast_page",
       "rect": [
-        607.0,
-        131.6,
-        78.0,
+        769.0,
+        239.0,
+        82.0,
         40.0
       ],
       "clip": [
-        248.0,
-        131.6,
-        1032.0,
-        628.4
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "toast_page.group[1].card[0].toast",
+      "layer": "toast_page",
+      "rect": [
+        174.0,
+        481.0,
+        320.0,
+        88.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "toast_page.group[1].card[1].toast",
+      "layer": "toast_page",
+      "rect": [
+        786.0,
+        481.0,
+        320.0,
+        88.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "toast_page.group[1].card[2].toast",
+      "layer": "toast_page",
+      "rect": [
+        174.0,
+        689.0,
+        320.0,
+        88.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "toast_page.group[1].card[3].toast",
+      "layer": "toast_page",
+      "rect": [
+        786.0,
+        689.0,
+        320.0,
+        88.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "toast_page.group[2].card[0].toast",
+      "layer": "toast_page",
+      "rect": [
+        174.0,
+        979.0,
+        320.0,
+        184.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "toast_page.group[2].card[1].toast",
+      "layer": "toast_page",
+      "rect": [
+        786.0,
+        1027.0,
+        320.0,
+        88.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
       ]
     }
   ]

@@ -1,5 +1,6 @@
 use super::super::backend::{CosmicTextBackend, StyleRun, TextBackend, TextStyle};
 use super::super::measure::TextMeasurer;
+use crate::styling::theme::TypeRole;
 
 fn sans(font_size: f32) -> TextStyle {
     TextStyle::new(font_size).with_family("Inclusive Sans")
@@ -411,7 +412,7 @@ fn line_metrics_come_from_real_faces() {
 #[test]
 fn vertical_center_centers_glyph_box_in_44px_pill() {
     // base-2sm inside the canonical 44px HOFF button.
-    let style = crate::styling::theme::TypographyScale::hoff().base_2sm();
+    let style = crate::styling::theme::TypographyScale::hoff().role(TypeRole::BodyStrong);
     let container_h = 44.0;
     let y = TextMeasurer::vertical_center(&style, container_h);
     let m = TextMeasurer::line_metrics(&style);
@@ -429,10 +430,10 @@ fn vertical_center_consistent_across_ramp() {
     // Every HOFF style stays strictly inside a 44px control.
     let ramp = crate::styling::theme::TypographyScale::hoff();
     for style in [
-        ramp.caption_sm(),
-        ramp.base_2sm(),
-        ramp.base_2m(),
-        ramp.base_m(),
+        ramp.run(TypeRole::Caption.strong()),
+        ramp.role(TypeRole::BodyStrong),
+        ramp.run(TypeRole::Body.medium()),
+        ramp.run(TypeRole::BodyLg.medium()),
     ] {
         let y = TextMeasurer::vertical_center(&style, 44.0);
         let m = TextMeasurer::line_metrics(&style);
@@ -476,6 +477,86 @@ fn truncate_maximizes_the_kept_prefix() {
     let wider: String = long.chars().take(kept_graphemes + 1).collect();
     let (w, _) = TextMeasurer::measure_styled(&format!("{wider}\u{2026}"), &style, None);
     assert!(w > 200.0, "a longer prefix still fits: {w} <= 200");
+}
+
+// -- clamp_to_lines (css line-clamp via real shaping) -----------------------
+
+/// Lines `text` wraps into at `w`, as the drawing wraps it.
+fn wrapped_lines(text: &str, style: &TextStyle, w: f32) -> usize {
+    let (_, h) = TextMeasurer::measure_styled(text, style, Some(w));
+    (h / style.line_height).round() as usize
+}
+
+const PARAGRAPH: &str = "These draggable sliders look really cool. Maybe these could be \
+     displayed when you hold shift, to rotate exactly on the X or Y. But by default I \
+     don't think we need these controllers.";
+
+#[test]
+fn clamp_keeps_text_that_wraps_within_the_lines() {
+    let style = sans(13.0);
+    let s = "two short words";
+    assert_eq!(TextMeasurer::clamp_to_lines(s, &style, 400.0, 3), s);
+    assert_eq!(TextMeasurer::clamp_to_lines("", &style, 400.0, 3), "");
+}
+
+#[test]
+fn clamp_to_no_lines_keeps_nothing() {
+    assert_eq!(
+        TextMeasurer::clamp_to_lines(PARAGRAPH, &sans(13.0), 200.0, 0),
+        ""
+    );
+}
+
+#[test]
+fn clamp_cuts_to_exactly_the_lines_with_an_ellipsis() {
+    let style = sans(13.0).with_line_height(20.0);
+    assert!(
+        wrapped_lines(PARAGRAPH, &style, 200.0) > 3,
+        "the fixture wraps past three"
+    );
+    let out = TextMeasurer::clamp_to_lines(PARAGRAPH, &style, 200.0, 3);
+    assert!(out.ends_with('\u{2026}'), "{out:?}");
+    assert!(!out.ends_with(" \u{2026}"), "trailing space kept: {out:?}");
+    assert_eq!(wrapped_lines(&out, &style, 200.0), 3, "{out:?}");
+}
+
+#[test]
+fn clamp_maximizes_the_kept_prefix() {
+    let style = sans(13.0).with_line_height(20.0);
+    let out = TextMeasurer::clamp_to_lines(PARAGRAPH, &style, 200.0, 2);
+    let kept = out.trim_end_matches('\u{2026}').trim_end().chars().count();
+    // The candidate one grapheme past every kept one no longer fits:
+    // skip the spaces the cut trims, then add the next character.
+    let rest: String = PARAGRAPH.chars().skip(kept).collect();
+    let skipped = rest.len() - rest.trim_start().len();
+    let wider: String = PARAGRAPH.chars().take(kept + skipped + 1).collect();
+    let next = format!("{}\u{2026}", wider.trim_end());
+    assert!(
+        wrapped_lines(&next, &style, 200.0) > 2,
+        "a longer prefix fits: {next:?}"
+    );
+}
+
+#[test]
+fn clamp_counts_hard_line_breaks_as_lines() {
+    let style = sans(13.0).with_line_height(20.0);
+    let out = TextMeasurer::clamp_to_lines("one\ntwo\nthree\nfour", &style, 400.0, 2);
+    assert!(out.ends_with('\u{2026}'), "{out:?}");
+    assert!(!out.contains("three"), "{out:?}");
+    assert_eq!(wrapped_lines(&out, &style, 400.0), 2, "{out:?}");
+}
+
+#[test]
+fn clamp_never_splits_a_grapheme_cluster() {
+    let style = sans(13.0).with_line_height(20.0);
+    let family = "👨‍👩‍👧‍👦";
+    let text = format!("{family} ").repeat(40);
+    let out = TextMeasurer::clamp_to_lines(&text, &style, 120.0, 1);
+    let kept = out.trim_end_matches('\u{2026}');
+    assert!(
+        kept.split(' ').all(|w| w.is_empty() || w == family),
+        "a cluster was split: {out:?}"
+    );
 }
 
 #[test]

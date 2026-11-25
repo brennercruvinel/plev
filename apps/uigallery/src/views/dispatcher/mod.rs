@@ -1,39 +1,33 @@
 //! Dispatch to the active pane: its natural height, its share of an
-//! event, its visible-only tick and its drawing. One match per verb over
-//! `pages::Pane`, so the rest of the view never names a pane's field.
+//! event (`event.rs`), its visible-only tick and its drawing
+//! (`render.rs`). One match per verb over `pages::Pane`, so the rest of
+//! the view never names a pane's field. Here too what the page means
+//! (its projection), the requests and the focus from outside its own
+//! input, and the Capture page's devices.
 
-use accord::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, SnapshotBuilder, Value};
-use engine::control::input::FileDrop;
-use engine::drawing::compositor::Compositor;
+use accord::{Millis, Receipt, ReceiptSink, Request, SemId, Snapshot, SnapshotBuilder};
 use engine::runtime::platform::capture::Capture;
-use engine::styling::theme::Theme;
-use engine::widgets::prelude::{EmptyState, EventResult, Rect, Wake, WidgetEvent};
+use engine::widgets::prelude::{Rect, Wake};
 
-use super::{Layers, Pane, ShowcaseView, panel};
-use component::After;
+use super::{Pane, ShowcaseView};
 
 impl ShowcaseView {
-    /// Natural (unclipped) height of the active page's content.
-    pub(super) fn page_content_height(&self, content: Rect) -> f32 {
-        self.pane_content_height(content) + self.note_h()
-    }
-
-    /// The active pane's natural height in `content`.
-    fn pane_content_height(&self, content: Rect) -> f32 {
+    /// The active pane's natural (unclipped) height in `content`.
+    pub(super) fn pane_content_height(&self, content: Rect) -> f32 {
         let t = &self.theme;
         match self.pane() {
             None => t.size.card_min_w / 2.0,
             Some(pane) => match pane {
                 Pane::Theme => self.panes.themes.content_height(content, t),
-                Pane::Typography => self.panes.typography.content_height(content),
-                Pane::Icons => self.panes.icons.content_height(content),
+                Pane::Typography => self.panes.typography.content_height(content, t),
+                Pane::Icons => self.panes.icons.content_height(content, t),
                 Pane::Effects => self.panes.effects.content_height(content, t),
                 Pane::Avatar => self.panes.avatar.content_height(content, t),
                 Pane::Badge => self.panes.badge.content_height(content, t),
                 Pane::Breadcrumb => self.panes.breadcrumb.content_height(content, t),
                 Pane::Button => self.panes.button.content_height(content, t),
                 Pane::Card => self.panes.card.content_height(content, t),
-                Pane::Chart => self.panes.chart.content_height(content),
+                Pane::Chart => self.panes.chart.content_height(content, t),
                 Pane::Checkbox => self.panes.checkbox.content_height(content, t),
                 Pane::Chip => self.panes.chip.content_height(content, t),
                 Pane::CodeBlock => self.panes.code_block.content_height(content, t),
@@ -56,12 +50,60 @@ impl ShowcaseView {
                 Pane::Slider => self.panes.slider.content_height(content, t),
                 Pane::Spinner => self.panes.spinner.content_height(content, t),
                 Pane::Stat => self.panes.stat.content_height(content, t),
+                Pane::Toolbar => self.panes.toolbar.content_height(content, t),
                 Pane::Switch => self.panes.switch.content_height(content, t),
                 Pane::Table => self.panes.table.content_height(content, t),
                 Pane::Tabs => self.panes.tabs.content_height(content, t),
                 Pane::Toast => self.panes.toast.content_height(content, t),
                 Pane::Tooltip => self.panes.tooltip.content_height(content, t),
                 Pane::Tree => self.panes.tree.content_height(content, t),
+                // task-104 front A, fields (#154)
+                Pane::Field => self.panes.field.content_height(content, t),
+                Pane::Label => self.panes.label.content_height(content, t),
+                Pane::InputGroup => self.panes.input_group.content_height(content, t),
+                Pane::InputOtp => self.panes.input_otp.content_height(content, t),
+                Pane::Textarea => self.panes.textarea.content_height(content, t),
+                Pane::Combobox => self.panes.combobox.content_height(content, t),
+                Pane::Command => self.panes.command.content_height(content, t),
+                // task-104 front B, overlays (#155)
+                Pane::AlertDialog => self.panes.alert_dialog.content_height(content, t),
+                Pane::Drawer => self.panes.drawer.content_height(content, t),
+                Pane::Sheet => self.panes.sheet.content_height(content, t),
+                Pane::DropdownMenu => self.panes.dropdown_menu.content_height(content, t),
+                Pane::Menubar => self.panes.menubar.content_height(content, t),
+                Pane::Modals => self.panes.modals.content_height(content, t),
+                Pane::HoverCard => self.panes.hover_card.content_height(content, t),
+                Pane::Popover => self.panes.popover.content_height(content, t),
+                // task-104 front C, conversation and feedback (#156)
+                Pane::Alert => self.panes.alert.content_height(content, t),
+                Pane::Attachment => self.panes.attachment.content_height(content, t),
+                Pane::Bubble => self.panes.bubble.content_height(content, t),
+                Pane::Comments => self.panes.comments.content_height(content, t),
+                Pane::Marker => self.panes.marker.content_height(content, t),
+                Pane::Message => self.panes.message.content_height(content, t),
+                Pane::MessageScroller => self.panes.message_scroller.content_height(content, t),
+                Pane::PromptInput => self.panes.prompt_input.content_height(content, t),
+                Pane::Notifications => self.panes.notifications.content_height(content, t),
+                // task-104 front D, disclosure and display (#157)
+                Pane::Accordion => self.panes.accordion.content_height(content, t),
+                Pane::AspectRatio => self.panes.aspect_ratio.content_height(content, t),
+                Pane::Collapsible => self.panes.collapsible.content_height(content, t),
+                Pane::Item => self.panes.item.content_height(content, t),
+                Pane::Kbd => self.panes.kbd.content_height(content, t),
+                Pane::Carousel => self.panes.carousel.content_height(content, t),
+                Pane::Pagination => self.panes.pagination.content_height(content, t),
+                Pane::StaticTable => self.panes.table_static.content_height(content, t),
+                // task-104 front E, selection and dates (#158)
+                Pane::ButtonGroup => self.panes.button_group.content_height(content, t),
+                Pane::Calendar => self.panes.calendar.content_height(content, t),
+                Pane::DatePicker => self.panes.date_picker.content_height(content, t),
+                Pane::Menus => self.panes.menus.content_height(content, t),
+                Pane::RadioGroup => self.panes.radio_group.content_height(content, t),
+                Pane::Toggle => self.panes.toggle.content_height(content, t),
+                Pane::ToggleGroup => self.panes.toggle_group.content_height(content, t),
+                // task-104 front F, kit foundation
+                Pane::Home => self.panes.home.content_height(content, t),
+                Pane::Topbar => self.panes.topbar.content_height(content, t),
                 Pane::Todo => self.panes.todo.content_height(content),
                 Pane::Surface => self
                     .panes
@@ -73,143 +115,8 @@ impl ShowcaseView {
                 Pane::Dock => self.panes.dock.content_height(content),
                 Pane::Editor => self.panes.editor.content_height(content),
                 Pane::Git => self.panes.git.content_height(content),
-                Pane::Builder => self.panes.builder.content_height(content),
+                Pane::Builder => self.panes.builder.content_height(content, t),
             },
-        }
-    }
-
-    /// The active pane's share of a pointer event in the main window,
-    /// with the view-level effects a page asks for (a dialog, a toast, a
-    /// theme). The events in the page's own window come through
-    /// `detached_event`, laid out for that window.
-    pub(super) fn page_event(&mut self, event: &WidgetEvent) -> EventResult {
-        let content = self.page_rect();
-        self.pane_event(event, content)
-    }
-
-    /// The active pane's share of a pointer event, laid out in `content`
-    /// (the main window's page rect, or the detached window's).
-    fn pane_event(&mut self, event: &WidgetEvent, content: Rect) -> EventResult {
-        let t = &self.theme;
-        match self.pane() {
-            None => EventResult::IGNORED,
-            Some(pane) => match pane {
-                // A card picked is the shell's `shell.theme`, the same
-                // capability as the T key and the menu, through the
-                // dispatcher.
-                Pane::Theme => {
-                    let (r, picked) = self.panes.themes.handle_event(event, content);
-                    if let Some(name) = picked {
-                        let name = Value::Text(name.to_owned());
-                        self.ask_shell(ShellTarget::Theme, "select", Some(name));
-                    }
-                    r
-                }
-                Pane::Typography => self.panes.typography.handle_event(event, content),
-                Pane::Icons => self.panes.icons.handle_event(event, content),
-                Pane::Effects => self.panes.effects.handle_event(event, content),
-                Pane::Avatar => self.panes.avatar.handle_event(event, content, t),
-                Pane::Badge => self.panes.badge.handle_event(event, content, t),
-                Pane::Breadcrumb => self.panes.breadcrumb.handle_event(event, content, t),
-                Pane::Button => self.panes.button.handle_event(event, content, t),
-                Pane::Card => self.panes.card.handle_event(event, content, t),
-                Pane::Chart => self.panes.chart.handle_event(event, content),
-                Pane::Checkbox => self.panes.checkbox.handle_event(event, content, t),
-                Pane::Chip => self.panes.chip.handle_event(event, content, t),
-                Pane::CodeBlock => self.panes.code_block.handle_event(event, content, t),
-                Pane::ContextMenu => self.panes.context_menu.handle_event(event, content, t),
-                Pane::Dialog => {
-                    let (r, open) = self.panes.dialog.handle_event(event, content, t);
-                    if let Some(destructive) = open {
-                        self.after_component(After::Modal { destructive });
-                    }
-                    r
-                }
-                Pane::Empty => self.panes.empty.handle_event(event, content, t),
-                Pane::Graph => self.panes.graph.handle_event(event, content, t),
-                Pane::IconButton => self.panes.icon_button.handle_event(event, content, t),
-                Pane::Input => self.panes.input.handle_event(event, content, t),
-                Pane::NavigationMenu => self.panes.navigation_menu.handle_event(event, content, t),
-                Pane::Panel => self.panes.panel.handle_event(event, content, t),
-                Pane::PanelHeader => self.panes.panel_header.handle_event(event, content, t),
-                Pane::Progress => self.panes.progress.handle_event(event, content, t),
-                Pane::Resizable => self.panes.resizable.handle_event(event, content, t),
-                Pane::ScrollArea => self.panes.scroll_area.handle_event(event, content, t),
-                Pane::Select => self.panes.select.handle_event(event, content, t),
-                Pane::Separator => self.panes.separator.handle_event(event, content, t),
-                Pane::Sidebar => self.panes.sidebar.handle_event(event, content, t),
-                Pane::Skeleton => self.panes.skeleton.handle_event(event, content, t),
-                Pane::Slider => self.panes.slider.handle_event(event, content, t),
-                Pane::Spinner => self.panes.spinner.handle_event(event, content, t),
-                Pane::Stat => self.panes.stat.handle_event(event, content, t),
-                Pane::Switch => self.panes.switch.handle_event(event, content, t),
-                Pane::Table => self.panes.table.handle_event(event, content, t),
-                Pane::Tabs => self.panes.tabs.handle_event(event, content, t),
-                Pane::Toast => {
-                    let (r, queued) = self.panes.toast.handle_event(event, content, t);
-                    if let Some(intent) = queued {
-                        self.after_component(After::Toast(intent));
-                    }
-                    r
-                }
-                Pane::Tooltip => self.panes.tooltip.handle_event(event, content, t),
-                Pane::Tree => self.panes.tree.handle_event(event, content, t),
-                Pane::Todo => {
-                    let inert = self.overlay_holds_pointer();
-                    self.panes.todo.set_inert(inert);
-                    self.panes.todo.handle_event(event, content, t)
-                }
-                Pane::Surface => {
-                    let inert = self.overlay_holds_pointer();
-                    let todo = &mut self.panes.todo;
-                    self.panes
-                        .surface
-                        .handle_event(event, content, t, todo, inert)
-                }
-                Pane::Silences => {
-                    let inert = self.overlay_holds_pointer();
-                    let todo = &mut self.panes.todo;
-                    self.panes
-                        .silences
-                        .handle_event(event, content, t, todo, inert)
-                }
-                Pane::Files => {
-                    let inert = self.overlay_holds_pointer();
-                    let todo = &mut self.panes.todo;
-                    self.panes
-                        .files
-                        .handle_event(event, content, t, todo, inert)
-                }
-                Pane::Capture => {
-                    let inert = self.overlay_holds_pointer();
-                    let todo = &mut self.panes.todo;
-                    self.panes
-                        .capture
-                        .handle_event(event, content, t, todo, inert)
-                }
-                Pane::Dock => self.panes.dock.handle_event(event, content),
-                Pane::Editor => self.panes.editor.handle_event(event, content),
-                Pane::Git => self.panes.git.handle_event(event, content),
-                Pane::Builder => self.panes.builder.handle_event(event, content),
-            },
-        }
-    }
-
-    /// The active page's share of a file drag over the window (the
-    /// engine's event, forwarded whole by the shell): the Files page
-    /// receives it; the other pages take no files.
-    pub(super) fn page_file_drop(&mut self, drop: &FileDrop) -> EventResult {
-        let content = self.page_rect();
-        let t = &self.theme;
-        match self.pane() {
-            Some(Pane::Files) => {
-                let inert = self.overlay_holds_pointer();
-                let todo = &mut self.panes.todo;
-                self.panes
-                    .files
-                    .handle_file_drop(drop, content, t, todo, inert)
-            }
-            _ => EventResult::IGNORED,
         }
     }
 
@@ -237,115 +144,58 @@ impl ShowcaseView {
             Some(Pane::Silences) => self.panes.silences.wake(dt, &mut self.panes.todo),
             Some(Pane::Capture) => capture,
             Some(Pane::Editor) => self.panes.editor.wake(dt),
+            // task-104 front A, fields (#154)
+            Some(Pane::Field) => self.panes.field.wake(dt),
+            Some(Pane::Label) => self.panes.label.wake(dt),
+            Some(Pane::InputGroup) => self.panes.input_group.wake(dt),
+            Some(Pane::InputOtp) => self.panes.input_otp.wake(dt),
+            Some(Pane::Textarea) => self.panes.textarea.wake(dt),
+            Some(Pane::Combobox) => self.panes.combobox.wake(dt),
+            Some(Pane::Command) => self.panes.command.wake(dt),
+            // task-104 front B, overlays (#155)
+            Some(Pane::Modals) => self.panes.modals.wake(dt),
+            Some(Pane::Menubar) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let page = &mut self.panes.menubar;
+                Wake::moving(page.sync(&mut self.overlay_mgr, content, viewport, &self.theme))
+            }
+            Some(Pane::DropdownMenu) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let page = &mut self.panes.dropdown_menu;
+                Wake::moving(page.sync(&mut self.overlay_mgr, content, viewport, &self.theme))
+            }
+            Some(Pane::HoverCard) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let page = &mut self.panes.hover_card;
+                let mgr = &mut self.overlay_mgr;
+                Wake::moving(page.wake(dt, mgr, content, viewport, &self.theme))
+            }
+            Some(Pane::Popover) => {
+                let (content, viewport) = (self.page_rect(), self.content_rect());
+                let popover = &mut self.panes.popover;
+                Wake::moving(popover.sync(&mut self.overlay_mgr, content, viewport, &self.theme))
+            }
+            // task-104 front C, conversation and feedback (#156)
+            Some(Pane::MessageScroller) => Wake::moving(self.panes.message_scroller.tick(dt)),
+            Some(Pane::PromptInput) => self.panes.prompt_input.wake(dt),
+            Some(Pane::Comments) => self.panes.comments.wake(dt),
+            Some(Pane::Notifications) => Wake::moving(self.panes.notifications.tick(dt)),
+            // task-104 front D, disclosure and display (#157)
+            Some(Pane::Accordion) => self.panes.accordion.wake(dt),
+            Some(Pane::Collapsible) => self.panes.collapsible.wake(dt),
+            // task-104 front E, selection and dates (#158)
+            Some(Pane::ToggleGroup) => Wake::moving(self.panes.toggle_group.tick(dt)),
+            // task-104 front F, kit foundation
+            Some(Pane::Topbar) => self.panes.topbar.wake(dt),
+            // task-104 front G, navigation and data
+            Some(Pane::Sidebar) => self.panes.sidebar.wake(dt),
+            Some(Pane::Toolbar) => Wake::moving(self.panes.toolbar.tick(dt)),
             _ => Wake::idle(),
         };
         if let Some(detached) = self.panes.detached.as_mut() {
             detached.wake = detached.wake.merge(wake);
         }
         wake
-    }
-
-    /// Draw the active page into `content` of the main window (a
-    /// placeholder names its slot).
-    pub(super) fn page_render(
-        &mut self,
-        c: &mut Compositor,
-        layers: Layers,
-        content: Rect,
-        theme: &Theme,
-    ) {
-        self.pane_render(c, layers, content, theme);
-    }
-
-    /// Draw the active pane into `content`, whichever window's.
-    fn pane_render(&mut self, c: &mut Compositor, layers: Layers, content: Rect, theme: &Theme) {
-        match self.pane() {
-            None => self.render_placeholder(c, content, theme),
-            Some(pane) => match pane {
-                Pane::Theme => self
-                    .panes
-                    .themes
-                    .render(c, content, theme, &self.theme_name),
-                Pane::Typography => self.panes.typography.render(c, content, theme),
-                Pane::Icons => self.panes.icons.render(c, content, theme),
-                Pane::Effects => self.panes.effects.render(c, content, theme),
-                Pane::Avatar => self.panes.avatar.render(c, content, theme),
-                Pane::Badge => self.panes.badge.render(c, content, theme),
-                Pane::Breadcrumb => self.panes.breadcrumb.render(c, content, theme),
-                Pane::Button => self.panes.button.render(c, content, theme),
-                Pane::Card => self.panes.card.render(c, content, theme),
-                Pane::Chart => self.panes.chart.render(c, content, theme),
-                Pane::Checkbox => self.panes.checkbox.render(c, content, theme),
-                Pane::Chip => self.panes.chip.render(c, content, theme),
-                Pane::CodeBlock => self.panes.code_block.render(c, content, theme),
-                Pane::ContextMenu => self.panes.context_menu.render(c, content, theme),
-                Pane::Dialog => self.panes.dialog.render(c, content, theme),
-                Pane::Empty => self.panes.empty.render(c, content, theme),
-                Pane::Graph => self.panes.graph.render(c, content, theme),
-                Pane::IconButton => self.panes.icon_button.render(c, content, theme),
-                Pane::Input => self.panes.input.render(c, content, theme),
-                Pane::NavigationMenu => self.panes.navigation_menu.render(c, content, theme),
-                Pane::Panel => self.panes.panel.render(c, content, theme),
-                Pane::PanelHeader => self.panes.panel_header.render(c, content, theme),
-                Pane::Progress => self.panes.progress.render(c, content, theme),
-                Pane::Resizable => self.panes.resizable.render(c, content, theme),
-                Pane::ScrollArea => self
-                    .panes
-                    .scroll_area
-                    .render(c, layers.list, content, theme),
-                Pane::Select => self.panes.select.render(c, layers.overlay, content, theme),
-                Pane::Separator => self.panes.separator.render(c, content, theme),
-                Pane::Sidebar => self.panes.sidebar.render(c, content, theme),
-                Pane::Skeleton => self.panes.skeleton.render(c, content, theme),
-                Pane::Slider => self.panes.slider.render(c, content, theme),
-                Pane::Spinner => self.panes.spinner.render(c, content, theme),
-                Pane::Stat => self.panes.stat.render(c, content, theme),
-                Pane::Switch => self.panes.switch.render(c, content, theme),
-                Pane::Table => self.panes.table.render(c, content, theme),
-                Pane::Tabs => self.panes.tabs.render(c, content, theme),
-                Pane::Toast => self.panes.toast.render(c, content, theme),
-                Pane::Tooltip => {
-                    self.panes.tooltip.render(c, content, theme);
-                    self.panes.tooltip.render_tooltip(
-                        c,
-                        layers.toast,
-                        theme,
-                        self.width,
-                        self.height,
-                    );
-                }
-                Pane::Tree => self.panes.tree.render(c, content, theme),
-                Pane::Todo => {
-                    let inert = self.overlay_holds_pointer();
-                    self.panes.todo.set_inert(inert);
-                    self.panes.todo.render(c, content, theme);
-                }
-                Pane::Surface => {
-                    let inert = self.overlay_holds_pointer();
-                    let todo = &mut self.panes.todo;
-                    self.panes.surface.render(c, content, theme, todo, inert);
-                }
-                Pane::Silences => {
-                    let inert = self.overlay_holds_pointer();
-                    self.panes.silences.set_inert(inert);
-                    self.panes.silences.render(c, content, theme);
-                }
-                Pane::Files => {
-                    let inert = self.overlay_holds_pointer();
-                    self.panes.files.set_inert(inert);
-                    self.panes.files.render(c, content, theme);
-                }
-                Pane::Capture => {
-                    let inert = self.overlay_holds_pointer();
-                    self.panes.capture.set_inert(inert);
-                    self.panes.capture.render(c, content, theme);
-                }
-                Pane::Dock => self.panes.dock.render(c, content, theme),
-                Pane::Editor => self.panes.editor.render(c, content),
-                Pane::Git => self.panes.git.render(c, content, theme),
-                Pane::Builder => self.panes.builder.render(c, content, theme),
-            },
-        }
     }
 
     /// What the active page means, when it projects it (the todo page,
@@ -405,6 +255,7 @@ impl ShowcaseView {
     /// receipt as it stands after the dispatch; `None` when the page
     /// takes none.
     pub fn act(&mut self, req: Request) -> Option<Receipt> {
+        self.arm_reveal();
         if self.is_shell(&req.target) {
             return self.act_shell(req);
         }
@@ -458,10 +309,23 @@ impl ShowcaseView {
         self.panes.todo.with_dispatcher(|_, _, now| now)
     }
 
-    /// Keyboard focus from assistive technology to a node of the active
-    /// page, or of the overlay that holds the pointer; `false` when
-    /// neither takes it.
+    /// Keyboard focus from assistive technology (and Tab) to a node of
+    /// the active page, of the overlay that holds the pointer, or of the
+    /// sidebar (`shell/sidebar.rs`); `false` when none takes it. The
+    /// sidebar lets its focus go once the page or the overlay takes it.
     pub fn assist_focus(&mut self, id: &SemId) -> bool {
+        self.arm_reveal();
+        if self.is_sidebar(id) {
+            return self.focus_sidebar(id);
+        }
+        let took = self.assist_page_focus(id);
+        if took {
+            self.blur_sidebar();
+        }
+        took
+    }
+
+    fn assist_page_focus(&mut self, id: &SemId) -> bool {
         if self.is_overlay(id) {
             return self.focus_overlay(id);
         }
@@ -510,22 +374,6 @@ impl ShowcaseView {
     pub fn set_capture_shown(&mut self, shown: bool) -> bool {
         self.panes.capture.set_shown(shown) && self.pane() == Some(Pane::Capture)
     }
-
-    /// A placeholder page: an empty state on a panel, naming the slot.
-    fn render_placeholder(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
-        let rect = Rect::new(
-            content.x,
-            content.y,
-            content.w.min(theme.size.readable_max_w),
-            theme.size.card_min_w / 2.0,
-        );
-        panel(c, rect, theme);
-        EmptyState::new(
-            self.current().title,
-            "Not in comps yet. The slot is here so the tree reads complete.",
-        )
-        .render(c, rect, theme);
-    }
 }
 
 /// The gallery through the agent port (task-61): the same hooks a screen
@@ -542,6 +390,9 @@ pub(in crate::views) mod component;
 mod detached;
 pub use detached::Detached;
 
+/// The active pane's share of a pointer event and of a file drag.
+mod event;
+
 /// The keyboard on the component pages (task-75 phase 2c): Tab over the
 /// projection, the arrow keys by widget, Enter and Space press.
 pub(in crate::views) mod keyboard;
@@ -555,9 +406,12 @@ pub(super) mod overlay;
 /// projection and what only a reader hears.
 mod reader;
 
+/// The active pane's drawing, and a placeholder's.
+mod render;
+
 /// The shell's capabilities (task-76 item 4): the page, the theme, the
 /// page in a window of its own and the recording's save, projected and
 /// run through the gallery's dispatcher.
 mod shell;
-pub(crate) use shell::PERSON_ONLY;
+pub(crate) use shell::{PERSON_ONLY, SIDEBAR};
 pub use shell::{Shell, ShellTarget};

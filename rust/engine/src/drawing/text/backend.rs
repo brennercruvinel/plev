@@ -14,6 +14,73 @@ use super::measure::{ShapedText, TextMeasurer};
 /// Default line-height multiplier used across the engine (see `builder::text`).
 pub const DEFAULT_LINE_HEIGHT_FACTOR: f32 = 1.3;
 
+/// Where a line may break inside a word (CSS `overflow-wrap`). Lines
+/// always break between words (UAX#14: at a space, after a hyphen or a
+/// slash, between CJK ideographs); this says what happens to a word wider
+/// than the line on its own.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub enum OverflowWrap {
+    /// CSS `normal`: the word stays whole and runs past the line (the
+    /// recipe clips or truncates it: `TextMeasurer::truncate_to_width`,
+    /// `clamp_to_lines`). Its min-content width is the longest word.
+    #[default]
+    Normal,
+    /// CSS `anywhere`: a word wider than the line breaks between its
+    /// graphemes. Its min-content width is the widest grapheme, so a flex
+    /// item may shrink to one; what a recipe asks for text that must
+    /// never run out whatever its room (an editable area, a message, a
+    /// URL).
+    Anywhere,
+    /// CSS `break-word`: drawn as [`OverflowWrap::Anywhere`] (a word
+    /// wider than the line breaks between its graphemes), but its
+    /// min-content width is the longest word, as under
+    /// [`OverflowWrap::Normal`]: a layout never shrinks it below a word,
+    /// so a word breaks only when it cannot fit on a line of its own. What
+    /// a label asks for (a form label, a disclosure's title).
+    BreakWord,
+}
+
+impl OverflowWrap {
+    /// The shaper's wrap mode for this rule on `text`. The line breaker
+    /// (UAX#14 without a dictionary) finds no word bounds in the scripts
+    /// written without spaces between words (Thai, Lao, Khmer, Myanmar,
+    /// the Tai scripts: class SA), so a paragraph of them would be one
+    /// word; there a run wider than the line breaks between graphemes
+    /// under either rule, the nearest the engine gets to a browser's
+    /// dictionary breaks.
+    pub(crate) fn cosmic(self, text: &str) -> cosmic_text::Wrap {
+        match self {
+            OverflowWrap::Normal if !text.chars().any(no_word_bounds) => cosmic_text::Wrap::Word,
+            _ => cosmic_text::Wrap::WordOrGlyph,
+        }
+    }
+
+    /// The rule the text's min-content width is measured under:
+    /// [`OverflowWrap::BreakWord`] keeps its words whole there.
+    pub fn min_content(self) -> Self {
+        match self {
+            OverflowWrap::BreakWord => OverflowWrap::Normal,
+            other => other,
+        }
+    }
+}
+
+/// A letter of a script whose words the line breaker cannot find (UAX#14
+/// class SA): Thai, Lao, Myanmar, Khmer, Tai Le, New Tai Lue, Tai Tham,
+/// Tai Viet, Myanmar Extended A and B.
+fn no_word_bounds(c: char) -> bool {
+    matches!(
+        c,
+        '\u{0E00}'..='\u{0EFF}'
+            | '\u{1000}'..='\u{109F}'
+            | '\u{1780}'..='\u{17FF}'
+            | '\u{1950}'..='\u{19DF}'
+            | '\u{1A20}'..='\u{1AAF}'
+            | '\u{AA60}'..='\u{AADF}'
+            | '\u{A9E0}'..='\u{A9FF}'
+    )
+}
+
 /// Resolved style for a run of text. `font_family: None` means the engine
 /// default family (sans-serif), matching `TextNodeKey`.
 #[derive(Debug, Clone, PartialEq)]
@@ -26,6 +93,41 @@ pub struct TextStyle {
     /// stays for call sites that need explicit tracking.
     pub letter_spacing: f32,
     pub font_family: Option<String>,
+    /// OpenType features the run turns on beyond the face's defaults.
+    pub features: TextFeatures,
+    /// What a word wider than the line does; [`OverflowWrap::Normal`]
+    /// unless the recipe asks.
+    pub overflow_wrap: OverflowWrap,
+}
+
+/// The OpenType features a run turns on beyond its face's defaults; the
+/// shaper applies them, and they are part of the shaping key.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+pub struct TextFeatures {
+    /// `tnum`: every figure as wide as every other, so numbers line up
+    /// in a column and a counting value does not shift its neighbours.
+    pub tabular_figures: bool,
+}
+
+impl TextFeatures {
+    pub const NONE: Self = Self {
+        tabular_figures: false,
+    };
+    pub const TABULAR: Self = Self {
+        tabular_figures: true,
+    };
+
+    /// The features as the shaper takes them; `None` when there are none.
+    pub(crate) fn cosmic(self) -> Option<cosmic_text::FontFeatures> {
+        if self == Self::NONE {
+            return None;
+        }
+        let mut f = cosmic_text::FontFeatures::new();
+        if self.tabular_figures {
+            f.enable(cosmic_text::FeatureTag::new(b"tnum"));
+        }
+        Some(f)
+    }
 }
 
 impl TextStyle {
@@ -36,7 +138,15 @@ impl TextStyle {
             font_weight: 400,
             letter_spacing: 0.0,
             font_family: None,
+            features: TextFeatures::NONE,
+            overflow_wrap: OverflowWrap::Normal,
         }
+    }
+
+    /// The rule for a word wider than the line (CSS `overflow-wrap`).
+    pub fn with_overflow_wrap(mut self, overflow_wrap: OverflowWrap) -> Self {
+        self.overflow_wrap = overflow_wrap;
+        self
     }
 
     pub fn with_family(mut self, family: &str) -> Self {
@@ -58,6 +168,11 @@ impl TextStyle {
     /// `em * font_size`).
     pub fn with_letter_spacing(mut self, letter_spacing: f32) -> Self {
         self.letter_spacing = letter_spacing;
+        self
+    }
+
+    pub fn with_features(mut self, features: TextFeatures) -> Self {
+        self.features = features;
         self
     }
 }

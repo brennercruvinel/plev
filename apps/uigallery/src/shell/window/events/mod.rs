@@ -75,19 +75,28 @@ impl App {
                 if self.print_key(&key_event.logical_key) {
                     return;
                 }
+                // F12 opens and closes the dev mode's panel, in a launch
+                // that has one.
+                if key_event.logical_key == Key::Named(NamedKey::F12) && self.dev_key(id) {
+                    return;
+                }
+                // The platform's window keys close the window or quit;
+                // Escape never does (below).
+                #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+                if let Some(action) = window_key(&key_event.logical_key, self.modifiers) {
+                    match action {
+                        WindowKey::Close if self.is_page_window(id) => self.close_page_window(),
+                        WindowKey::Close | WindowKey::Quit => event_loop.exit(),
+                    }
+                    return;
+                }
                 match &key_event.logical_key {
+                    // Escape closes what is open, and only that: with
+                    // nothing open it does nothing (leaving the app is the
+                    // platform's key, `window_key`).
                     Key::Named(NamedKey::Escape) => {
                         if self.view.close_top_overlay() {
                             self.changed();
-                        } else if self.is_page_window(id) {
-                            #[cfg(not(any(
-                                target_arch = "wasm32",
-                                target_os = "android",
-                                target_os = "ios"
-                            )))]
-                            self.close_page_window();
-                        } else {
-                            event_loop.exit();
                         }
                     }
                     // The editor owns the keyboard while it is showing.
@@ -136,7 +145,16 @@ impl App {
             WindowEvent::CursorMoved { position, .. } => {
                 let sf = self.windows.get(id).map_or(1.0, |h| h.scale_factor()) as f32;
                 let (x, y) = (position.x as f32 / sf, position.y as f32 / sf);
+                // a pointer moved: press areas back to the pointer's
+                // minimum (`engine::widgets::hit`)
+                engine::widgets::hit::set_touch_input(false);
                 self.set_cursor(id, (x, y));
+                // a pointer that moves (winit tells a finger apart, as a
+                // `Touch`): the sidebar peeks again where it fits
+                let main = Some(id) == self.main;
+                if main && self.view.set_touch(false) {
+                    self.invalidate_in(id);
+                }
                 if self.pointer(id, &WidgetEvent::MouseMove { x, y }) {
                     self.invalidate_in(id);
                 }
@@ -190,7 +208,11 @@ impl App {
             }
 
             // a finger (android, iOS): a tap clicks, a drag scrolls
-            WindowEvent::Touch(touch) => self.touched(id, &touch),
+            // a finger: press areas grow to the touch minimum
+            WindowEvent::Touch(touch) => {
+                engine::widgets::hit::set_touch_input(true);
+                self.touched(id, &touch);
+            }
 
             WindowEvent::MouseWheel { delta, .. } => {
                 let (x, y) = self.cursor_in(id);
@@ -230,7 +252,20 @@ impl App {
                     target_os = "ios"
                 )))]
                 self.focus_changed(id, on);
-                #[cfg(any(target_arch = "wasm32", target_os = "android", target_os = "ios"))]
+                // the browser has no bridge to read them again
+                // (`Bridge::process_event`): the page reads them here
+                #[cfg(target_arch = "wasm32")]
+                if on {
+                    engine::control::accessibility::reduced_motion::follow_system();
+                    engine::control::accessibility::preference::follow_contrast();
+                }
+                // a contrast the system changed meanwhile adapts the theme
+                // (adr-0086), read again when a window takes the focus
+                #[cfg(not(any(target_os = "android", target_os = "ios")))]
+                if on {
+                    self.view.follow_contrast();
+                }
+                #[cfg(any(target_os = "android", target_os = "ios"))]
                 let _ = on;
             }
 
@@ -264,6 +299,35 @@ fn primary(modifiers: ModifiersState) -> bool {
     }
 }
 
+/// What a window key asks of the shell, before the page sees the key.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum WindowKey {
+    /// The window closes, as its close button does (the main one quits).
+    Close,
+    /// The app quits.
+    Quit,
+}
+
+/// The platform's keys for leaving: the primary with W closes the window,
+/// with Q quits (on macOS the menu's Quit has cmd-q too; Alt-F4 on
+/// Windows arrives as `CloseRequested`). Escape is never one of them: it
+/// closes what is open, nothing more.
+#[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
+fn window_key(key: &Key, modifiers: ModifiersState) -> Option<WindowKey> {
+    let Key::Character(c) = key else {
+        return None;
+    };
+    if !primary(modifiers) || modifiers.alt_key() {
+        return None;
+    }
+    match c.as_str() {
+        "w" | "W" => Some(WindowKey::Close),
+        "q" | "Q" => Some(WindowKey::Quit),
+        _ => None,
+    }
+}
+
 /// The input method (task-74 phase 4).
 mod ime;
 
@@ -271,7 +335,9 @@ mod ime;
 mod tests {
     use winit::keyboard::ModifiersState as M;
 
-    use super::{chord, primary};
+    use winit::keyboard::{Key, NamedKey};
+
+    use super::{WindowKey, chord, primary, window_key};
 
     /// cmd or ctrl makes a chord, AltGr (ctrl with alt) does not; the
     /// primary is cmd on macOS and ctrl elsewhere.
@@ -287,5 +353,32 @@ mod tests {
             (M::CONTROL, M::SUPER)
         };
         assert!(primary(mine) && !primary(other));
+    }
+
+    /// Escape never leaves the app, with or without a modifier; the
+    /// primary with W closes the window and with Q quits; the other
+    /// modifier, or a plain W, types.
+    #[test]
+    fn escape_never_quits_and_leaving_is_the_platforms_key() {
+        let esc = Key::Named(NamedKey::Escape);
+        let (mine, other) = if cfg!(target_os = "macos") {
+            (M::SUPER, M::CONTROL)
+        } else {
+            (M::CONTROL, M::SUPER)
+        };
+        for mods in [M::empty(), mine, other, M::SHIFT] {
+            assert_eq!(window_key(&esc, mods), None, "Escape with {mods:?}");
+        }
+        let w = Key::Character("w".into());
+        let q = Key::Character("q".into());
+        assert_eq!(window_key(&w, mine), Some(WindowKey::Close));
+        assert_eq!(window_key(&q, mine), Some(WindowKey::Quit));
+        assert_eq!(
+            window_key(&Key::Character("W".into()), mine | M::SHIFT),
+            Some(WindowKey::Close)
+        );
+        assert_eq!(window_key(&w, M::empty()), None, "a plain w types");
+        assert_eq!(window_key(&w, other), None);
+        assert_eq!(window_key(&q, mine | M::ALT), None, "AltGr types");
     }
 }

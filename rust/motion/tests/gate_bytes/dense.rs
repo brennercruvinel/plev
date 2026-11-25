@@ -1,7 +1,7 @@
 //! rulers measured in-session (stat -f %z; gzip -9 -c | wc -c):
 //!   explosion json 698654 -> 207434 gz, webm 38642;
 //!   girl json 742135 -> 122861 gz, webm 111344.
-//! run: cargo test -p motion --test bench_lottie -- --nocapture
+//! run: cargo test -p motion --test gate_bytes -- --nocapture
 
 use crate::lottie::{Scan, f, scan_layer};
 use motion::{

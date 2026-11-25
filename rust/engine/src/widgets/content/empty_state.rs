@@ -2,10 +2,12 @@
 //! title, wrapped message, optional CTA button — centered in the given
 //! bounds. Content-driven: every line is really measured, the stack is
 //! centered as a unit, and the message wraps against the available width
-//! (clamped by a readability maximum, never a viewport constant).
+//! (clamped by a readability maximum, never a viewport constant), each of
+//! its lines centered on its own (the kit's `text-center`).
 
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
-use crate::drawing::text::{TextMeasurer, TextStyle};
+use crate::drawing::text::{OverflowWrap, TextMeasurer, TextStyle};
+use crate::styling::theme::TypeRole;
 use crate::styling::theme::{IconSize, Theme};
 use crate::widgets::icons;
 
@@ -46,12 +48,29 @@ impl EmptyState {
         self
     }
 
+    /// The title's run; wrapped, a word breaks only when it cannot fit
+    /// a line of its own.
     fn title_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_m()
+        theme
+            .typography
+            .run(TypeRole::BodyLg.medium())
+            .with_overflow_wrap(OverflowWrap::BreakWord)
     }
 
     fn message_style(theme: &Theme) -> TextStyle {
-        theme.typography.base_2r()
+        theme
+            .typography
+            .role(TypeRole::Body)
+            .with_overflow_wrap(OverflowWrap::BreakWord)
+    }
+
+    /// The title's block in `bounds`' width, `(w, h)`: one line where it
+    /// fits, wrapped where it does not (a narrow holder, a larger text, a
+    /// longer language); the block is centered.
+    pub fn title_size(&self, bounds: Rect, theme: &Theme) -> (f32, f32) {
+        let style = Self::title_style(theme);
+        let (w, h) = TextMeasurer::measure_styled(&self.title, &style, Some(bounds.w));
+        (w, h.max(style.line_height))
     }
 
     /// Gap between the icon/title/message/CTA blocks: the `lg` step.
@@ -69,6 +88,23 @@ impl EmptyState {
         (bounds.w * MESSAGE_WIDTH_FRAC).min(theme.size.readable_max_w)
     }
 
+    /// The message in the lines it draws in, each with its width: the
+    /// shaper's own breaks (`TextMeasurer::lines`), so each line can be
+    /// centered on its own (the kit's `text-center`).
+    pub fn message_lines(&self, bounds: Rect, theme: &Theme) -> Vec<(String, f32)> {
+        TextMeasurer::lines(
+            &self.message,
+            &Self::message_style(theme),
+            self.message_width(bounds, theme),
+        )
+    }
+
+    /// How tall the stack is in `bounds`' width: what a holder gives it
+    /// so nothing of it is cut (a table's body, a card).
+    pub fn height(&self, bounds: Rect, theme: &Theme) -> f32 {
+        self.content_height(bounds, theme)
+    }
+
     /// Total stack height for the current content and bounds.
     fn content_height(&self, bounds: Rect, theme: &Theme) -> f32 {
         let gap = Self::gap(theme);
@@ -76,14 +112,11 @@ impl EmptyState {
         if self.icon.is_some() {
             h += Self::icon_size(theme) + gap;
         }
-        h += Self::title_style(theme).line_height + gap;
+        h += self.title_size(bounds, theme).1 + gap;
         if !self.message.is_empty() {
-            let (_, mh) = TextMeasurer::measure_styled(
-                &self.message,
-                &Self::message_style(theme),
-                Some(self.message_width(bounds, theme)),
-            );
-            h += mh + gap;
+            h += self.message_lines(bounds, theme).len() as f32
+                * Self::message_style(theme).line_height
+                + gap;
         }
         if let Some(cta) = &self.cta {
             h += cta.preferred_size(theme).1;
@@ -138,27 +171,31 @@ impl EmptyState {
             y += icon_size + gap;
         }
 
+        // the title's block centered, wrapped where one line is too wide
         let title_style = Self::title_style(theme);
-        let (tw, _) = TextMeasurer::measure_styled(&self.title, &title_style, None);
+        let (tw, th) = self.title_size(bounds, theme);
+        let one_line = th <= title_style.line_height + 0.5;
+        let wrap = (!one_line).then_some(bounds.w);
         compositor.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&self.title, &title_style, None),
+            key: TextNodeKey::from_style(&self.title, &title_style, wrap),
             x: bounds.x + (bounds.w - tw) / 2.0,
             y,
             color: theme.colors.text.0,
         });
-        y += title_style.line_height + gap;
+        y += th + gap;
 
-        if !self.message.is_empty() {
-            let style = Self::message_style(theme);
-            let mw = self.message_width(bounds, theme);
-            let (w, mh) = TextMeasurer::measure_styled(&self.message, &style, Some(mw));
-            compositor.push(SceneNode::Text {
-                key: TextNodeKey::from_style(&self.message, &style, Some(mw)),
-                x: bounds.x + (bounds.w - w.min(mw)) / 2.0,
-                y,
-                color: theme.colors.text_dim.0,
-            });
-            let _ = mh;
+        // each line of the message centered on its own
+        let style = Self::message_style(theme);
+        for (line, w) in self.message_lines(bounds, theme) {
+            if !line.is_empty() {
+                compositor.push(SceneNode::Text {
+                    key: TextNodeKey::from_style(&line, &style, None),
+                    x: bounds.x + (bounds.w - w) / 2.0,
+                    y,
+                    color: theme.colors.text_dim.0,
+                });
+            }
+            y += style.line_height;
         }
 
         if let Some(rect) = self.cta_rect(bounds, theme)

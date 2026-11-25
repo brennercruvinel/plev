@@ -9,6 +9,10 @@ use crate::views::ShowcaseView;
 use accord::Snapshot;
 use engine::drawing::compositor::Compositor;
 use engine::drawing::headless::{Frame, HeadlessError, Renderer, SvgExport, Viewport};
+use engine::runtime::dev::{DevMode, Dock, Follow, Tab};
+use engine::runtime::perf::Recorder;
+use engine::runtime::perf::stages::{self, Stage};
+use engine::styling::theme::Prefs;
 
 /// Animation steps a headless frame may take before it is drawn: the
 /// window keeps drawing while anything moves, so the frame it settles
@@ -18,6 +22,9 @@ const SETTLE_STEPS: usize = 120;
 
 /// One animation step of a headless frame: a 60 Hz display.
 const SETTLE_DT: f32 = 1.0 / 60.0;
+
+/// Frames a headless dev mode draws and records before the one it reads.
+const DEV_FRAMES: u64 = 48;
 
 /// Why a page could not be staged, drawn, exported or projected.
 #[derive(Debug)]
@@ -82,6 +89,18 @@ pub fn stage_page(
     theme: &str,
     scroll: Option<f32>,
 ) -> Result<StagedPage, RenderError> {
+    stage_page_with(viewport, page, theme, scroll, Prefs::default())
+}
+
+/// [`stage_page`] as the person's `prefs` ask (a text size): the theme
+/// adapted to them (ADR 0086). A render never reads the machine's own.
+pub fn stage_page_with(
+    viewport: Viewport,
+    page: &str,
+    theme: &str,
+    scroll: Option<f32>,
+    prefs: Prefs,
+) -> Result<StagedPage, RenderError> {
     crate::views::stage_without_host();
     let mut view = ShowcaseView::new(viewport.width, viewport.height);
     view.jump_to_page(page);
@@ -92,28 +111,50 @@ pub fn stage_page(
     if view.theme_name != theme {
         return Err(RenderError::UnknownTheme(theme.to_string()));
     }
+    view.set_prefs(prefs);
     if let Some(offset) = scroll {
         view.scroll_page_to(offset);
     }
     view.resize(viewport.width, viewport.height, viewport.scale);
 
-    let mut compositor = Compositor::new();
-    let (mut steps, mut settled) = (0, false);
-    while steps < SETTLE_STEPS && !settled {
-        let moving = view.tick(if steps == 0 { 0.0 } else { SETTLE_DT });
-        view.render(&mut compositor);
-        steps += 1;
-        settled = !moving;
-    }
-    Ok(StagedPage {
+    let mut staged = StagedPage {
         view,
-        compositor,
-        steps,
-        settled,
-    })
+        compositor: Compositor::new(),
+        steps: 0,
+        settled: false,
+    };
+    staged.settle();
+    Ok(staged)
 }
 
 impl StagedPage {
+    /// Steps the page's fixed clock until it settles, building its scene.
+    fn settle(&mut self) {
+        let (mut steps, mut settled) = (0, false);
+        while steps < SETTLE_STEPS && !settled {
+            let moving = self.view.tick(if steps == 0 { 0.0 } else { SETTLE_DT });
+            self.view.render(&mut self.compositor);
+            steps += 1;
+            settled = !moving;
+        }
+        self.steps = steps;
+        self.settled = settled;
+    }
+
+    /// Staged again with the sidebar pinned beside the page (it peeks,
+    /// out of the window, by default) and the command palette open over
+    /// it (⌘K), as asked. The compositor stays: the view's layers were
+    /// made in it, and each frame begins its layers afresh.
+    pub fn stage_again(&mut self, pinned: bool, palette: bool) {
+        if pinned {
+            self.view.pin_sidebar(true);
+        }
+        if palette {
+            self.view.toggle_palette();
+        }
+        self.settle();
+    }
+
     /// The page's title as the sidebar shows it.
     pub fn title(&self) -> &'static str {
         self.view.page_title()
@@ -144,6 +185,97 @@ impl StagedPage {
         Ok(renderer.render(&mut self.compositor, clear)?)
     }
 
+    /// The frame with the dev mode's panel open on `tab`, as the window
+    /// shows it (`engine::runtime::dev`): the page laid out in its share
+    /// of the viewport, [`DEV_FRAMES`] frames drawn and recorded so the
+    /// panel has a history and the GPU's timestamps of the first ones are
+    /// read back, the last one read. The panel shows the slowest frame
+    /// recorded, which here is the first: the whole scene drawn from
+    /// nothing. The Inspect view shows the first control the page binds.
+    /// `renderer` wants `RenderConfig::gpu_timestamps` for the GPU's own
+    /// times.
+    pub fn render_dev(
+        &mut self,
+        renderer: &mut Renderer,
+        tab: Tab,
+        dock: Dock,
+    ) -> Result<Frame, RenderError> {
+        let viewport = renderer.viewport();
+        let window = (viewport.width, viewport.height);
+        let mut dev = DevMode::new(true);
+        dev.set_open(true);
+        dev.set_tab(tab);
+        dev.set_dock(dock);
+        dev.set_follow(Follow::Slowest);
+        let (page_w, page_h) = dev.page_size(window.0, window.1);
+        self.view.resize(page_w, page_h, viewport.scale);
+        let clear = self.view.theme.colors.bg.to_linear_array();
+        let mut recorder = Recorder::new();
+        recorder.set_on(true);
+        engine::message!("{} staged at {page_w}x{page_h}", self.title());
+        for index in 0..DEV_FRAMES {
+            let frame = stages::span(Stage::Frame);
+            {
+                engine::zone!("tick");
+                let _tick = stages::span(Stage::Tick);
+                let _ = self.view.tick(SETTLE_DT);
+            }
+            {
+                engine::zone!("scene build");
+                let build = stages::span(Stage::SceneBuild);
+                self.view.render(&mut self.compositor);
+                let layers = self.compositor.layers();
+                build.end(|| layers.iter().map(|l| l.nodes().len() as u64).sum());
+            }
+            engine::plot!("controls bound", self.compositor.bindings().count());
+            if index == 0 && tab == Tab::Inspect {
+                let first = self.compositor.bindings().next();
+                match first.map(|(id, _)| id.clone()) {
+                    Some(id) => dev.pick(Some(id)),
+                    // a page that binds nothing: the first path it draws
+                    // in view (an icon), as the picker would choose it
+                    None => {
+                        let icons: Vec<[f32; 4]> = self
+                            .compositor
+                            .layers()
+                            .iter()
+                            .filter(|layer| layer.visible)
+                            .flat_map(|layer| layer.nodes())
+                            .filter(|node| node.kind() == "Path")
+                            .filter_map(|node| node.bounds())
+                            .collect();
+                        for [x, y, w, h] in icons {
+                            let at = (x + w / 2.0, y + h / 2.0);
+                            if at.0 > 0.0 && at.0 < page_w && at.1 > 0.0 && at.1 < page_h {
+                                dev.pick_at(&self.compositor, at.0, at.1);
+                            }
+                            if dev.picked_kind() == Some("Path") {
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            let snapshot = self.view.semantics();
+            {
+                engine::zone!("dev mode");
+                dev.draw(
+                    &mut self.compositor,
+                    &self.view.theme,
+                    window,
+                    &recorder,
+                    snapshot.as_ref(),
+                );
+            }
+            self.compositor.set_frame_index(index);
+            renderer.draw(&mut self.compositor, clear);
+            drop(frame);
+            renderer.record(&mut recorder, &self.compositor, index);
+        }
+        recorder.set_on(false);
+        Ok(renderer.read()?)
+    }
+
     /// The frame as SVG, every approximation on the report. The glyphs
     /// are the renderer's shaping, the same [`render`](Self::render)
     /// draws from, so the svg of a drawn frame holds the glyphs the png
@@ -162,7 +294,7 @@ impl StagedPage {
     }
 }
 
-/// The lean serde form of `sem` (docs/adr/semantics/0040-lean-semantic-form-and-one-redaction.md):
+/// The lean serde form of `sem` (docs/adr/Semantics/0040-lean-semantic-form-and-one-redaction/0040-lean-semantic-form-and-one-redaction.md):
 /// the nodes in projection order, and the focus when there is one.
 #[derive(serde::Serialize)]
 struct SnapshotJson<'a> {
@@ -254,6 +386,22 @@ mod tests {
         };
         let [r, g, b, _] = t.colors.bg.to_array();
         [r, g, b].map(|c| (c * 255.0).round() as u8)
+    }
+
+    /// Staged again with the palette open, the frame draws its sheet on
+    /// a layer the compositor has: the view's layers were made in it.
+    #[test]
+    fn staged_again_the_palette_draws_on_a_layer_that_exists() {
+        let mut staged = match stage_page(DESKTOP, "Button", "core", None) {
+            Ok(s) => s,
+            Err(e) => panic!("{e}"),
+        };
+        staged.stage_again(true, true);
+        let c = staged.compositor();
+        let id = accord::SemId::parse("palette").expect("an id");
+        let bound = c.binding(&id).expect("the palette is bound");
+        let layer = c.layer(bound.layer).expect("its layer exists");
+        assert!(!layer.nodes().is_empty(), "its sheet is drawn");
     }
 
     #[test]
@@ -421,10 +569,15 @@ mod tests {
     /// one is on the report, and a report line names its node.
     #[test]
     fn the_effects_page_reports_its_shadows_gradients_and_blur() {
-        let Some(mut r) = renderer(DESKTOP) else {
+        // Tall enough for the compositor group, under the depths.
+        let tall = Viewport {
+            height: 1600.0,
+            ..DESKTOP
+        };
+        let Some(mut r) = renderer(tall) else {
             return;
         };
-        let export = match staged("Effects", "hoff", DESKTOP).svg(&mut r) {
+        let export = match staged("Effects", "hoff", tall).svg(&mut r) {
             Ok(e) => e,
             Err(e) => panic!("{e}"),
         };
@@ -500,16 +653,20 @@ mod tests {
         };
         let mut runs: Vec<(String, String)> = Vec::new();
         for title in ["Card", "Effects", "Typography"] {
-            let export = match staged(title, "hoff", DESKTOP).svg(&mut r) {
+            // the sidebar pinned, so it draws on every page
+            let mut page = staged(title, "hoff", DESKTOP);
+            page.view.pin_sidebar(true);
+            page.view.render(&mut page.compositor);
+            let export = match page.svg(&mut r) {
                 Ok(e) => e,
                 Err(e) => panic!("{title}: {e}"),
             };
             runs.push((
                 group(&export.svg, "Foundations"),
-                group(&export.svg, "Accordion"),
+                group(&export.svg, "Components"),
             ));
         }
-        for (label, at) in [("Foundations", 0usize), ("Accordion", 1)] {
+        for (label, at) in [("Foundations", 0usize), ("Components", 1)] {
             let first = if at == 0 { &runs[0].0 } else { &runs[0].1 };
             assert!(first.matches("<path d=").count() >= 9, "{label}: {first}");
             for (title, run) in ["Effects", "Typography"].iter().zip(&runs[1..]) {
@@ -550,9 +707,9 @@ mod tests {
 
     #[test]
     fn a_page_without_a_projection_is_an_error_not_an_empty_file() {
-        let staged = staged("Card", "core", DESKTOP);
+        let staged = staged("Separator", "core", DESKTOP);
         match staged.semantics() {
-            Err(RenderError::NoSemantics(page)) => assert_eq!(page, "Card"),
+            Err(RenderError::NoSemantics(page)) => assert_eq!(page, "Separator"),
             other => panic!("expected NoSemantics, got {:?}", other.map(|s| s.len())),
         }
         assert!(

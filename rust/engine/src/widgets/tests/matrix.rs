@@ -7,7 +7,12 @@ use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
 use crate::styling::theme::{Intent, Theme};
 use accord::{Role, SemId, SnapshotBuilder};
 
+use crate::widgets::form::field::Field;
+use crate::widgets::overlay::popover::{Popover, PopoverTrigger, render_panel};
 use crate::widgets::prelude::*;
+use crate::widgets::selection::{
+    ButtonGroup, Calendar, Date, GroupItem, RadioGroup, Toggle, ToggleGroup,
+};
 use crate::widgets::widget::Rect;
 
 const THEMES: [&str; 12] = [
@@ -58,8 +63,7 @@ fn assert_finite(nodes: &[SceneNode], what: &str) {
 fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     let mut c = Compositor::new();
     c.begin_frame();
-    let bp = theme.layout.breakpoint(vw);
-    let gutter = theme.layout.gutter(bp);
+    let gutter = theme.layout.gutter_at(vw);
     let content = Rect::new(gutter, gutter, vw - gutter * 2.0, vh - gutter * 2.0);
     let row = |i: f32| Rect::new(content.x, content.y + i * 60.0, content.w, 44.0);
 
@@ -80,10 +84,62 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     let mut f = TextField::new("name").with_text("brenner");
     f.focus();
     f.render(&mut c, row(5.0), theme);
+    // The kit's field, every part on: label and link, icon, eye, error.
+    let mut field = Field::new("email")
+        .label("Email")
+        .link("Forgot password?")
+        .icon("scan")
+        .password(true)
+        .with_text("brenner")
+        .error("This email is already taken.");
+    field.input.focus();
+    field.render(&mut c, Rect::new(content.x, 4300.0, content.w, 0.0), theme);
     Checkbox::new(true)
         .label("on")
         .render(&mut c, row(6.0), theme);
     Switch::new(true).render(&mut c, row(7.0), theme);
+    let mut toggle = Toggle::new("Bold").icon("eye").on(true);
+    toggle.set_focused(true);
+    toggle.render(&mut c, row(7.0), theme);
+    Toggle::icon_only("eye", "Preview")
+        .disabled(true)
+        .render(&mut c, row(7.0), theme);
+    let mut group = ToggleGroup::new(["Day", "Week", "Month"]).selected(2);
+    group.set_focused(Some(0));
+    group.render(&mut c, row(10.0), theme);
+    let tools = ButtonGroup::new([
+        GroupItem::Toggle(Toggle::icon_only("eye", "Preview").on(true)),
+        GroupItem::Separator,
+        GroupItem::Action {
+            button: IconButton::new("x").variant(IconButtonVariant::Toolbar),
+            label: "Close".into(),
+        },
+    ]);
+    let mut plan = RadioGroup::new(["Free", "Pro"]).selected(1);
+    plan.set_focused(Some(0));
+    let (plan_w, plan_h) = plan.size_within(content.w, theme);
+    plan.render(
+        &mut c,
+        Rect::new(content.x, row(12.0).y, plan_w, plan_h),
+        theme,
+    );
+    let mut when = Calendar::new(2026, 10);
+    if let Some(day) = Date::new(2026, 10, 31) {
+        when = when.selected(day).today(day);
+        when.set_focused(Some(day));
+    }
+    let (when_w, when_h) = when.size_within(content.w, theme);
+    when.render(
+        &mut c,
+        Rect::new(content.x, row(13.0).y, when_w, when_h),
+        theme,
+    );
+    let (_, tools_h) = tools.size_within(content.w, theme);
+    tools.render(
+        &mut c,
+        Rect::new(content.x, row(11.0).y, content.w, tools_h),
+        theme,
+    );
     Slider::new(0.0, 100.0, 40.0).render(&mut c, row(8.0), theme);
     let mut s = Select::new(["a", "b", "c"], 1);
     s.render(&mut c, row(9.0), theme);
@@ -212,6 +268,20 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
         Rect::new(content.x, 3700.0, content.w, 200.0),
         theme,
     );
+    let accordion = Accordion::new(AccordionMode::Single)
+        .item("3D Objects", "Meshes and primitives on the canvas.")
+        .item("Materials", "Surfaces and the maps that drive them.")
+        .opened(0)
+        .disabled_item(1);
+    let h = accordion.height(content.w, theme);
+    accordion.render(&mut c, Rect::new(content.x, 4300.0, content.w, h), theme);
+    let mut collapsible = Collapsible::new("Explore").icon("house").current(true);
+    collapsible.set_focused(true);
+    collapsible.toggle();
+    collapsible.wake(0.1);
+    let h = collapsible.height(content.w, 80.0, theme);
+    let at = Rect::new(content.x, 4700.0, content.w, h);
+    collapsible.render(&mut c, at, 80.0, theme, |_, _| {});
     let mut table = Table::new(
         vec![Column::new("a", theme), Column::new("b", theme).priority(0)],
         theme,
@@ -245,6 +315,89 @@ fn render_all(theme: &Theme, vw: f32, vh: f32) -> Vec<SceneNode> {
     tip.render(&mut c, LayerId::DEFAULT, theme, vw, vh);
     ProgressBar::new(0.5).render(&mut c, row(21.0), theme);
     Spinner::new().render(&mut c, row(22.0), theme);
+    // task-104 front C (#156): a thread row and a quick comment
+    {
+        use crate::widgets::message::message::{Message, MessageKind};
+        Message::new(
+            "Luna Starfield",
+            "2s",
+            "a body long enough to wrap on a phone, at least once",
+        )
+        .divider(true)
+        .render(&mut c, row(23.0), theme);
+        Message::new("Randomdash", "1h", "clamped to three lines")
+            .kind(MessageKind::Quick)
+            .reaction("2")
+            .render(&mut c, row(26.0), theme);
+        use crate::widgets::message::bubble::{Bubble, BubbleSide};
+        Bubble::new("a bubble long enough to wrap on a phone, at least once")
+            .unread(true)
+            .render(&mut c, row(29.0), theme);
+        Bubble::new("mine")
+            .side(BubbleSide::End)
+            .render(&mut c, row(31.0), theme);
+        use crate::widgets::message::scroller::MessageScroller;
+        let thread = MessageScroller::new(
+            "comments",
+            "none",
+            (0..8)
+                .map(|i| Message::new("Sam", "1m", format!("message {i}")))
+                .collect(),
+        );
+        let h = thread.height(content.w, theme);
+        thread.render(&mut c, Rect::new(content.x, 3400.0, content.w, h), theme);
+        use crate::widgets::buttons::ButtonVariant;
+        use crate::widgets::feedback::alert::Alert;
+        Alert::new(Intent::Constructive, "3D object is generated", "a scene")
+            .time("4h ago")
+            .avatar("Hoff")
+            .content("a content long enough to wrap on a phone, and cut at two lines")
+            .unread(true)
+            .action("Decline", ButtonVariant::Primary)
+            .action("Accept", ButtonVariant::Secondary)
+            .render(
+                &mut c,
+                Rect::new(content.x, 3400.0 + h, content.w, 0.0),
+                theme,
+            );
+        use crate::widgets::message::attachment::{AttachmentKind, AttachmentTray};
+        AttachmentTray::new()
+            .with("a.png", "PNG", AttachmentKind::Image(None))
+            .with(
+                "a file name long enough to be cut on a phone.pdf",
+                "PDF",
+                AttachmentKind::File,
+            )
+            .with("car.glb", "3D", AttachmentKind::Object)
+            .with_add()
+            .show_removes(true)
+            .render(&mut c, Rect::new(content.x, 3200.0, content.w, 0.0), theme);
+        use crate::widgets::message::marker::{CursorState, Marker};
+        for (i, m) in [
+            Marker::pin(["Luna", "Sam", "Ada"]).unread(true),
+            Marker::cursor(CursorState::Point),
+            Marker::cursor(CursorState::Pinned),
+            Marker::cursor(CursorState::Uploading),
+            Marker::cursor(CursorState::Typing),
+        ]
+        .iter()
+        .enumerate()
+        {
+            m.render(
+                &mut c,
+                Rect::new(content.x + i as f32 * 40.0, 3100.0, 0.0, 0.0),
+                theme,
+            );
+        }
+    }
+
+    // task-104 front B: the popover's trigger, open, and its panel, placed
+    // inside the content.
+    let trigger = PopoverTrigger::new("100%");
+    let anchor = Rect::new(content.right() - 88.0, row(23.0).y, 88.0, 40.0);
+    trigger.render(&mut c, LayerId::DEFAULT, anchor, true, theme);
+    let placed = Popover::new().placement(anchor, (204.0, 160.0), content, theme);
+    render_panel(&mut c, LayerId::DEFAULT, placed.rect, theme);
 
     let mut shell = AppShell::new(
         Sidebar::new(vec![
@@ -288,7 +441,7 @@ fn widgets_with_a_sem_id_project_and_bind_under_every_theme_at_phone_and_desktop
     let mut rects = Vec::new();
     for (t, theme) in themes().into_iter().enumerate() {
         for (vw, vh) in VIEWPORTS {
-            let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+            let gutter = theme.layout.gutter_at(vw);
             let row = |i: f32| Rect::new(gutter, gutter + i * 60.0, vw - gutter * 2.0, 44.0);
             let field = TextField::new("name")
                 .with_text("brenner")
@@ -370,7 +523,7 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
     for (t, theme) in themes().into_iter().enumerate() {
         for (vw, vh) in VIEWPORTS {
             let what = format!("theme {t} at {vw}x{vh}");
-            let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+            let gutter = theme.layout.gutter_at(vw);
             let row = |i: f32| Rect::new(gutter, gutter + i * 60.0, vw - gutter * 2.0, 44.0);
             let block = |i: f32| Rect::new(gutter, gutter + i * 60.0, vw - gutter * 2.0, 200.0);
             let label = |i: usize| format!("row {i}");
@@ -400,6 +553,60 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
             switch.render(&mut c, row(3.0), &theme);
             switch.project(&mut b, &id("m.switch"), "wifi", None);
             frames.push((c, vec![(id("m.switch"), Role::Toggle, Probe::Hit)]));
+
+            let toggle = Toggle::icon_only("eye", "Preview").sem(id("m.toggle"));
+            let (mut c, _) = frame(false);
+            toggle.render(&mut c, row(3.0), &theme);
+            toggle.project(&mut b, &id("m.toggle"), None);
+            frames.push((c, vec![(id("m.toggle"), Role::Toggle, Probe::Hit)]));
+
+            let tools = ButtonGroup::new([
+                GroupItem::Toggle(Toggle::icon_only("eye", "Preview").sem(id("m.tools.item[0]"))),
+                GroupItem::Separator,
+                GroupItem::Action {
+                    button: IconButton::new("x").sem(id("m.tools.item[2]")),
+                    label: "Close".into(),
+                },
+            ])
+            .sem(id("m.tools"));
+            let (tw, th) = tools.size_within(vw - gutter * 2.0, &theme);
+            let (mut c, _) = frame(false);
+            tools.render(&mut c, Rect::new(gutter, row(7.0).y, tw, th), &theme);
+            tools.project(&mut b, &id("m.tools"), "tools", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.tools"), Role::Toolbar, Probe::Bound),
+                    (id("m.tools.item[0]"), Role::Toggle, Probe::Hit),
+                    (id("m.tools.item[2]"), Role::Button, Probe::Hit),
+                ],
+            ));
+
+            let plan = RadioGroup::new(["Free", "Pro"]).sem(id("m.plan"));
+            let (pw, ph) = plan.size_within(vw - gutter * 2.0, &theme);
+            let (mut c, _) = frame(false);
+            plan.render(&mut c, Rect::new(gutter, row(8.0).y, pw, ph), &theme);
+            plan.project(&mut b, &id("m.plan"), "plan", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.plan"), Role::Group, Probe::Bound),
+                    (id("m.plan[1]"), Role::Radio, Probe::Hit),
+                ],
+            ));
+
+            let group = ToggleGroup::new(["Day", "Week", "Month"]).sem(id("m.view"));
+            let (mut c, _) = frame(false);
+            group.render(&mut c, row(6.0), &theme);
+            group.project(&mut b, &id("m.view"), "view", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.view"), Role::Group, Probe::Bound),
+                    (id("m.view[0]"), Role::Radio, Probe::Hit),
+                    (id("m.view[2]"), Role::Radio, Probe::Hit),
+                ],
+            ));
 
             let slider = Slider::new(0.0, 100.0, 40.0).step(5.0).sem(id("m.slider"));
             let (mut c, _) = frame(false);
@@ -562,6 +769,92 @@ fn every_interactive_widget_projects_and_binds_under_every_theme_at_phone_and_de
                 ],
             ));
 
+            // task-104 front C (#156): a message row and its like chip
+            let message = crate::widgets::message::message::Message::new("Luna", "2s", "body")
+                .kind(crate::widgets::message::message::MessageKind::Quick)
+                .reaction("2")
+                .sem(id("m.message"));
+            let (mut c, _) = frame(false);
+            message.render(&mut c, block(22.0), &theme);
+            message.project(&mut b, &id("m.message"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.message"), Role::ListItem, Probe::Bound),
+                    (id("m.message.reaction"), Role::Button, Probe::Hit),
+                ],
+            ));
+            let bubble = crate::widgets::message::bubble::Bubble::new("hi").sem(id("m.bubble"));
+            let (mut c, _) = frame(false);
+            bubble.render(&mut c, row(24.0), &theme);
+            bubble.project(&mut b, &id("m.bubble"), None);
+            frames.push((c, vec![(id("m.bubble"), Role::ListItem, Probe::Hit)]));
+            let thread = crate::widgets::message::scroller::MessageScroller::new(
+                "comments",
+                "none",
+                vec![crate::widgets::message::message::Message::new(
+                    "Sam", "1m", "hi",
+                )],
+            )
+            .sem(id("m.thread"));
+            let (mut c, _) = frame(false);
+            let h = thread.height(vw - gutter * 2.0, &theme);
+            thread.render(
+                &mut c,
+                Rect::new(gutter, gutter, vw - gutter * 2.0, h),
+                &theme,
+            );
+            thread.project(&mut b, &id("m.thread"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.thread"), Role::List, Probe::Bound),
+                    (id("m.thread[0]"), Role::ListItem, Probe::Hit),
+                ],
+            ));
+            let alert = crate::widgets::feedback::alert::Alert::new(
+                Intent::Constructive,
+                "Invite",
+                "a scene",
+            )
+            .action("Accept", crate::widgets::buttons::ButtonVariant::Secondary)
+            .sem(id("m.alert"));
+            let (mut c, _) = frame(false);
+            alert.render(&mut c, block(26.0), &theme);
+            alert.project(&mut b, &id("m.alert"), None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.alert"), Role::Status, Probe::Bound),
+                    (id("m.alert.action[0]"), Role::Button, Probe::Hit),
+                ],
+            ));
+            let tray = crate::widgets::message::attachment::AttachmentTray::new()
+                .with(
+                    "notes.txt",
+                    "TXT",
+                    crate::widgets::message::attachment::AttachmentKind::File,
+                )
+                .with_add()
+                .sem(id("m.files"));
+            let (mut c, _) = frame(false);
+            tray.render(&mut c, block(28.0), &theme);
+            tray.project(&mut b, &id("m.files"), "attachments", None);
+            frames.push((
+                c,
+                vec![
+                    (id("m.files"), Role::List, Probe::Node),
+                    (id("m.files[0]"), Role::ListItem, Probe::Hit),
+                    (id("m.files[0].remove"), Role::Button, Probe::Hit),
+                    (id("m.files.add"), Role::Button, Probe::Hit),
+                ],
+            ));
+            let pin = crate::widgets::message::marker::Marker::pin(["Luna"]).sem(id("m.pin"));
+            let (mut c, _) = frame(false);
+            pin.render(&mut c, row(30.0), &theme);
+            pin.project(&mut b, &id("m.pin"), None);
+            frames.push((c, vec![(id("m.pin"), Role::Button, Probe::Hit)]));
+
             let snap = b
                 .finish()
                 .unwrap_or_else(|e| panic!("{what}: the projection does not validate: {e:?}"));
@@ -609,7 +902,7 @@ fn a_long_select_reaches_its_last_option_under_every_theme_at_phone_and_desktop_
     for (t, theme) in themes().into_iter().enumerate() {
         for (vw, _) in VIEWPORTS {
             let what = format!("theme {t} at {vw}");
-            let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+            let gutter = theme.layout.gutter_at(vw);
             let control = Rect::new(gutter, gutter, vw - gutter * 2.0, 44.0);
             let mut select =
                 Select::new((0..20).map(|i| format!("option {i}")), 0).sem(long.clone());
@@ -653,7 +946,7 @@ fn modal_and_toast_fit_a_phone_width() {
     let (vw, vh) = (390.0, 844.0);
     let modal = Modal::new("T", "B", "OK", "No");
     let d = modal.dialog_rect(&theme, vw, vh);
-    let gutter = theme.layout.gutter(theme.layout.breakpoint(vw));
+    let gutter = theme.layout.gutter_at(vw);
     assert!(d.x >= gutter - 0.5 && d.x + d.w <= vw - gutter + 0.5);
     let mut toasts = ToastManager::new();
     toasts.push("hi", Intent::Neutral, &theme);

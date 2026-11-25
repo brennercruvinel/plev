@@ -3,7 +3,7 @@
 //! The invariant they all serve: **a string renders to the same pixels no
 //! matter what else is on screen**. Glyph caching, atlas packing and atlas
 //! growth are per-frame global state, and every defect in
-//! `docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md` was a leak of
+//! `docs/adr/Rendering/0024-glyph-raster-identity-and-atlas-isolation/0024-glyph-raster-identity-and-atlas-isolation.md` was a leak of
 //! that state into one string's pixels.
 //!
 //! These need a GPU adapter. Where there is none they skip rather than fail,
@@ -11,6 +11,7 @@
 
 use engine::drawing::text::TextStyle;
 use engine::drawing::text::probe::{Rendered, Specimen, render};
+use engine::styling::theme::TypeRole;
 
 const W: u32 = 900;
 const SCALE: f32 = 2.0;
@@ -20,7 +21,12 @@ const BAND_H: u32 = 80;
 
 fn scene(extra: &[(String, TextStyle)]) -> Vec<Specimen> {
     let ramp = engine::styling::theme::TypographyScale::hoff();
-    let mut out = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
+    let mut out = vec![Specimen::new(
+        "Expense Tracker",
+        ramp.role(TypeRole::Title),
+        20.0,
+        20.0,
+    )];
     for (i, (text, style)) in extra.iter().enumerate() {
         out.push(Specimen::new(
             text.clone(),
@@ -86,7 +92,12 @@ fn a_string_renders_identically_whether_or_not_the_atlas_grew() {
 #[test]
 fn repeating_a_string_does_not_change_the_first_copy() {
     let ramp = engine::styling::theme::TypographyScale::hoff();
-    let solo = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
+    let solo = vec![Specimen::new(
+        "Expense Tracker",
+        ramp.role(TypeRole::Title),
+        20.0,
+        20.0,
+    )];
     let Some(a) = render(&solo, W, 160, SCALE) else {
         eprintln!("no GPU adapter; skipping");
         return;
@@ -97,7 +108,7 @@ fn repeating_a_string_does_not_change_the_first_copy() {
     let mut repeated = solo;
     repeated.push(Specimen::new(
         "Expense Tracker",
-        ramp.title(),
+        ramp.role(TypeRole::Title),
         20.333,
         100.0,
     ));
@@ -118,7 +129,12 @@ fn repeating_a_string_does_not_change_the_first_copy() {
 #[test]
 fn raster_scale_does_not_leak_between_renders() {
     let ramp = engine::styling::theme::TypographyScale::hoff();
-    let s = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
+    let s = vec![Specimen::new(
+        "Expense Tracker",
+        ramp.role(TypeRole::Title),
+        20.0,
+        20.0,
+    )];
     let Some(first) = render(&s, W, 160, 2.0) else {
         eprintln!("no GPU adapter; skipping");
         return;
@@ -141,7 +157,12 @@ fn raster_scale_does_not_leak_between_renders() {
 #[test]
 fn a_scale_change_does_not_leave_stale_glyphs_behind() {
     let ramp = engine::styling::theme::TypographyScale::hoff();
-    let mut s = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
+    let mut s = vec![Specimen::new(
+        "Expense Tracker",
+        ramp.role(TypeRole::Title),
+        20.0,
+        20.0,
+    )];
     for (i, (text, style)) in engine::drawing::text::probe::atlas_filling_specimens()
         .into_iter()
         .enumerate()
@@ -175,7 +196,12 @@ fn a_scale_change_does_not_leave_stale_glyphs_behind() {
 #[test]
 fn ink_counts_glyph_coverage_not_background() {
     let ramp = engine::styling::theme::TypographyScale::hoff();
-    let s = vec![Specimen::new("Expense Tracker", ramp.title(), 20.0, 20.0)];
+    let s = vec![Specimen::new(
+        "Expense Tracker",
+        ramp.role(TypeRole::Title),
+        20.0,
+        20.0,
+    )];
     let Some(img) = render(&s, W, 200, SCALE) else {
         eprintln!("no GPU adapter; skipping");
         return;

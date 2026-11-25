@@ -11,9 +11,16 @@ authors.workspace = true
 repository.workspace = true
 publish = false
 description = "plev: a gpu-first compositing engine (wgpu, winit, cosmic-text, taffy)"
+# the integration tests are one executable, tests/suite.rs, a module per file
+# (task-106): cargo links every file under tests/ as an executable of its
+# own, each with the whole crate inside. a target listed apart at the end of
+# this file is one that needs a process to itself.
+autotests = false
 
-[lib]
-crate-type = ["cdylib", "staticlib", "rlib"]
+# a plain library: the apps are the ones that become a mobile `.so` or `.a`
+# (tool/tasks/mobileapp.sh asks for that crate type when it builds one). as a
+# cdylib and staticlib of its own the engine linked a 196 MB archive on every
+# desktop build, and its rlib lost the hash in its file name (task-106).
 
 [lints]
 workspace = true
@@ -68,7 +75,7 @@ image.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 unicode-segmentation.workspace = true
-# the semantic contract (docs/adr/semantics/0035-semantic-binding-beside-the-scene.md):
+# the semantic contract (docs/adr/Semantics/0035-semantic-binding-beside-the-scene/0035-semantic-binding-beside-the-scene.md):
 # the compositor binds each `SemId` to its rect beside the scene.
 accord.workspace = true
 # the widgets' multi-line editor sits on the rope-based editing core.
@@ -121,7 +128,7 @@ tray-icon = { version = "0.25", default-features = false }
 # macos the UserNotifications framework refuses a process without an app
 # bundle (`objc2-user-notifications` 0.3 would enter with the classes it
 # uses, plus `objc2` and `objc2-foundation` directly; see the item 5 probe
-# in docs/tasks/task-76-platform-integration/README.md), and the
+# in docs/Tasks/task-76-platform-integration/task-76-platform-integration.md), and the
 # bundle is the platform bring-up's. until then `NativeNotifier` says why.
 
 [target.'cfg(target_os = "android")'.dependencies]
@@ -138,7 +145,7 @@ proc-macro2 = { workspace = true, optional = true }
 wasm-bindgen.workspace = true
 wasm-bindgen-futures.workspace = true
 # Response: the Noto files fetched on demand (drawing/text/on_demand.rs)
-web-sys = { workspace = true, features = ["Response"] }
+web-sys = { workspace = true, features = ["Response", "MediaQueryList", "CssStyleDeclaration"] }
 js-sys.workspace = true
 console_log.workspace = true
 console_error_panic_hook.workspace = true
@@ -160,3 +167,18 @@ theme = "@android:style/Theme.DeviceDefault.NoActionBar.Fullscreen"
 name = "scene_build"
 harness = false
 
+[[test]]
+name = "suite"
+path = "tests/suite.rs"
+
+# a process each: device_loss and text_audit install their own recorder as
+# the process's logger (log::set_logger takes one per process) and assert on
+# what the engine logged. together only the first would record, and in the
+# suite either would also hear every other test.
+[[test]]
+name = "device_loss"
+path = "tests/device_loss.rs"
+
+[[test]]
+name = "text_audit"
+path = "tests/text_audit.rs"

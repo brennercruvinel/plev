@@ -1,0 +1,661 @@
+{
+  "nodes": [
+    {
+      "id": "attachment_page",
+      "role": "region",
+      "label": "Attachment"
+    },
+    {
+      "id": "attachment_page.group[0]",
+      "role": "group",
+      "label": "Tile",
+      "parent": "attachment_page"
+    },
+    {
+      "id": "attachment_page.group[0].card[0][0]",
+      "role": "list_item",
+      "label": "Uploaded 1",
+      "description": "PNG",
+      "parent": "attachment_page.group[0].card[0]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[0].card[0][0].remove",
+      "role": "button",
+      "label": "Remove Uploaded 1",
+      "parent": "attachment_page.group[0].card[0][0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[0].card[0]",
+      "role": "list",
+      "label": "Picture, Focus",
+      "parent": "attachment_page.group[0]"
+    },
+    {
+      "id": "attachment_page.group[0].card[1][0]",
+      "role": "list_item",
+      "label": "Uploaded 1",
+      "description": "PNG",
+      "parent": "attachment_page.group[0].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[0].card[1][0].remove",
+      "role": "button",
+      "label": "Remove Uploaded 1",
+      "parent": "attachment_page.group[0].card[1][0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[0].card[1]",
+      "role": "list",
+      "label": "Picture, Hover, Touch",
+      "parent": "attachment_page.group[0]"
+    },
+    {
+      "id": "attachment_page.group[0].card[2][0]",
+      "role": "list_item",
+      "label": "Brief.pdf",
+      "description": "PDF, 3.4 MB",
+      "parent": "attachment_page.group[0].card[2]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[0].card[2][0].remove",
+      "role": "button",
+      "label": "Remove Brief.pdf",
+      "parent": "attachment_page.group[0].card[2][0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[0].card[2]",
+      "role": "list",
+      "label": "File",
+      "parent": "attachment_page.group[0]"
+    },
+    {
+      "id": "attachment_page.group[0].card[3][0]",
+      "role": "list_item",
+      "label": "Classic Car.glb",
+      "description": "3D object, 12 MB",
+      "parent": "attachment_page.group[0].card[3]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[0].card[3][0].remove",
+      "role": "button",
+      "label": "Remove Classic Car.glb",
+      "parent": "attachment_page.group[0].card[3][0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[0].card[3]",
+      "role": "list",
+      "label": "3D object",
+      "parent": "attachment_page.group[0]"
+    },
+    {
+      "id": "attachment_page.group[1]",
+      "role": "group",
+      "label": "Tray",
+      "parent": "attachment_page"
+    },
+    {
+      "id": "attachment_page.group[1].card[0][0]",
+      "role": "list_item",
+      "label": "Uploaded 1",
+      "description": "PNG",
+      "parent": "attachment_page.group[1].card[0]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[0][0].remove",
+      "role": "button",
+      "label": "Remove Uploaded 1",
+      "parent": "attachment_page.group[1].card[0][0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[0][1]",
+      "role": "list_item",
+      "label": "Uploaded 2",
+      "description": "PNG",
+      "parent": "attachment_page.group[1].card[0]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[0][1].remove",
+      "role": "button",
+      "label": "Remove Uploaded 2",
+      "parent": "attachment_page.group[1].card[0][1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[0][2]",
+      "role": "list_item",
+      "label": "Uploaded 3",
+      "description": "PNG",
+      "parent": "attachment_page.group[1].card[0]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[0][2].remove",
+      "role": "button",
+      "label": "Remove Uploaded 3",
+      "parent": "attachment_page.group[1].card[0][2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[0].add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "attachment_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[0]",
+      "role": "list",
+      "label": "Pictures, Add",
+      "parent": "attachment_page.group[1]"
+    },
+    {
+      "id": "attachment_page.group[1].card[1][0]",
+      "role": "list_item",
+      "label": "Uploaded 1",
+      "description": "PNG",
+      "parent": "attachment_page.group[1].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[1][0].remove",
+      "role": "button",
+      "label": "Remove Uploaded 1",
+      "parent": "attachment_page.group[1].card[1][0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[1][1]",
+      "role": "list_item",
+      "label": "Brief.pdf",
+      "description": "PDF, 3.4 MB",
+      "parent": "attachment_page.group[1].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[1][1].remove",
+      "role": "button",
+      "label": "Remove Brief.pdf",
+      "parent": "attachment_page.group[1].card[1][1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[1][2]",
+      "role": "list_item",
+      "label": "Classic Car.glb",
+      "description": "3D object",
+      "parent": "attachment_page.group[1].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[1][2].remove",
+      "role": "button",
+      "label": "Remove Classic Car.glb",
+      "parent": "attachment_page.group[1].card[1][2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[1].add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "attachment_page.group[1].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[1]",
+      "role": "list",
+      "label": "Mixed, Add",
+      "parent": "attachment_page.group[1]"
+    },
+    {
+      "id": "attachment_page.group[1].card[2].add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "attachment_page.group[1].card[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[2]",
+      "role": "list",
+      "label": "Empty, Add",
+      "parent": "attachment_page.group[1]"
+    },
+    {
+      "id": "attachment_page.group[1].card[3][0]",
+      "role": "list_item",
+      "label": "Uploading 1",
+      "description": "PNG, 40%",
+      "parent": "attachment_page.group[1].card[3]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[3][0].remove",
+      "role": "button",
+      "label": "Remove Uploading 1",
+      "parent": "attachment_page.group[1].card[3][0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[1].card[3]",
+      "role": "list",
+      "label": "Loading picture",
+      "parent": "attachment_page.group[1]"
+    },
+    {
+      "id": "attachment_page.group[2]",
+      "role": "group",
+      "label": "Content",
+      "parent": "attachment_page"
+    },
+    {
+      "id": "attachment_page.group[2].card[0][0]",
+      "role": "list_item",
+      "label": "Minimalist Architecture Scene, final review with the lighting notes.pdf",
+      "description": "PDF, 3.4 MB",
+      "parent": "attachment_page.group[2].card[0]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[0][0].remove",
+      "role": "button",
+      "label": "Remove Minimalist Architecture Scene, final review with the lighting notes.pdf",
+      "parent": "attachment_page.group[2].card[0][0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[0]",
+      "role": "list",
+      "label": "Long name",
+      "parent": "attachment_page.group[2]"
+    },
+    {
+      "id": "attachment_page.group[2].card[1][0]",
+      "role": "list_item",
+      "label": "Uploaded 1",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][0].remove",
+      "role": "button",
+      "label": "Remove Uploaded 1",
+      "parent": "attachment_page.group[2].card[1][0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][1]",
+      "role": "list_item",
+      "label": "Uploaded 2",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][1].remove",
+      "role": "button",
+      "label": "Remove Uploaded 2",
+      "parent": "attachment_page.group[2].card[1][1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][2]",
+      "role": "list_item",
+      "label": "Uploaded 3",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][2].remove",
+      "role": "button",
+      "label": "Remove Uploaded 3",
+      "parent": "attachment_page.group[2].card[1][2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][3]",
+      "role": "list_item",
+      "label": "Uploaded 4",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][3].remove",
+      "role": "button",
+      "label": "Remove Uploaded 4",
+      "parent": "attachment_page.group[2].card[1][3]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][4]",
+      "role": "list_item",
+      "label": "Uploaded 5",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][4].remove",
+      "role": "button",
+      "label": "Remove Uploaded 5",
+      "parent": "attachment_page.group[2].card[1][4]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][5]",
+      "role": "list_item",
+      "label": "Uploaded 6",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][5].remove",
+      "role": "button",
+      "label": "Remove Uploaded 6",
+      "parent": "attachment_page.group[2].card[1][5]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][6]",
+      "role": "list_item",
+      "label": "Uploaded 7",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][6].remove",
+      "role": "button",
+      "label": "Remove Uploaded 7",
+      "parent": "attachment_page.group[2].card[1][6]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][7]",
+      "role": "list_item",
+      "label": "Uploaded 8",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][7].remove",
+      "role": "button",
+      "label": "Remove Uploaded 8",
+      "parent": "attachment_page.group[2].card[1][7]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][8]",
+      "role": "list_item",
+      "label": "Uploaded 9",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][8].remove",
+      "role": "button",
+      "label": "Remove Uploaded 9",
+      "parent": "attachment_page.group[2].card[1][8]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][9]",
+      "role": "list_item",
+      "label": "Uploaded 10",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][9].remove",
+      "role": "button",
+      "label": "Remove Uploaded 10",
+      "parent": "attachment_page.group[2].card[1][9]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][10]",
+      "role": "list_item",
+      "label": "Uploaded 11",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][10].remove",
+      "role": "button",
+      "label": "Remove Uploaded 11",
+      "parent": "attachment_page.group[2].card[1][10]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][11]",
+      "role": "list_item",
+      "label": "Uploaded 12",
+      "description": "PNG",
+      "parent": "attachment_page.group[2].card[1]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1][11].remove",
+      "role": "button",
+      "label": "Remove Uploaded 12",
+      "parent": "attachment_page.group[2].card[1][11]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1].add",
+      "role": "button",
+      "label": "Add files",
+      "parent": "attachment_page.group[2].card[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[1]",
+      "role": "list",
+      "label": "Many, wrapping",
+      "parent": "attachment_page.group[2]"
+    },
+    {
+      "id": "attachment_page.group[2].card[2][0]",
+      "role": "list_item",
+      "label": "تقرير المشروع.pdf",
+      "description": "PDF · مستند",
+      "parent": "attachment_page.group[2].card[2]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[2][0].remove",
+      "role": "button",
+      "label": "Remove تقرير المشروع.pdf",
+      "parent": "attachment_page.group[2].card[2][0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[2][1]",
+      "role": "list_item",
+      "label": "设计稿 🎨.png",
+      "description": "PNG · 图片",
+      "parent": "attachment_page.group[2].card[2]",
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[2][1].remove",
+      "role": "button",
+      "label": "Remove 设计稿 🎨.png",
+      "parent": "attachment_page.group[2].card[2][1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "attachment_page.group[2].card[2]",
+      "role": "list",
+      "label": "Mixed scripts",
+      "parent": "attachment_page.group[2]"
+    }
+  ]
+}

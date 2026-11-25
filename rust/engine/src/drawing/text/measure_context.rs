@@ -6,12 +6,13 @@
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
 
+use cosmic_text::fontdb::Database;
 use cosmic_text::{Attrs, Buffer, Family, FontSystem, Metrics, Shaping, Weight};
 use lru::LruCache;
 
 use crate::runtime::perf::stages::{self, Stage};
 
-use super::backend::TextStyle;
+use super::backend::{OverflowWrap, TextStyle};
 use super::cluster_cache::{CLUSTER_CACHE_BUDGET, ClusterCache};
 use super::measure::LineMetrics;
 
@@ -57,6 +58,8 @@ pub(super) struct MeasureKey {
     font_weight: u16,
     letter_spacing_bits: u32,
     font_family: Option<String>,
+    features: super::TextFeatures,
+    overflow_wrap: OverflowWrap,
     // Wrap width rounded to whole pixels (plan: "largura-bucket").
     width_bucket: Option<i32>,
 }
@@ -70,6 +73,8 @@ impl MeasureKey {
             font_weight: style.font_weight,
             letter_spacing_bits: style.letter_spacing.to_bits(),
             font_family: style.font_family.clone(),
+            features: style.features,
+            overflow_wrap: style.overflow_wrap,
             width_bucket: max_width.map(|w| w.round() as i32),
         }
     }
@@ -132,9 +137,11 @@ impl MeasureContext {
         let fs = &mut self.font_system;
         self.scratch
             .set_metrics(fs, Metrics::new(style.font_size, style.line_height));
+        self.scratch.set_wrap(fs, style.overflow_wrap.cosmic(text));
         self.scratch.set_size(fs, max_width, None);
+        let attrs = attrs_for(style, fs.db());
         self.scratch
-            .set_text(fs, text, &attrs_for(style), Shaping::Advanced, None);
+            .set_text(fs, text, &attrs, Shaping::Advanced, None);
         self.scratch.shape_until_scroll(fs, false);
     }
 }
@@ -151,11 +158,18 @@ fn new_font_system() -> FontSystem {
     super::fonts::font_system(super::fonts::FaceSet::Target).0
 }
 
-pub(super) fn attrs_for(style: &TextStyle) -> Attrs<'_> {
-    let mut attrs = Attrs::new().weight(Weight(style.font_weight));
+/// The attributes `style` shapes with in `db`: its family at the weight
+/// that family has nearest to the one asked ([`super::fonts::matched_weight`]).
+pub(super) fn attrs_for<'a>(style: &'a TextStyle, db: &Database) -> Attrs<'a> {
+    let family = style.font_family.as_deref();
+    let weight = super::fonts::matched_weight(db, family, style.font_weight);
+    let mut attrs = Attrs::new().weight(Weight(weight));
     if style.letter_spacing != 0.0 && style.font_size > 0.0 {
         // cosmic-text tracking is in EM; the engine API is px.
         attrs = attrs.letter_spacing(style.letter_spacing / style.font_size);
+    }
+    if let Some(features) = style.features.cosmic() {
+        attrs = attrs.font_features(features);
     }
     match style.font_family {
         Some(ref family) => attrs.family(Family::Name(family)),

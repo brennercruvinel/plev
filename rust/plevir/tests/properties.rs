@@ -13,7 +13,7 @@
 // the validator for the keywords the schema uses (no schema dependency).
 // shared with rules.rs: this binary uses the registry only.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{ActionName, SemId, StateRef};
 use plevir::{

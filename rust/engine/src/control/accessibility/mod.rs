@@ -1,5 +1,5 @@
 //! Accessibility as a projection of the semantic contract
-//! (docs/adr/interface/0038-accessibility-projects-the-semantic-snapshot.md).
+//! (docs/adr/Interface/0038-accessibility-projects-the-semantic-snapshot/0038-accessibility-projects-the-semantic-snapshot.md).
 //!
 //! The tree assistive technology reads is built from the same
 //! `accord::Snapshot` agents and tests read (`tree`), placed by the
@@ -9,8 +9,9 @@
 //! adapter implements custom actions. What a screen reader asks comes back as
 //! a `accord::Request` with `Actor::Assistive`, for the app's one dispatcher
 //! (`action`). Keyboard focus walks the same snapshot (`focus`). The
-//! system's "reduce motion" is read here (`motion`) and ends every
-//! transition at once (`animation::set_reduced_motion`). An app shell
+//! system's "reduce motion" is read here (`reduced_motion`, from the
+//! platform's own source in `preference`, with its "more contrast") and
+//! ends every transition at once (`animation::set_reduced_motion`). An app shell
 //! wires all of it through one `Bridge` (native only).
 
 pub mod action;
@@ -18,6 +19,7 @@ pub mod action;
 pub mod bridge;
 pub mod focus;
 pub mod ids;
+pub mod preference;
 pub mod present;
 pub mod reduced_motion;
 pub mod role;

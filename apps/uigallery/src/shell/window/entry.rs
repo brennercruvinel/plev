@@ -24,7 +24,12 @@ pub fn run() {
     } else {
         "warn"
     };
-    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(filter)).init();
+    // what the console shows also goes to the dev mode's Log view
+    // (`perf::marks::Tee`); without a dev mode the tee is the logger alone
+    let logger =
+        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or(filter)).build();
+    log::set_max_level(logger.filter());
+    let _ = log::set_boxed_logger(Box::new(engine::runtime::perf::Tee::new(logger)));
     let mut builder = EventLoop::<UserEvent>::with_user_event();
     #[cfg(target_os = "macos")]
     background::event_loop(&mut builder);
@@ -61,6 +66,10 @@ pub fn run_web() {
     engine::drawing::text::on_faces_arrived(move || {
         let _ = faces.send_event(UserEvent::Faces);
     });
+    // the browser's prefers-reduced-motion and prefers-contrast, read
+    // again when the page takes the focus (`events`)
+    engine::control::accessibility::reduced_motion::follow_system();
+    engine::control::accessibility::preference::follow_contrast();
     event_loop.spawn_app(app);
 }
 

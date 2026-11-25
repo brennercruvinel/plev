@@ -1,37 +1,18 @@
 use crate::drawing::compositor::{Compositor, SceneNode, TextNodeKey};
 use crate::drawing::text::{TextMeasurer, TextStyle};
-use crate::styling::theme::{IconSize, Theme};
+use crate::styling::theme::Theme;
 use crate::widgets::icons;
 use accord::{NodeBuilder, Role, SemId, SnapshotBuilder};
 
 use super::list::reachable;
-use crate::widgets::recipe::focus_ring_inside;
+use super::tokens::{DisclosureSurface, TreeRecipe};
+use crate::widgets::recipe::{focus_ring_inside, rounded_rect, rounded_rect_stroke, shadow_node};
 use crate::widgets::widget::{EventResult, Rect, WidgetEvent, with_alpha};
 
-/// The per-theme geometry the hit test and the render share: a dense
-/// base-2r row (line box plus `xs` above and below), one `lg` step of
-/// indent per depth, small icons, `xs` gaps.
-struct Metrics {
-    row_h: f32,
-    indent: f32,
-    icon: f32,
-    pad_x: f32,
-    gap: f32,
-    style: TextStyle,
-}
-
-impl Metrics {
-    fn of(theme: &Theme) -> Self {
-        let style = theme.typography.base_2r();
-        Self {
-            row_h: (style.line_height + theme.spacing.xs * 2.0).round(),
-            indent: theme.spacing.lg,
-            icon: theme.control.icon(IconSize::Sm),
-            pad_x: theme.spacing.sm,
-            gap: theme.spacing.xs,
-            style,
-        }
-    }
+/// The row height the hit test and the render share
+/// (`theme.disclosure.tree`).
+fn row_h(theme: &Theme) -> f32 {
+    theme.disclosure.tree.row_h
 }
 
 /// A node in a [`Tree`].
@@ -192,7 +173,7 @@ impl Tree {
     }
 
     pub fn row_height(&self, theme: &Theme) -> f32 {
-        Metrics::of(theme).row_h
+        row_h(theme)
     }
 
     /// Currently visible rows (expanded branches only), top to bottom.
@@ -219,7 +200,7 @@ impl Tree {
 
     /// Total height of the visible rows.
     pub fn content_height(&self, theme: &Theme) -> f32 {
-        self.visible_rows().len() as f32 * Metrics::of(theme).row_h
+        self.visible_rows().len() as f32 * row_h(theme)
     }
 
     fn node_mut(nodes: &mut [TreeNode], id: u64) -> Option<&mut TreeNode> {
@@ -249,7 +230,7 @@ impl Tree {
         if !bounds.contains(x, y) {
             return None;
         }
-        let i = ((y - bounds.y) / Metrics::of(theme).row_h).floor();
+        let i = ((y - bounds.y) / row_h(theme)).floor();
         if i < 0.0 {
             return None;
         }
@@ -296,104 +277,124 @@ impl Tree {
     }
 
     pub fn render(&self, compositor: &mut Compositor, bounds: Rect, theme: &Theme) {
-        let m = Metrics::of(theme);
-        let style = &m.style;
+        let r = &theme.disclosure.tree;
+        let style = theme.typography.run(r.text_type);
         if let Some(id) = &self.sem {
             compositor.bind(id, [bounds.x, bounds.y, bounds.w, bounds.h]);
         }
         for (i, row) in self.visible_rows().iter().enumerate() {
-            let ry = bounds.y + i as f32 * m.row_h;
-            if ry + m.row_h > bounds.y + bounds.h + m.row_h {
+            let ry = bounds.y + i as f32 * r.row_h;
+            if ry + r.row_h > bounds.y + bounds.h + r.row_h {
                 break;
             }
-            let row_rect = Rect::new(bounds.x, ry, bounds.w, m.row_h);
+            let row_rect = Rect::new(bounds.x, ry, bounds.w, r.row_h);
             // The row binds where the hit test finds it: inside the bounds.
             if let Some(id) = &self.sem
-                && let Some(r) = reachable(row_rect, bounds)
+                && let Some(at) = reachable(row_rect, bounds)
             {
-                compositor.bind(&id.key(row.id.to_string()), [r.x, r.y, r.w, r.h]);
+                compositor.bind(&id.key(row.id.to_string()), [at.x, at.y, at.w, at.h]);
             }
             let is_selected = self.selected == Some(row.id);
             let is_hovered = self.hovered_row == Some(i);
-
-            // HOFF rows: hover / selected white glass at the nav radius,
-            // inset a hair so neighbors keep a seam. Row icons pushed
-            // later stack on top (push order preserved).
             if is_selected || is_hovered {
-                let seam_x = m.gap / 2.0;
-                let seam_y = theme.control.edge_width;
-                compositor.push(crate::widgets::recipe::rounded_rect(
-                    row_rect.x + seam_x,
-                    row_rect.y + seam_y,
-                    row_rect.w - seam_x * 2.0,
-                    row_rect.h - seam_y * 2.0,
-                    theme.shape.nav.min(row_rect.h / 2.0),
-                    if is_selected {
-                        theme.glass.surface_active.0
-                    } else {
-                        theme.glass.surface_hover.0
-                    },
-                ));
+                let surface = if is_selected { &r.selected } else { &r.hover };
+                paint_surface(compositor, row_rect, r, surface);
             }
-
             if self.focused == Some(row.id) {
-                let radius = theme.shape.nav.min(row_rect.h / 2.0);
+                let radius = r.radius.min(row_rect.h / 2.0);
                 compositor.push(focus_ring_inside(row_rect, radius, theme));
             }
+            let span = (bounds.x, bounds.right());
+            self.paint_row(compositor, row, span, ry, is_selected, &style, r);
+        }
+    }
 
-            let mut cx = bounds.x + m.pad_x + row.depth as f32 * m.indent;
-
-            if row.is_branch {
-                let chevron = if row.expanded {
-                    "chevron-down"
-                } else {
-                    "chevron-right"
-                };
-                if let Some(node) = icons::icon_at(
-                    chevron,
-                    m.icon,
-                    with_alpha(theme.colors.text_dim, 1.0),
-                    cx,
-                    ry + (m.row_h - m.icon) / 2.0,
-                ) {
-                    compositor.push(node);
-                }
-            }
-            cx += m.icon + m.gap;
-
-            let icon_name = row.icon.unwrap_or(if row.is_branch {
-                if row.expanded {
-                    "folder-open"
-                } else {
-                    "folder"
-                }
+    /// The chevron, the icon (in its tile) and the label of a row at
+    /// `ry`, indented by its depth, between the bounds' left and right
+    /// edges `x`: a label too long for what is left is cut.
+    #[allow(clippy::too_many_arguments)]
+    fn paint_row(
+        &self,
+        compositor: &mut Compositor,
+        row: &TreeRow,
+        (x, right): (f32, f32),
+        ry: f32,
+        selected: bool,
+        style: &TextStyle,
+        r: &TreeRecipe,
+    ) {
+        let mut cx = x + r.pad_x + row.depth as f32 * r.indent;
+        if row.is_branch {
+            let chevron = if row.expanded {
+                "chevron-down"
             } else {
-                "file"
-            });
-            if let Some(node) = icons::icon_at(
-                icon_name,
-                m.icon,
-                with_alpha(theme.colors.text_mid, 1.0),
-                cx,
-                ry + (m.row_h - m.icon) / 2.0,
-            ) {
+                "chevron-right"
+            };
+            let y = ry + (r.row_h - r.chevron) / 2.0;
+            let color = with_alpha(r.chevron_color, 1.0);
+            if let Some(node) = icons::icon_at(chevron, r.chevron, color, cx, y) {
                 compositor.push(node);
             }
-            cx += m.icon + m.gap * 2.0;
-
-            compositor.push(SceneNode::Text {
-                key: TextNodeKey::from_style(&row.label, style, None),
-                x: cx,
-                y: ry + TextMeasurer::vertical_center(style, m.row_h),
-                color: with_alpha(
-                    if is_selected {
-                        theme.colors.text
-                    } else {
-                        theme.colors.text_mid
-                    },
-                    1.0,
-                ),
-            });
         }
+        cx += r.chevron + r.chevron_gap;
+
+        let icon_name = row.icon.unwrap_or(if row.is_branch {
+            if row.expanded {
+                "folder-open"
+            } else {
+                "folder"
+            }
+        } else {
+            "file"
+        });
+        let mut box_w = r.icon;
+        if let Some(tile) = &r.tile {
+            let ty = ry + (r.row_h - tile.size) / 2.0;
+            let tile_rect = Rect::new(cx, ty, tile.size, tile.size);
+            if selected
+                && let Some(node) = shadow_node(tile_rect, tile.radius, &tile.shadow_selected)
+            {
+                compositor.push(node);
+            }
+            let fill = if selected { tile.selected } else { tile.rest };
+            let radius = tile.radius.min(tile.size / 2.0);
+            compositor.push(rounded_rect(cx, ty, tile.size, tile.size, radius, fill.0));
+            box_w = tile.size;
+        }
+        let icon_color = if selected {
+            r.icon_selected
+        } else {
+            r.icon_color
+        };
+        let (ix, iy) = (cx + (box_w - r.icon) / 2.0, ry + (r.row_h - r.icon) / 2.0);
+        let color = with_alpha(icon_color, 1.0);
+        if let Some(node) = icons::icon_at(icon_name, r.icon, color, ix, iy) {
+            compositor.push(node);
+        }
+        cx += box_w + r.label_gap;
+
+        let label = if selected { r.label_selected } else { r.label };
+        let room = (right - r.pad_x - cx).max(0.0);
+        let shown = TextMeasurer::truncate_to_width(&row.label, style, room);
+        compositor.push(SceneNode::Text {
+            key: TextNodeKey::from_style(&shown, style, None),
+            x: cx,
+            y: ry + TextMeasurer::vertical_center(style, r.row_h),
+            color: with_alpha(label, 1.0),
+        });
+    }
+}
+
+/// The surface under a hovered or selected row, inset by the seam.
+fn paint_surface(c: &mut Compositor, row: Rect, r: &TreeRecipe, surface: &DisclosureSurface) {
+    let [sx, sy] = r.seam;
+    let at = Rect::new(row.x + sx, row.y + sy, row.w - sx * 2.0, row.h - sy * 2.0);
+    let radius = r.radius.min(row.h / 2.0);
+    c.push(rounded_rect(at.x, at.y, at.w, at.h, radius, surface.fill.0));
+    if r.border > 0.0 && surface.border.0[3] > 0.0 {
+        let edge = surface.border.0;
+        c.push(rounded_rect_stroke(
+            at.x, at.y, at.w, at.h, radius, edge, r.border,
+        ));
     }
 }

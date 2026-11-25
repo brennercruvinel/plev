@@ -90,10 +90,611 @@
       "focusable": true
     },
     {
-      "id": "input_page.preview",
-      "role": "label",
-      "label": "live value: (empty)",
+      "id": "input_page.group[0]",
+      "role": "group",
+      "label": "Email",
       "parent": "input_page"
+    },
+    {
+      "id": "input_page.group[0].card[0]",
+      "role": "text_input",
+      "label": "Email",
+      "parent": "input_page.group[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "valid": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[0].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[0].card[1]",
+      "role": "text_input",
+      "label": "Email",
+      "parent": "input_page.group[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "sophie@hoff.dev"
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "valid": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[0].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[0].card[2]",
+      "role": "text_input",
+      "label": "Email",
+      "description": "This email is already taken.",
+      "parent": "input_page.group[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": true
+        },
+        "valid": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[0].card[2]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[1]",
+      "role": "group",
+      "label": "Password",
+      "parent": "input_page"
+    },
+    {
+      "id": "input_page.group[1].card[0]",
+      "role": "text_input",
+      "label": "Password",
+      "parent": "input_page.group[1]",
+      "state": {
+        "text": {
+          "kind": "int",
+          "value": 0
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "valid": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[1].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "secret": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[1].card[0].reveal",
+      "role": "toggle",
+      "label": "show password",
+      "parent": "input_page.group[1]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "input_page.group[1].card[0].reveal:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[1].card[0].link",
+      "role": "link",
+      "label": "Forgot password?",
+      "parent": "input_page.group[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[1].card[1]",
+      "role": "text_input",
+      "label": "Password",
+      "parent": "input_page.group[1]",
+      "state": {
+        "text": {
+          "kind": "int",
+          "value": 13
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": false
+        },
+        "valid": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[1].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "secret": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[1].card[1].link",
+      "role": "link",
+      "label": "Forgot password?",
+      "parent": "input_page.group[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[1].card[2]",
+      "role": "text_input",
+      "label": "Password",
+      "description": "Confirm password is incorrect",
+      "parent": "input_page.group[1]",
+      "state": {
+        "text": {
+          "kind": "int",
+          "value": 0
+        },
+        "invalid": {
+          "kind": "bool",
+          "value": true
+        },
+        "valid": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[1].card[2]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "secret": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[1].card[2].reveal",
+      "role": "toggle",
+      "label": "show password",
+      "parent": "input_page.group[1]",
+      "state": {
+        "on": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "toggle",
+          "reads": [
+            "input_page.group[1].card[2].reveal:on"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[1].card[2].link",
+      "role": "link",
+      "label": "Forgot password?",
+      "parent": "input_page.group[1]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[2]",
+      "role": "group",
+      "label": "Username",
+      "parent": "input_page"
+    },
+    {
+      "id": "input_page.group[2].card[0]",
+      "role": "text_input",
+      "label": "Username",
+      "parent": "input_page.group[2]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "sophie"
+        },
+        "editing": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[2].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[2].card[0].edit",
+      "role": "button",
+      "label": "edit",
+      "parent": "input_page.group[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[3]",
+      "role": "group",
+      "label": "Replace avatar",
+      "parent": "input_page"
+    },
+    {
+      "id": "input_page.group[3].card[0]",
+      "role": "button",
+      "label": "Replace avatar",
+      "parent": "input_page.group[3]",
+      "state": {
+        "photo": {
+          "kind": "bool",
+          "value": true
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[3].card[1]",
+      "role": "button",
+      "label": "Upload avatar",
+      "parent": "input_page.group[3]",
+      "state": {
+        "photo": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[4]",
+      "role": "group",
+      "label": "Invite",
+      "parent": "input_page"
+    },
+    {
+      "id": "input_page.group[4].card[0]",
+      "role": "text_input",
+      "label": "Email, name...",
+      "parent": "input_page.group[4]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[4].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[4].card[0].choice",
+      "role": "select",
+      "label": "access",
+      "parent": "input_page.group[4]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "can view"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "input_page.group[4].card[0].choice:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "input_page.group[4].card[0].choice:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "input_page.group[4].card[0].choice:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "can view",
+          "can edit"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[5]",
+      "role": "group",
+      "label": "Color picker",
+      "parent": "input_page"
+    },
+    {
+      "id": "input_page.group[5].card[0]",
+      "role": "group",
+      "label": "Color",
+      "parent": "input_page.group[5]",
+      "state": {
+        "value": {
+          "kind": "text",
+          "value": "#F4F4F4FF"
+        }
+      }
+    },
+    {
+      "id": "input_page.group[5].card[0].hex",
+      "role": "text_input",
+      "label": "Hex",
+      "parent": "input_page.group[5].card[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "F4F4F4"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[5].card[0].hex:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[5].card[0].alpha",
+      "role": "text_input",
+      "label": "Opacity",
+      "description": "percent",
+      "parent": "input_page.group[5].card[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "100"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[5].card[0].alpha:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[6]",
+      "role": "group",
+      "label": "Search",
+      "parent": "input_page"
+    },
+    {
+      "id": "input_page.group[6].card[0]",
+      "role": "text_input",
+      "label": "Search...",
+      "description": "⌘ K",
+      "parent": "input_page.group[6]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_page.group[6].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_page.group[6].card[0].action",
+      "role": "button",
+      "label": "search",
+      "parent": "input_page.group[6]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
     }
   ]
 }

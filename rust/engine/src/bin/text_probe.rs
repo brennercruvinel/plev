@@ -7,7 +7,7 @@
 //!
 //! Set `PROBE_FILL=1` to push enough distinct glyphs through the atlas that
 //! it has to grow mid-frame, the state in which the defects described in
-//! `docs/adr/rendering/0024-glyph-raster-identity-and-atlas-isolation.md` become visible.
+//! `docs/adr/Rendering/0024-glyph-raster-identity-and-atlas-isolation/0024-glyph-raster-identity-and-atlas-isolation.md` become visible.
 //! A probe that draws a single line never reaches it.
 //!
 //! Native only (the probe and env_logger are): on wasm32 this binary is empty.
@@ -15,8 +15,9 @@
 #[cfg(target_arch = "wasm32")]
 fn main() {}
 
-#[cfg(not(target_arch = "wasm32"))]
 use engine::drawing::text::probe::{Specimen, render};
+#[cfg(not(target_arch = "wasm32"))]
+use engine::styling::theme::TypeRole;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
@@ -29,18 +30,21 @@ fn main() {
 
     let ramp = engine::styling::theme::TypographyScale::hoff();
     let mut specimens = vec![
-        ("Builder".to_string(), ramp.title()),
-        ("Expense Tracker".to_string(), ramp.title()),
-        ("4K Video Streaming".to_string(), ramp.title()),
-        ("Dock".to_string(), ramp.title()),
-        ("2 active \u{b7} 1 done".to_string(), ramp.base_2r()),
+        ("Builder".to_string(), ramp.role(TypeRole::Title)),
+        ("Expense Tracker".to_string(), ramp.role(TypeRole::Title)),
+        ("4K Video Streaming".to_string(), ramp.role(TypeRole::Title)),
+        ("Dock".to_string(), ramp.role(TypeRole::Title)),
+        (
+            "2 active \u{b7} 1 done".to_string(),
+            ramp.role(TypeRole::Body),
+        ),
         (
             "tree rebuilt from state 0 times".to_string(),
-            ramp.base_2r(),
+            ramp.role(TypeRole::Body),
         ),
         (
             "The quick brown fox jumps over the lazy dog".to_string(),
-            ramp.base_r(),
+            ramp.role(TypeRole::BodyLg),
         ),
     ];
 

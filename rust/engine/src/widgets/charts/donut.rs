@@ -7,7 +7,7 @@
 
 use std::f32::consts::{FRAC_PI_2, TAU};
 
-use crate::drawing::text::TextStyle;
+use crate::drawing::text::{TextMeasurer, TextStyle};
 use crate::widgets::widget::Rect;
 
 use super::Label;
@@ -65,10 +65,21 @@ pub fn donut(
     center_style: TextStyle,
     label_style: TextStyle,
 ) -> Donut {
-    // legend column width comes from the widest measured name.
+    // legend column width comes from the widest measured name, never
+    // more than half of what the donut and the legend share: a narrow
+    // plot, a larger text or a longer language cuts the names (with an
+    // ellipsis) before the ring loses its half.
+    let room = ((rect.w - LEGEND_PAD) / 2.0 - SWATCH - SWATCH_GAP).max(0.0);
     let legend_labels: Vec<Label> = items
         .iter()
-        .map(|(name, _)| Label::measured(*name, label_style.clone()))
+        .map(|(name, _)| {
+            let whole = Label::measured(*name, label_style.clone());
+            if whole.w <= room {
+                return whole;
+            }
+            let cut = TextMeasurer::truncate_to_width(name, &label_style, room);
+            Label::measured(cut, label_style.clone())
+        })
         .collect();
     let widest = legend_labels.iter().map(|l| l.w).fold(0.0, f32::max);
     let legend_w = if items.is_empty() {

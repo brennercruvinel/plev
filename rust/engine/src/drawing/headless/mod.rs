@@ -196,6 +196,24 @@ impl Renderer {
         &mut self.gpu
     }
 
+    /// The frame `index` just drawn from `compositor`, kept by `recorder`
+    /// as a window's host keeps its own (`WindowHost::present`): what the
+    /// dev mode reads, without a window. Nothing while the recorder is
+    /// off.
+    pub fn record(
+        &self,
+        recorder: &mut crate::runtime::perf::Recorder,
+        compositor: &Compositor,
+        index: u64,
+    ) {
+        let memory = crate::runtime::perf::MemoryStats::of(
+            compositor,
+            &self.text_system,
+            &self.texture_pool,
+        );
+        recorder.end_frame(index, compositor, memory, &self.gpu);
+    }
+
     /// Draw the scene already pushed into `compositor` (after its
     /// `begin_frame`) into the target. `clear_linear` is the background
     /// in linear space, as for `present_frame`. Returns the draw calls,

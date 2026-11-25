@@ -16,11 +16,12 @@
 //! `uigallery-todo.snapshot.json`, which the projection tests of the ide and
 //! the showcase write (`apps/idestudio/tests/plevir_fixture.rs`,
 //! `apps/uigallery/tests/plevir_fixture.rs`). The schema file is
-//! `plevir::schema()` written out; `UIR_BLESS=1` writes it again.
+//! `plevir::schema()` written out, the keys of each object in order;
+//! `UIR_BLESS=1` writes it again.
 
 // the validator for the keywords the schema uses (no schema dependency).
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use std::path::PathBuf;
 
@@ -206,9 +207,25 @@ fn the_schema_refuses_a_literal_an_unknown_name_and_a_second_form() {
     }
 }
 
+/// `value` with the keys of every object in order, whatever map serde_json
+/// was built with (`preserve_order` reaches every member through `unions`,
+/// and then a map keeps the order of insertion): the file a test writes
+/// never depends on a cargo feature.
+fn sorted(value: Value) -> Value {
+    match value {
+        Value::Object(map) => {
+            let mut pairs: Vec<(String, Value)> = map.into_iter().collect();
+            pairs.sort_by(|a, b| a.0.cmp(&b.0));
+            Value::Object(pairs.into_iter().map(|(k, v)| (k, sorted(v))).collect())
+        }
+        Value::Array(items) => Value::Array(items.into_iter().map(sorted).collect()),
+        other => other,
+    }
+}
+
 #[test]
 fn the_schema_file_is_what_schema_writes() {
-    let mut text = serde_json::to_string_pretty(&schema()).unwrap();
+    let mut text = serde_json::to_string_pretty(&sorted(schema())).unwrap();
     text.push('\n');
     let at = path(SCHEMA);
     if std::env::var_os("UIR_BLESS").is_some() {

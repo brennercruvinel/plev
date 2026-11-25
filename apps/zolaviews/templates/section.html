@@ -1,0 +1,45 @@
+{#- A section of the plev book (extra.kind, written by plev/book.mjs):
+    collection  its description, how many it holds, the cards, and the index
+                its README wrote, folded below the cards
+    document    a task or an experiment read as an article: details, text,
+                then the cards of its phases, backlinks and its neighbours -#}
+{% extends "base.html" %}
+
+{% block content %}
+{%- set kind = section.extra.kind | default(value="collection") -%}
+{%- set paths = section.extra.children | default(value=[]) -%}
+
+{%- if kind == "document" -%}
+<article>
+  {{- ("# " ~ section.title) | markdown(inline=true) | safe -}}
+  {%- include "partials/book_details.html" -%}
+  {{ section.content | safe }}
+  {%- if paths | length > 0 -%}
+    <h2 id="phases">{{ <trans key="book_phases"/> }}</h2>
+    {%- include "partials/book_cards.html" -%}
+  {%- endif -%}
+  {%- include "partials/backlinks.html" -%}
+</article>
+{%- else -%}
+  {{- ("# " ~ section.title) | markdown(inline=true) | safe -}}
+  {%- set intro = section.extra.intro | default(value=section.description | default(value="")) -%}
+  {%- if intro -%}
+    {{ intro | markdown | safe }}
+  {%- endif -%}
+  <p>
+    <small>
+      <a href="{{ get_url(path='categories', lang=lang) }}">{{ <trans key="filter_category"/> }}</a>
+      · <a href="{{ get_url(path='tags', lang=lang) }}">{{ <trans key="filter_tag"/> }}</a>
+      <br />
+      {{ <trans key="posts" number={paths | length}/> }}
+    </small>
+  </p>
+  {%- include "partials/book_cards.html" -%}
+  {%- if section.content -%}
+    <details class="book-index">
+      <summary>{{ <trans key="book_written_index"/> }} <code>{{ section.extra.source | default(value="") }}</code></summary>
+      {{ section.content | safe }}
+    </details>
+  {%- endif -%}
+{%- endif -%}
+{% endblock content %}

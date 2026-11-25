@@ -1,0 +1,67 @@
+---
+id: platform-ios-build
+title: "ios build - decisions and knowledge"
+project: plev
+type: reference
+status: reference
+date: 2021-08-15
+date_basis: reconstructed
+recorded: 2026-03-08
+topics: [mobile, platform, fonts]
+relations: []
+source: docs/ref/ios-build.md
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+---
+
+# ios build - decisions and knowledge
+
+Records the decisions and knowledge of the iOS build: fonts embedded with `include_bytes!`, because fontdb does not find system fonts, Metal as the backend, the winit 0.30 lifecycle and the Info.plist requirements. The text describes the simulator (`aarch64-apple-ios-sim`) and device (`aarch64-apple-ios`) targets, and the difference from the desktop build in font loading. The record matters because each of these points diverges from desktop and Android.
+
+## font loading no ios
+- `fontdb` (usado por cosmic-text) no ios tenta scan de diretórios linux-style e não encontra fontes do sistema
+- solução: embedded font via `include_bytes!` - mesmo padrão usado no WASM
+- cfg: `cfg(any(target_arch = "wasm32", target_os = "ios"))` unifica WASM e ios no mesmo branch
+- desktop (macos, linux, windows) mantém `FontSystem::new()` que escaneia fontes do sistema
+
+## GPU no ios
+- `Backends::PRIMARY` já seleciona metal no ios (mesmo backend que macos)
+- `Limits::default()` funciona no ios (metal suporta todos os limites default)
+- `pollster::block_on` funciona no ios para init async do GPU
+- ios não destrói surface metal no background (diferente do android/vulkan)
+- não precisa de drop/recreate de surface no lifecycle suspend/resume
+
+## window no ios
+- `with_inner_size` é irrelevante (ios sempre fullscreen)
+- `WindowAttributesExtIOS::with_valid_orientations` controla orientações suportadas
+- `winit::platform::ios::ValidOrientations::LandscapeAndPortrait` é o default
+- `winit::platform::ios::ScreenEdge` controla system gesture edges
+- `winit::platform::ios::WindowExtIOS` tem `set_prefers_home_indicator_hidden`, `set_prefers_status_bar_hidden`
+
+## lifecycle no ios (winit 0.30)
+- `applicationDidBecomeActive` -> `resumed()` - window pode ser criada aqui
+- `applicationWillResignActive` -> `suspended()` - app vai para background
+- `applicationDidReceiveMemoryWarning` -> `memory_warning()` - liberar memória
+- `applicationWillTerminate` -> `LoopExiting` event
+- `run_app` nunca retorna no ios - comportamento esperado
+
+## build
+- target simulator: `aarch64-apple-ios-sim` (apple silicon)
+- target device: `aarch64-apple-ios`
+- `staticlib` no `crate-type` gera `.a` necessário para linking no xcode
+- simulator: script bash + `xcrun simctl install/launch`
+- device: requer xcode project com code signing
+- binary size debug: ~50mb+ (wgpu+cosmic-text). release com lto reduz significativamente.
+
+## info.plist obrigatório
+- `UILaunchStoryboardName` (vazio, mas obrigatório para resolução nativa)
+- `LSRequiresIPhoneOS: true`
+- `UISupportedInterfaceOrientations` para declarar orientações
+- `UIRequiresFullScreen: true` para evitar split-screen no ipad
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [ADR 0088: libraries are plain, and a mobile build asks for its crate type](../../adr/Structure/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type/0088-libraries-are-plain-and-a-mobile-build-asks-for-its-crate-type.md)
+<!-- /related -->

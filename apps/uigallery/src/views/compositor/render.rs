@@ -1,13 +1,13 @@
 //! Frame side of the gallery: the animation tick and the scene build
-//! (chrome, the clipped page, the alias note or placeholder, the active
-//! overlay, the toasts).
+//! (chrome, the clipped page or placeholder, the active overlay, the
+//! toasts).
 
-use engine::drawing::compositor::{Compositor, LayerId, SceneNode, TextNodeKey};
+use engine::drawing::compositor::{Compositor, LayerId, SceneNode};
 use engine::widgets::overlay::OverlayManager;
 use engine::widgets::prelude::{Rect, Wake};
 
 use super::super::components::scroll_area::ScrollAreaPage;
-use super::super::{ActiveOverlay, Body, Layers, PAGES, Pane, ShowcaseView, pages};
+use super::super::{ActiveOverlay, Layers, Pane, ShowcaseView};
 
 impl ShowcaseView {
     // -- Animation -------------------------------------------------------------
@@ -27,6 +27,12 @@ impl ShowcaseView {
         wake = wake.merge(Wake::moving(self.panes.tooltip.tick(dt)));
         wake = wake.merge(Wake::moving(self.panes.table.tick(dt)));
         wake = wake.merge(self.page_wake(dt));
+        wake = wake.merge(Wake::moving(self.reveal_tick(dt)));
+        wake = wake.merge(self.sidebar_wake(dt));
+        // the palette's caret (`palette.rs`)
+        if let Some(ActiveOverlay::Palette { widget, .. }) = &mut self.active_overlay {
+            wake = wake.merge(widget.command.search.input.wake(dt));
+        }
         // The git tab always ticks (its caret and toasts keep time
         // whichever page shows); only the page on screen asks the loop
         // for frames. Worker events land through `apply_git`.
@@ -69,6 +75,7 @@ impl ShowcaseView {
         *self.layers.get_or_insert_with(|| Layers {
             list: c.create_layer(10),
             overlay: c.create_layer(OverlayManager::BASE_Z),
+            anchored: c.create_layer(OverlayManager::BASE_Z + 100),
             toast: c.create_layer(OverlayManager::BASE_Z + 200),
         })
     }
@@ -78,10 +85,11 @@ impl ShowcaseView {
         let layers = self.ensure_layers(c);
         let theme = self.theme.clone();
 
-        // The chrome: header on the default layer, the sidebar on the
-        // overlay layer so a drawer sits above the content.
+        // The chrome: the header on the default layer; the sidebar beside
+        // the page, or on the overlay layer while it floats over it.
         self.shell
             .render(c, LayerId::DEFAULT, layers.overlay, &theme);
+        self.render_sidebar(c, layers.overlay);
 
         // Keep the page scroll clamped to the current viewport/content
         // (resize can shrink content; the offset must follow).
@@ -120,17 +128,25 @@ impl ShowcaseView {
                 viewport.h
             },
         });
-        self.render_note(c, content, &theme);
         self.page_render(c, layers, content, &theme);
         c.push(SceneNode::PopClip);
 
         // Active overlay: fade via layer opacity driven by the manager.
+        // An edge panel slides instead: the layer stays opaque and the
+        // panel draws its entry's progress.
         let mut overlay_opacity = 1.0;
         if let Some(active) = &self.active_overlay {
             let id = active.id();
-            if let Some(overlay) = self.overlay_mgr.stack.iter().find(|o| o.id == id) {
-                overlay_opacity = overlay.opacity();
+            let shown = self
+                .overlay_mgr
+                .stack
+                .iter()
+                .find(|o| o.id == id)
+                .map_or(1.0, |o| o.progress());
+            if !active.slides() {
+                overlay_opacity = shown;
             }
+            let window = Rect::new(0.0, 0.0, self.width, self.height);
             match active {
                 ActiveOverlay::Modal { widget, .. } => {
                     widget.render(c, layers.overlay, &theme, self.width, self.height);
@@ -138,34 +154,30 @@ impl ShowcaseView {
                 ActiveOverlay::Menu { widget, x, y, .. } => {
                     widget.render(c, layers.overlay, &theme, *x, *y);
                 }
+                ActiveOverlay::Sheet { widget, .. } => {
+                    widget.render(c, layers.overlay, &theme, window, shown);
+                }
+                ActiveOverlay::Drawer { widget, .. } => {
+                    widget.render(c, layers.overlay, &theme, window, shown);
+                }
+                // the scrim over the window and the sheet, on the overlay
+                // layer, which fades with the entry
+                ActiveOverlay::Palette { widget, .. } => {
+                    c.on_layer(layers.overlay, |c| widget.render(c, window, window, &theme));
+                }
             }
         }
         c.set_layer_opacity(layers.overlay, overlay_opacity);
 
         self.toasts
             .render(c, layers.toast, &theme, self.width, self.height);
-    }
 
-    /// The note an alias page shows above the shared example: which
-    /// page's example it is, and what its own still lacks.
-    fn render_note(
-        &self,
-        c: &mut Compositor,
-        content: Rect,
-        theme: &engine::styling::theme::Theme,
-    ) {
-        let Body::Alias { pane, gap } = self.current().body else {
-            return;
-        };
-        let owner = PAGES[pages::index_of(pane)].title;
-        let note = format!("shares the {owner} example. still missing: {gap}.");
-        let style = theme.typography.caption_r();
-        c.push(SceneNode::Text {
-            key: TextNodeKey::from_style(&note, &style, Some(content.w)),
-            x: content.x,
-            y: content.y - self.note_h(),
-            color: theme.glass.text_placeholder.0,
-        });
+        // A focus that moved out of the page's window brings the page to
+        // it (`reveal.rs`); a jump (reduced motion) is drawn at once, and
+        // the frame drawn again finds the focus already shown.
+        if self.reveal_focus(c) {
+            self.render(c);
+        }
     }
 }
 

@@ -387,3 +387,36 @@ fn the_card_fits_a_phone_and_a_wide_window() {
         );
     }
 }
+
+/// The width sweep, 280 to 1600 every 8 px, in core and hoff: the card in
+/// the content; the switches, their rows, the frame (at the camera's
+/// proportion), the meter and the status inside the card; the frame no
+/// wider than the camera.
+#[test]
+fn nothing_cuts_or_overlaps_from_280_to_1600() {
+    for theme in [Theme::hoff_core(), Theme::hoff()] {
+        let page = CapturePage::new(&theme);
+        for w in (280..=1600).step_by(8) {
+            let c = Rect::new(0.0, 0.0, w as f32, 800.0);
+            let l = page.layout(c, &theme);
+            let p = l.panel;
+            assert!(p.x >= c.x && p.right() <= c.right() + 0.5, "{w}: card");
+            let inside =
+                |r: Rect| r.x >= p.x && r.right() <= p.right() + 0.5 && r.bottom() <= p.bottom();
+            for r in l
+                .switches
+                .iter()
+                .chain(&l.labels)
+                .chain([&l.frame, &l.meter, &l.status])
+            {
+                assert!(inside(*r), "{w}: {r:?} in {p:?}");
+            }
+            assert!(l.frame.w <= page.settings.width as f32, "{w}");
+            let ratio = page.settings.width as f32 / page.settings.height as f32;
+            assert!(
+                (l.frame.w / l.frame.h - ratio).abs() < 0.05,
+                "{w}: the camera's shape"
+            );
+        }
+    }
+}

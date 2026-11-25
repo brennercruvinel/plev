@@ -1,0 +1,327 @@
+//! Every other theme's values: the kit's geometry and motion in the
+//! theme's palette (`derive`).
+
+use super::*;
+use crate::styling::theme::TypeRole;
+
+impl DisclosureTokens {
+    /// The kit's geometry and motion in a theme's palette: ink is the
+    /// text, the gray is the dim text, the line is the divider, the wash
+    /// is the hover tone, the paper is the surface.
+    pub fn derive(theme: &Theme) -> Self {
+        let colors = &theme.colors;
+        let kit = Self::hoff_core();
+        let wash = DisclosureSurface {
+            fill: colors.bg_hover,
+            border: NONE,
+        };
+        let accordion = DisclosureRecipe {
+            label: colors.text,
+            chevron_color: colors.text_dim,
+            divider: colors.divider,
+            body: colors.text_dim,
+            grid: kit.accordion.grid.map(|grid| GridRecipe {
+                fill: colors.bg_hover,
+                ring_outer: (grid.ring_outer.0, tint(colors.text_dim, 0.5)),
+                ring_inner: (grid.ring_inner.0, colors.surface),
+                glyph_color: colors.text_dim,
+                ..grid
+            }),
+            ..kit.accordion
+        };
+        let collapsible = DisclosureRecipe {
+            hover: wash,
+            open: wash,
+            current: DisclosureSurface {
+                fill: colors.bg_hover,
+                border: colors.divider,
+            },
+            label: colors.text,
+            chevron_color: colors.text_dim,
+            tile: kit.collapsible.tile.map(|tile| DisclosureTile {
+                fill_current: colors.surface,
+                shadow_current: ShadowSpec {
+                    color: tint(colors.text, 0.10),
+                    ..tile.shadow_current
+                },
+                icon_rest: colors.text_dim,
+                icon_current: colors.text,
+                ..tile
+            }),
+            // The counter's shadows are black and white washes and stay;
+            // its fill and its text follow the palette.
+            counter: kit.collapsible.counter.clone().map(|counter| CapRecipe {
+                fill: colors.bg_hover,
+                text: colors.text_dim,
+                ..counter
+            }),
+            rail: kit.collapsible.rail.map(|rail| DisclosureRail {
+                color: colors.divider,
+                link_rest: colors.text_dim,
+                link_active: colors.text,
+                ..rail
+            }),
+            body: colors.text_dim,
+            ..kit.collapsible
+        };
+        // The hover border sits between the line and the dim text.
+        let between = Color([
+            (colors.divider.0[0] + colors.text_dim.0[0]) / 2.0,
+            (colors.divider.0[1] + colors.text_dim.0[1]) / 2.0,
+            (colors.divider.0[2] + colors.text_dim.0[2]) / 2.0,
+            (colors.divider.0[3] + colors.text_dim.0[3]) / 2.0,
+        ]);
+        let item = ItemRecipe {
+            row_hover: wash,
+            row_selected: DisclosureSurface {
+                fill: colors.bg_hover,
+                border: colors.divider,
+            },
+            icon_color: colors.text_dim,
+            label: colors.text,
+            meta: colors.text_dim,
+            tile_rest: DisclosureSurface {
+                fill: colors.bg_hover,
+                border: colors.divider,
+            },
+            tile_hover: DisclosureSurface {
+                fill: colors.surface,
+                border: between,
+            },
+            tile_selected: DisclosureSurface {
+                fill: colors.surface,
+                border: colors.text,
+            },
+            add_fill: [colors.accent_dim, colors.accent],
+            add_glyph_color: colors.bg,
+            ..kit.item
+        };
+        let kbd = kit.kbd.map(|cap| CapRecipe {
+            fill: colors.bg_hover,
+            text: colors.text_dim,
+            ..cap
+        });
+        let aspect = AspectRecipe {
+            rest: DisclosureSurface {
+                fill: colors.bg_panel,
+                border: colors.divider,
+            },
+            hover: DisclosureSurface {
+                fill: colors.bg_hover,
+                border: colors.divider,
+            },
+            glyph_color: colors.text_dim,
+            ..kit.aspect
+        };
+        let carousel = CarouselRecipe {
+            fill: colors.bg_hover,
+            glyph_color: colors.text_dim,
+            ring_outer: (kit.carousel.ring_outer.0, colors.text_dim),
+            ring_inner: (kit.carousel.ring_inner.0, colors.surface),
+            counter: colors.text_dim,
+            bar_fill: colors.surface,
+            bar_border: colors.divider,
+            arrow_on: colors.text,
+            arrow_off: colors.text_dim,
+            tick_on: colors.text,
+            tick_off: tint(colors.text, 0.30),
+            ..kit.carousel
+        };
+        let pager = PagerRecipe {
+            hover: wash,
+            current: DisclosureSurface {
+                fill: colors.bg_hover,
+                border: colors.divider,
+            },
+            label: colors.text,
+            label_dim: colors.text_dim,
+            ..kit.pager
+        };
+        let (list, table) = Self::rows(theme);
+        let tree = Self::tree(theme);
+        let (panel, header) = Self::panels(theme);
+        // The split as before the kit: the soft glass edge at rest, the
+        // active surface while hovered or dragged.
+        let split = SplitRecipe {
+            rest: theme.glass.edge_soft,
+            active: theme.glass.surface_active,
+        };
+        Self {
+            accordion,
+            collapsible,
+            motion: kit.motion,
+            item,
+            kbd,
+            aspect,
+            carousel,
+            pager,
+            list,
+            table,
+            tree,
+            panel,
+            header,
+            // the page frame's own head (not the panel head, whose texts
+            // took the kit's roles), with the fluid h3 title
+            page: PageHeadRecipe::derive(theme, HeaderRecipe::page_head(theme)),
+            card: CardRecipe::derive(theme),
+            catalog: CatalogTokens::derive(theme),
+            split,
+        }
+    }
+
+    /// The panel and its head every theme drew before the kit: the card
+    /// radius, `lg` padding, a caption label in the faint glass text; the
+    /// head one `Xl` control tall with the title centered in it, `md`
+    /// padding left and right, the blurb `xs` under that row with nothing
+    /// below it, the glass default title, the dim blurb, `sm` before the
+    /// badge, no rule.
+    /// The texts keep the kit's roles (a text's role is its component's,
+    /// the theme sizes it): the label, the head's strong title and its blurb.
+    fn panels(theme: &Theme) -> (PanelRecipe, HeaderRecipe) {
+        let panel = PanelRecipe {
+            radius: theme.shape.card,
+            pad: theme.spacing.lg,
+            label_type: TypeRole::Label.run(),
+            label: theme.glass.text_faint,
+        };
+        let header = HeaderRecipe {
+            title_type: TypeRole::Heading.strong(),
+            blurb_type: TypeRole::Label.run(),
+            ..HeaderRecipe::page_head(theme)
+        };
+        (panel, header)
+    }
+
+    /// The tree every theme drew before the kit, value for value: body
+    /// text rows padded `xs` above and below, `sm` before the first
+    /// glyph, an `lg` indent, `Sm` icons an `xs` apart and two before the
+    /// label; the glass washes under a row in the nav radius, inset half
+    /// a gap and an edge; the label mid, the selected one in the text
+    /// tone, the chevron dim, the icon mid. The label is the kit's role.
+    fn tree(theme: &Theme) -> TreeRecipe {
+        let (colors, glass) = (&theme.colors, &theme.glass);
+        let label_run = TypeRole::Label.run();
+        let icon = theme.control.icon(crate::styling::theme::IconSize::Sm);
+        let gap = theme.spacing.xs;
+        TreeRecipe {
+            row_h: (theme.typography.run(label_run).line_height + gap * 2.0).round(),
+            pad_x: theme.spacing.sm,
+            indent: theme.spacing.lg,
+            chevron: icon,
+            chevron_gap: gap,
+            icon,
+            tile: None,
+            label_gap: gap * 2.0,
+            radius: theme.shape.nav,
+            border: 0.0,
+            seam: [gap / 2.0, theme.control.edge_width],
+            hover: DisclosureSurface {
+                fill: glass.surface_hover,
+                border: NONE,
+            },
+            selected: DisclosureSurface {
+                fill: glass.surface_active,
+                border: NONE,
+            },
+            text_type: label_run,
+            label: colors.text_mid,
+            label_selected: colors.text,
+            chevron_color: colors.text_dim,
+            icon_color: colors.text_mid,
+            icon_selected: colors.text_mid,
+        }
+    }
+
+    /// The rows and the table every theme drew before the kit, value for
+    /// value, so the apps on them (urnadbapp's lists, `screen`'s tables)
+    /// keep their pixels: the hovered and selected rows in the glass
+    /// washes, square, the focus ring in the nav radius; the header band
+    /// in the tabs glass and the nav radius, caption titles in the faint
+    /// glass text, the divider under it; `md` cell padding, body text,
+    /// the lead column in the mid tone, the others faint.
+    fn rows(theme: &Theme) -> (RowRecipe, TableRecipe) {
+        let (colors, glass) = (&theme.colors, &theme.glass);
+        let list = RowRecipe {
+            radius: 0.0,
+            border: 0.0,
+            hover: DisclosureSurface {
+                fill: glass.surface_hover,
+                border: NONE,
+            },
+            selected: DisclosureSurface {
+                fill: glass.surface_active,
+                border: NONE,
+            },
+            ring_radius: theme.shape.nav,
+            rule: 0.0,
+            rule_color: NONE,
+        };
+        // the kit's roles: caption titles and caption cells
+        let caption_run = TypeRole::Caption.run();
+        let table = TableRecipe {
+            frame: 0.0,
+            frame_color: NONE,
+            header_fill: glass.tabs,
+            header_radius: theme.shape.nav,
+            header_type: caption_run,
+            header_text: glass.text_faint,
+            rule: theme.control.edge_width,
+            rule_color: colors.divider,
+            cell_pad: theme.spacing.md,
+            cell_type: caption_run,
+            cell: colors.text_mid,
+            cell_dim: glass.text_faint,
+            rows: list,
+        };
+        (list, table)
+    }
+}
+
+impl PageHeadRecipe {
+    /// A derived theme's page head: the panel head inside the gutter, its
+    /// title the h3 role in the text's main color, fluid with the head's
+    /// width as h3 is. The page's title so stands a step above the
+    /// showcase's group titles (h6) at every width, never smaller nor
+    /// fainter than them.
+    pub fn derive(theme: &Theme, header: HeaderRecipe) -> Self {
+        let roles = &theme.typography.roles;
+        let h3 = roles.spec(TypeRole::H3);
+        let [_, min_lh] = roles
+            .fluid_min(TypeRole::H3)
+            .unwrap_or([h3.size, h3.line_height]);
+        let titled = |line_height: f32| HeaderRecipe {
+            row: header.row.max(line_height),
+            title_type: TypeRole::H3.run(),
+            title: theme.colors.text,
+            ..header
+        };
+        PageHeadRecipe {
+            narrow: titled(min_lh),
+            wide: titled(h3.line_height),
+            range: roles.range,
+            bleed: false,
+        }
+    }
+}
+
+impl HeaderRecipe {
+    /// The head every theme drew before the kit, from `theme`: the page
+    /// head of the shell and the panel head outside the core.
+    pub fn page_head(theme: &Theme) -> Self {
+        let title_run = TypeRole::Title.run();
+        let blurb_run = TypeRole::Body.run();
+        HeaderRecipe {
+            pad_x: theme.spacing.md,
+            pad_y: 0.0,
+            row: theme.control.height(crate::styling::theme::ControlSize::Xl),
+            blurb_gap: theme.spacing.xs,
+            title_type: title_run,
+            title: theme.glass.text_default,
+            blurb_type: blurb_run,
+            blurb: theme.colors.text_dim,
+            badge_gap: theme.spacing.sm,
+            rule: 0.0,
+            rule_color: NONE,
+        }
+    }
+}

@@ -5,14 +5,15 @@ tmp/
 dist/
 out/
 
-# Android SDK/NDK (local toolchains, not part of the project)
-ndk/
-emulator/
-platform-tools/
-platforms/
-build-tools/
-system-images/
-licenses/
+# Android SDK/NDK (local toolchains, not part of the project), anchored to the
+# root: an unanchored platforms/ once hid docs pages from git
+/ndk/
+/emulator/
+/platform-tools/
+/platforms/
+/build-tools/
+/system-images/
+/licenses/
 tmps/
 .temp/
 
@@ -49,7 +50,8 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 
-# IDE
+# IDE (and Obsidian, when docs/ is opened as a vault)
+.obsidian/
 .idea/
 .vscode/
 *.swp

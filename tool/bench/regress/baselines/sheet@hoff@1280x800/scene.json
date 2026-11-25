@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "cd3e888935ff0e87",
+    "nodes": 15
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "sheet_page",
       "z": 0,
-      "hash": "5c8d456edeb57305",
-      "nodes": 30,
+      "hash": "6353dae69a00745f",
+      "nodes": 105,
       "bounds": [
-        283.0,
-        49.0,
-        521.33606,
-        543.56
+        25.584782,
+        35.810867,
+        1222.4152,
+        732.18915
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "318e36033b90becd",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,70 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "sheet_page.group[0].card[0]",
+      "layer": "sheet_page",
+      "rect": [
+        239.0,
+        279.0,
+        191.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "sheet_page.group[0].card[1]",
+      "layer": "sheet_page",
+      "rect": [
+        845.0,
+        279.0,
+        202.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "sheet_page.group[0].card[2]",
+      "layer": "sheet_page",
+      "rect": [
+        223.0,
+        487.0,
+        222.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "sheet_page.group[0].card[3]",
+      "layer": "sheet_page",
+      "rect": [
+        850.0,
+        487.0,
+        192.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    }
+  ]
 }

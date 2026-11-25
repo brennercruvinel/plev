@@ -12,15 +12,14 @@ fn a_tab_a_row_an_item_and_a_link_are_chosen_the_same_from_the_three() {
     for (page, id, action) in [
         ("Tabs", "tabs_page.tabs[2]", "select"),
         ("Data Table", "table_page.table[3]", "select"),
-        ("Table", "table_page.table[3]", "select"),
         ("Scroll Area", "scroll_area_page.list[4]", "select"),
-        ("Item", "scroll_area_page.list[4]", "select"),
+        ("Item", "item_page.group[0].card[0].item[1]", "select"),
         (
             "Navigation Menu",
             "navigation_menu_page.link[2]",
             "activate",
         ),
-        ("Kbd", "navigation_menu_page.link[2]", "activate"),
+        ("Kbd", "kbd_page.group[1].card[0].link[2]", "activate"),
         ("Breadcrumb", "breadcrumb_page.trail[1]", "activate"),
     ] {
         let mut person = gallery(page);

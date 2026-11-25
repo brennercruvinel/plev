@@ -1,0 +1,54 @@
+{
+  "nodes": [
+    {
+      "id": "home_page",
+      "role": "region",
+      "label": "Home"
+    },
+    {
+      "id": "home_page.group[0]",
+      "role": "group",
+      "label": "Branding",
+      "parent": "home_page"
+    },
+    {
+      "id": "home_page.group[0].card[0]",
+      "role": "link",
+      "label": "Plev",
+      "description": "Symbol",
+      "parent": "home_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "home_page.group[0].card[1]",
+      "role": "link",
+      "label": "Plev",
+      "description": "Wordmark",
+      "parent": "home_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "home_page.group[0].card[2]",
+      "role": "link",
+      "label": "Plev",
+      "description": "Full",
+      "parent": "home_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

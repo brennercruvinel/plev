@@ -1,0 +1,149 @@
+//! The profile family: an avatar with its online dot, the name and the
+//! handle, the bio and the action.
+
+use super::{Card, Metrics};
+use crate::drawing::compositor::{Compositor, LayerId, SceneNode};
+use crate::drawing::gpu::image::ImageHandle;
+use crate::drawing::text::TextMeasurer;
+use crate::styling::theme::TypeRole;
+use crate::styling::theme::{ControlSize, Theme};
+use crate::widgets::recipe::glass_pill;
+use crate::widgets::widget::Rect;
+
+impl Card {
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn render_profile(
+        &self,
+        c: &mut Compositor,
+        layer: LayerId,
+        b: Rect,
+        theme: &Theme,
+        name: &str,
+        username: &str,
+        bio: &str,
+        action: &str,
+        online: bool,
+        avatar: Option<ImageHandle>,
+    ) {
+        let m = Metrics::of(theme);
+        let glass = &theme.glass;
+        let text = theme.colors.text;
+        let ty = &theme.typography;
+        let pad = Self::profile_pad(theme);
+        let size = Self::avatar_size(theme);
+        let av = Rect::new(b.x + pad, b.y + pad, size, size);
+
+        // Avatar: image, or a monochrome glass disc with an initial.
+        if let Some(image) = avatar {
+            c.push_to_layer(
+                layer,
+                SceneNode::Image {
+                    x: av.x,
+                    y: av.y,
+                    w: av.w,
+                    h: av.h,
+                    image,
+                    corner_radius: av.w / 2.0,
+                },
+            );
+        } else {
+            for node in glass_pill(
+                av,
+                av.w / 2.0,
+                glass.edge.0,
+                theme.control.edge_width_strong,
+                glass.surface_active.0,
+                theme,
+            ) {
+                c.push_to_layer(layer, node);
+            }
+            if let Some(initial) = name.chars().next() {
+                let s: String = initial.to_uppercase().collect();
+                // Avatar initial: the title style, centered.
+                let style = ty.role(TypeRole::Title);
+                let (tw, _) = TextMeasurer::measure_styled(&s, &style, None);
+                self.text(
+                    c,
+                    layer,
+                    &s,
+                    &style,
+                    av.x + (av.w - tw) / 2.0,
+                    av.y + TextMeasurer::vertical_center(&style, av.h),
+                    text.0,
+                    None,
+                );
+            }
+        }
+        // Online dot at the avatar's top-left corner (knob gradient).
+        if online {
+            let off = theme.control.edge_width * 2.0;
+            self.dot(c, layer, av.x - off, av.y - off, true, theme);
+        }
+
+        // Action pill (FollowButton): a `Sm` glass button, caption-sm, in
+        // half of what the avatar leaves at most; the name and the handle
+        // on one line each before it.
+        let text_x = av.x + av.w + m.gap + m.gap_sm;
+        let style = ty.run(TypeRole::Caption.strong());
+        let pad_x = theme.control.pad_x(ControlSize::Sm);
+        let room = (b.right() - pad - text_x) / 2.0;
+        let action = &Self::fit(action, &style, room - pad_x * 2.0);
+        let (tw, _) = TextMeasurer::measure_styled(action, &style, None);
+        let bh = theme.control.height(ControlSize::Sm);
+        let bw = (tw + pad_x * 2.0).max(bh * 2.0);
+        let btn = Rect::new(b.x + b.w - pad - bw, b.y + pad, bw, bh);
+
+        // Name (base-2sm, primary) and username (caption-r, the meta
+        // register text-tertiary, not the fainter placeholder tone, which
+        // read gray-on-gray over the lifted card).
+        let name_style = ty.role(TypeRole::BodyStrong);
+        let name_w = btn.x - m.gap - text_x;
+        let name = &Self::fit(name, &name_style, name_w);
+        self.text(c, layer, name, &name_style, text_x, b.y + pad, text.0, None);
+        let handle = ty.run(TypeRole::Caption.regular());
+        self.text(
+            c,
+            layer,
+            &Self::fit(username, &handle, name_w),
+            &handle,
+            text_x,
+            b.y + pad + name_style.line_height + m.gap_sm / 2.0,
+            theme.colors.text_dim.0,
+            None,
+        );
+
+        for node in glass_pill(
+            btn,
+            btn.h / 2.0,
+            glass.edge.0,
+            theme.control.edge_width_strong,
+            glass.button.0,
+            theme,
+        ) {
+            c.push_to_layer(layer, node);
+        }
+        self.text(
+            c,
+            layer,
+            action,
+            &style,
+            btn.x + (btn.w - tw) / 2.0,
+            btn.y + TextMeasurer::vertical_center(&style, btn.h),
+            theme.colors.text_mid.0,
+            None,
+        );
+
+        // Bio: body-2r at the secondary body register, indented past the
+        // avatar column.
+        self.text(
+            c,
+            layer,
+            bio,
+            &ty.role(TypeRole::Paragraph),
+            text_x,
+            b.y + pad + size + m.gap,
+            theme.colors.text_mid.0,
+            Some(b.w - pad * 2.0 - size - m.gap * 2.0),
+        );
+    }
+}

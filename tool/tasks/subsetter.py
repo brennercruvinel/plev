@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """font-subset: the embedded Noto faces of the non-Latin scripts (task-74 phase 2)
-and of emoji (phase 5).
+and of emoji (phase 5), and the mono face (task-104).
 
 Reads the Noto sources from a directory outside the repo, checks each one's
 sha256, subsets it and writes the result to rust/engine/assets/fonts/,
 next to the license (LICENSE-Noto-OFL.txt). Stdlib plus fontTools (tested
 with 4.64.0), never the network. The sources stay out of the repo; only the
-subsets are committed. docs/adr/rendering/0071-embedded-fonts-by-script.md has the why.
+subsets are committed. docs/adr/Rendering/0071-embedded-fonts-by-script/0071-embedded-fonts-by-script.md has the why.
 
     tool/tasks/subsetter.py [--src DIR] [--out DIR] [--check]
 
@@ -44,6 +44,15 @@ any of them is in another embedded face besides U+2764 and U+200D (see
 EMOJI_SHARED): cosmic-text tries emoji faces first in its last fallback
 step, so a shared code point would move from the other face to the emoji.
 Its license goes to LICENSE-NotoColorEmoji-OFL.txt.
+
+The mono face is JetBrains Mono Regular (v2.304, the static hinted TTF),
+the theme's code family, one weight only. It keeps the Google Fonts
+"latin" range (LATIN below: Basic Latin, Latin-1, general punctuation and
+a few symbols) with fontTools' default feature list, so the code ligatures
+(calt) stay; a glyph outside the range falls back to the UI sans. Its
+source sits in --src with the Noto ones, its license goes to
+LICENSE-JetBrainsMono-OFL.txt. `--faces mono` builds (or checks) it alone,
+without the Noto sources.
 """
 
 import argparse
@@ -114,9 +123,25 @@ EMOJI = ("NotoColorEmoji-CBDT.ttf",
 EMOJI_LICENSE_SOURCE = "OFL-NotoColorEmoji.txt"
 EMOJI_LICENSE_OUT = "LICENSE-NotoColorEmoji-OFL.txt"
 
+# JetBrains Mono v2.304, the static hinted Regular, and its license.
+MONO = ("JetBrainsMono-Regular.ttf",
+        "a0bf60ef0f83c5ed4d7a75d45838548b1f6873372dfac88f71804491898d138f",
+        "https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/fonts/ttf/JetBrainsMono-Regular.ttf")
+MONO_LICENSE_SOURCE = ("OFL-JetBrainsMono.txt",
+                       "https://raw.githubusercontent.com/JetBrains/JetBrainsMono/v2.304/OFL.txt")
+MONO_LICENSE_OUT = "LICENSE-JetBrainsMono-OFL.txt"
+
 
 def span(first, last):
     return list(range(first, last + 1))
+
+
+# The Google Fonts "latin" unicode-range, the subset the mono face keeps.
+LATIN = (
+    span(0x0000, 0x00FF) + [0x0131] + span(0x0152, 0x0153) + span(0x02BB, 0x02BC)
+    + [0x02C6, 0x02DA, 0x02DC, 0x0304, 0x0308, 0x0329] + span(0x2000, 0x206F)
+    + [0x20AC, 0x2122, 0x2191, 0x2193, 0x2212, 0x2215, 0xFEFF, 0xFFFD]
+)
 
 
 ZWJ = 0x200D
@@ -301,7 +326,7 @@ def license_text(src_dir):
     note = (
         "The files NotoSans*-Regular and NotoSans*-Bold in this directory are "
         "subsets of the\nNoto fonts above, made by tool/tasks/subsetter.py "
-        "(docs/adr/rendering/0071-embedded-fonts-by-script.md).\n"
+        "(docs/adr/Rendering/0071-embedded-fonts-by-script/0071-embedded-fonts-by-script.md).\n"
     )
     body = (src_dir / LICENSE_SOURCE[0]).read_text(encoding="utf-8")
     return f"{head}\n\n{note}\n{body}"
@@ -393,14 +418,59 @@ def emoji_license_text(src_dir):
     note = (
         f"The file {EMOJI[0]} in this directory is a subset of Noto Color Emoji "
         "v2.051\n(CBDT build), made by tool/tasks/subsetter.py "
-        "(docs/adr/rendering/0071-embedded-fonts-by-script.md).\n"
+        "(docs/adr/Rendering/0071-embedded-fonts-by-script/0071-embedded-fonts-by-script.md).\n"
     )
     body = (src_dir / EMOJI_LICENSE_SOURCE).read_text(encoding="utf-8")
     return f"{head}\n\n{note}\n{body}"
 
 
-def build(src_dir, out_dir):
+def subset_mono(src, dst):
+    """The mono subset: LATIN, the code points of it the source has, with
+    the default feature list and the hinting."""
+    opts = options("latin")
+    font = subset.load_font(str(src), opts)
+    unicodes = sorted(set(LATIN) & set(font.getBestCmap()))
+    sub = subset.Subsetter(opts)
+    sub.populate(unicodes=unicodes)
+    sub.subset(font)
+    subset.save_font(font, str(dst), opts)
+    font.close()
+    kept = TTFont(str(dst), lazy=True)
+    return len(unicodes), len(kept.getBestCmap())
+
+
+def mono_license_text(src_dir):
+    """The mono source's OFL text as shipped (it opens with the copyright
+    line), and where the subset came from."""
+    note = (
+        f"The file {MONO[0]} in this directory is a subset of JetBrains Mono "
+        "v2.304\n(Regular, the Latin range), made by tool/tasks/subsetter.py.\n"
+    )
+    body = (src_dir / MONO_LICENSE_SOURCE[0]).read_text(encoding="utf-8")
+    return f"{note}\n{body}"
+
+
+def build_mono(src_dir, out_dir):
+    name, digest, url = MONO
+    src = checked_source(src_dir, name, digest, url)
+    dst = out_dir / name
+    letters, kept = subset_mono(src, dst)
+    (out_dir / MONO_LICENSE_OUT).write_text(mono_license_text(src_dir), encoding="utf-8")
+    return (name, src.stat().st_size, dst.stat().st_size, letters, kept)
+
+
+def built_names(faces):
+    """The files a build of `faces` writes."""
+    mono = [MONO[0], MONO_LICENSE_OUT]
+    if faces == "mono":
+        return mono
+    return [name for name, *_ in SOURCES] + [LICENSE_OUT, EMOJI[0], EMOJI_LICENSE_OUT] + mono
+
+
+def build(src_dir, out_dir, faces):
     out_dir.mkdir(parents=True, exist_ok=True)
+    if faces == "mono":
+        return [build_mono(src_dir, out_dir)], None
     report = []
     for name, kind, digest, url in SOURCES:
         src = checked_source(src_dir, name, digest, url)
@@ -421,6 +491,7 @@ def build(src_dir, out_dir):
         sys.exit(f"{name}: {size} bytes, past the {MAX_BYTES} byte limit")
     report.append((name, src.stat().st_size, size, emoji, kept))
     (out_dir / EMOJI_LICENSE_OUT).write_text(emoji_license_text(src_dir), encoding="utf-8")
+    report.append(build_mono(src_dir, out_dir))
     return report, glyphs
 
 
@@ -429,12 +500,13 @@ def main():
     parser.add_argument("--src", type=Path, default=ROOT / "target" / "fonts-noto")
     parser.add_argument("--out", type=Path, default=ASSETS)
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--faces", choices=["all", "mono"], default="all")
     args = parser.parse_args()
 
     if args.check:
         with tempfile.TemporaryDirectory() as tmp:
-            build(args.src, Path(tmp))
-            names = [name for name, *_ in SOURCES] + [LICENSE_OUT, EMOJI[0], EMOJI_LICENSE_OUT]
+            build(args.src, Path(tmp), args.faces)
+            names = built_names(args.faces)
             differ = [
                 n for n in names
                 if (Path(tmp) / n).read_bytes() != (args.out / n).read_bytes()
@@ -444,14 +516,15 @@ def main():
         print(f"{len(names)} files match a fresh build")
         return
 
-    report, glyphs = build(args.src, args.out)
+    report, glyphs = build(args.src, args.out, args.faces)
     total = 0
     print("file | source bytes | subset bytes | letters (emoji) | code points kept")
     for name, before, after, letters, kept in report:
         total += after
         print(f"{name} | {before} | {after} | {letters} | {kept}")
     print(f"total | | {total}")
-    print(f"{EMOJI[0]}: {glyphs} glyphs")
+    if glyphs is not None:
+        print(f"{EMOJI[0]}: {glyphs} glyphs")
 
 
 if __name__ == "__main__":

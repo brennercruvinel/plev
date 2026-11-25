@@ -34,6 +34,10 @@ pub enum OverlayKind {
     },
     /// A brief informational label (no interaction).
     Tooltip { text: String },
+    /// A panel anchored to a trigger (popover, and the anchored overlays
+    /// of task-104's front B): the widget that pushed it owns its content
+    /// and draws it; the stack holds its place and its bounds.
+    Anchored,
 }
 
 /// Entry/exit animation state for an overlay (fade + scale driven by a

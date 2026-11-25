@@ -1,0 +1,123 @@
+{
+  "nodes": [
+    {
+      "id": "sheet_page",
+      "role": "region",
+      "label": "Sheet"
+    },
+    {
+      "id": "sheet_page.group[0]",
+      "role": "group",
+      "label": "Live",
+      "parent": "sheet_page"
+    },
+    {
+      "id": "sheet_page.group[0].card[0]",
+      "role": "button",
+      "label": "Open from the top",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "sheet_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sheet_page.group[0].card[1]",
+      "role": "button",
+      "label": "Open from the right",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "sheet_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sheet_page.group[0].card[2]",
+      "role": "button",
+      "label": "Open from the bottom",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "sheet_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sheet_page.group[0].card[3]",
+      "role": "button",
+      "label": "Open from the left",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "sheet_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "sheet_page.group[1]",
+      "role": "group",
+      "label": "States",
+      "parent": "sheet_page"
+    },
+    {
+      "id": "sheet_page.group[1].card[0]",
+      "role": "group",
+      "label": "Profile",
+      "description": "Changes apply to every workspace once you save them.",
+      "parent": "sheet_page.group[1]"
+    },
+    {
+      "id": "sheet_page.group[1].card[0][0]",
+      "role": "label",
+      "label": "Private profile: Off",
+      "parent": "sheet_page.group[1].card[0]"
+    },
+    {
+      "id": "sheet_page.group[1].card[0][1]",
+      "role": "label",
+      "label": "Avatar: 1.png",
+      "parent": "sheet_page.group[1].card[0]"
+    },
+    {
+      "id": "sheet_page.group[1].card[0][2]",
+      "role": "label",
+      "label": "Display name: Sophie Bennett",
+      "parent": "sheet_page.group[1].card[0]"
+    },
+    {
+      "id": "sheet_page.group[1].card[1]",
+      "role": "group",
+      "label": "Profile",
+      "description": "Changes apply to every workspace once you save them.",
+      "parent": "sheet_page.group[1]"
+    },
+    {
+      "id": "sheet_page.group[1].card[1][0]",
+      "role": "label",
+      "label": "Private profile: Off",
+      "parent": "sheet_page.group[1].card[1]"
+    },
+    {
+      "id": "sheet_page.group[1].card[1][1]",
+      "role": "label",
+      "label": "Avatar: 1.png",
+      "parent": "sheet_page.group[1].card[1]"
+    },
+    {
+      "id": "sheet_page.group[1].card[1][2]",
+      "role": "label",
+      "label": "Display name: Sophie Bennett",
+      "parent": "sheet_page.group[1].card[1]"
+    }
+  ]
+}

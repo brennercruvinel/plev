@@ -7,7 +7,7 @@
 
 // shared with the other test binaries: this one reads less of it.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{Actor, SemId};
 use offers::{Adapt, Adaptation, ProposeError, Transformed, Transformer, transform_verified};

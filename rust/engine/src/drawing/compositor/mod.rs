@@ -3,6 +3,7 @@ mod clip;
 pub(crate) mod drawing;
 mod layer;
 mod memory;
+mod probe;
 mod scene;
 mod sequence;
 mod stats;
@@ -20,6 +21,7 @@ pub use clip::{
 };
 pub use drawing::{GradientRectParams, RoundedRectParams, ShadowParams};
 pub use layer::{Layer, LayerEffect, LayerId};
+pub use probe::NodeAt;
 pub use scene::{SceneNode, TextNodeKey};
 pub use sequence::{DrawCommand, DrawKind};
 pub use stats::RenderStats;
@@ -51,6 +53,15 @@ pub struct Compositor {
     /// Where each bound `SemId` sits this frame, beside the scene (see
     /// `binding`): never part of a layer hash.
     bind_table: binding::BindTable,
+    /// The layer `push` and `bind` draw on: the default one, but inside
+    /// [`Compositor::on_layer`].
+    target: LayerId,
+    /// The index of the frame being drawn, as the frame's owner counts
+    /// them (see [`Compositor::set_frame_index`]).
+    frame_index: u64,
+    /// The layers the last `window::draw_frame` encoded, in order, with
+    /// the draw calls of their passes; reused frame to frame.
+    pub(crate) drawn: Vec<(LayerId, u32)>,
 }
 
 impl Default for Compositor {
@@ -68,6 +79,9 @@ impl Compositor {
             invalidated: false,
             stats: RenderStats::default(),
             bind_table: binding::BindTable::default(),
+            target: LayerId::DEFAULT,
+            frame_index: 0,
+            drawn: Vec::new(),
         };
         comp.layers.push(Layer::new(LayerId::DEFAULT, 0));
         comp
@@ -78,6 +92,25 @@ impl Compositor {
             layer.begin_frame();
         }
         self.bind_table.begin_frame();
+        self.target = LayerId::DEFAULT;
+    }
+
+    /// Runs `draw` with `push` and `bind` aimed at `layer`: a widget that
+    /// draws through `push` (and the widgets it composes) lands on the
+    /// layer its owner chose, as a sidebar sliding over a page that uses
+    /// layers of its own. The target before is restored after.
+    pub fn on_layer<R>(&mut self, layer: LayerId, draw: impl FnOnce(&mut Self) -> R) -> R {
+        let before = std::mem::replace(&mut self.target, layer);
+        let out = draw(self);
+        self.target = before;
+        out
+    }
+
+    /// The layer `push` and `bind` aim at now: the default one, or the
+    /// one [`Compositor::on_layer`] chose. A widget that draws to a layer
+    /// by its id passes this to land where its owner drew it.
+    pub fn target(&self) -> LayerId {
+        self.target
     }
 
     /// Request a render regardless of scene changes. Called on input, resize,
@@ -96,6 +129,26 @@ impl Compositor {
         self.layers
             .iter()
             .any(|l| l.dirty || l.compute_hash() != l.prev_hash)
+    }
+
+    /// Tag the frames drawn from now on with `index` (a window host gives
+    /// its frame counter before each frame): the GPU timestamps of a frame
+    /// carry it, so a reading that comes back later finds its frame.
+    pub fn set_frame_index(&mut self, index: u64) {
+        self.frame_index = index;
+    }
+
+    /// The index given by [`Compositor::set_frame_index`]; 0 until then.
+    pub fn frame_index(&self) -> u64 {
+        self.frame_index
+    }
+
+    /// The layers the last `window::draw_frame` redrew, in encode order,
+    /// each with the draw calls of its layer passes (a backdrop blur's
+    /// included). Empty before the first frame, and for a frame that
+    /// redrew no layer.
+    pub fn drawn_layers(&self) -> &[(LayerId, u32)] {
+        &self.drawn
     }
 
     /// Stats collected for the most recent frame.

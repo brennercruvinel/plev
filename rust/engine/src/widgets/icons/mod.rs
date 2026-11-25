@@ -33,7 +33,7 @@ const STROKE_WIDTH: f32 = 2.0;
 /// Cache cap — icons come in few sizes, this is just a safety valve.
 const CACHE_CAPACITY: usize = 512;
 
-use data::{ICONS, Shape};
+use data::{Shape, icons};
 use svg::parse_svg_path;
 
 // ---------------------------------------------------------------------------
@@ -42,12 +42,12 @@ use svg::parse_svg_path;
 
 /// All available icon names, sorted.
 pub fn icon_names() -> Vec<&'static str> {
-    ICONS.iter().map(|(n, _)| *n).collect()
+    icons().map(|(n, _)| *n).collect()
 }
 
 /// `true` if `name` is a known icon.
 pub fn has_icon(name: &str) -> bool {
-    ICONS.iter().any(|(n, _)| *n == name)
+    icons().any(|(n, _)| *n == name)
 }
 
 /// Tessellate `name` at `size` (square, top-left at origin), tinted `color`.
@@ -69,7 +69,7 @@ pub fn icon_path(
     x: f32,
     y: f32,
 ) -> Option<TessellatedPath> {
-    let (canonical, shapes) = ICONS.iter().find(|(n, _)| *n == name)?;
+    let (canonical, shapes) = icons().find(|(n, _)| *n == name)?;
     ICON_CACHE.with(|cache| {
         let mut cache = cache.borrow_mut();
         if cache.len() >= CACHE_CAPACITY {
@@ -85,7 +85,8 @@ pub fn icon_path(
             .iter()
             .map(|v| QuadVertex {
                 position: [v.position[0] + x, v.position[1] + y],
-                color,
+                // a faint part keeps its share of the tint
+                color: [color[0], color[1], color[2], color[3] * v.color[3]],
             })
             .collect();
 
@@ -155,6 +156,15 @@ fn tessellate_icon(shapes: &[Shape], size: f32) -> CachedIcon {
             },
             Shape::Polygon(points) => match poly_path(points, s, true) {
                 Some(pb) => pb.stroke_round(WHITE, width),
+                None => continue,
+            },
+            // a kit glyph fills its path, scaled from its own viewBox
+            Shape::Fill(view, d) => match parse_svg_path(d, size / view) {
+                Some(pb) => pb.fill(WHITE),
+                None => continue,
+            },
+            Shape::Faint(view, share, d) => match parse_svg_path(d, size / view) {
+                Some(pb) => pb.fill([1.0, 1.0, 1.0, *share]),
                 None => continue,
             },
             Shape::Rect(x, y, w, h, rx) => {

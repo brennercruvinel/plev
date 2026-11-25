@@ -1,0 +1,507 @@
+//! Buttons page, the hoff core kit's ButtonsPage: groups with a title and
+//! a bottom rule, cards in rows, one state per card behind a chip that
+//! names it. The widgets are `engine::widgets::buttons` (labeled, icon-only,
+//! submit) and, last, the page's Tooltip bubble at rest; every visual value
+//! comes from the theme.
+//!
+//! Projected (task-75 phase 2b): a group per title,
+//! `button_page.group[<g>]`, and in it each card's widget,
+//! `button_page.group[<g>].card[<c>]`, as the comps projects it, described
+//! by the card's chip (the states it shows); an icon-only button is named
+//! by its icon, the submit button "submit", the tooltip a label named by
+//! its text. A button here does nothing but press, so its `activate`
+//! changes nothing. The Icon Button page is this
+//! page with the icon-only groups alone ([`ButtonPage::icons`]).
+
+use accord::{Request, Role, SemId, SnapshotBuilder};
+use engine::drawing::compositor::{Compositor, LayerId};
+use engine::styling::theme::{Theme, hoff_core};
+use engine::widgets::prelude::{
+    Button, ButtonSize, ButtonVariant, EventResult, IconButton, IconButtonSize, IconButtonVariant,
+    Rect, SubmitButton, Tooltip, WidgetEvent,
+};
+
+use super::showcase::{self, GroupLayout};
+use super::{After, Component, child_id, root_id, under};
+
+enum Spec {
+    Button(Button),
+    Icon(IconButton),
+    Submit(SubmitButton),
+    /// The bubble alone, shown as the kit's card shows it: no anchor, no
+    /// delay. It binds its id itself (the widget has none).
+    Tooltip(Tooltip, Option<SemId>),
+}
+
+impl Spec {
+    fn preferred_size(&self, theme: &Theme) -> (f32, f32) {
+        match self {
+            Spec::Button(b) => b.preferred_size(theme),
+            Spec::Icon(b) => b.preferred_size(theme),
+            Spec::Submit(b) => b.preferred_size(theme),
+            Spec::Tooltip(t, _) => t.size(theme),
+        }
+    }
+
+    fn handle_event(&mut self, event: &WidgetEvent, bounds: Rect) -> EventResult {
+        match self {
+            Spec::Button(b) => b.handle_event(event, bounds),
+            Spec::Icon(b) => b.handle_event(event, bounds),
+            Spec::Submit(b) => b.handle_event(event, bounds),
+            Spec::Tooltip(..) => EventResult::IGNORED,
+        }
+    }
+
+    fn render(&self, c: &mut Compositor, bounds: Rect, theme: &Theme) {
+        match self {
+            Spec::Button(b) => b.render(c, bounds, theme),
+            Spec::Icon(b) => b.render(c, bounds, theme),
+            Spec::Submit(b) => b.render(c, bounds, theme),
+            Spec::Tooltip(t, id) => {
+                if let Some(id) = id {
+                    c.bind_to_layer(
+                        LayerId::DEFAULT,
+                        id,
+                        [bounds.x, bounds.y, bounds.w, bounds.h],
+                    );
+                }
+                t.render_at(c, LayerId::DEFAULT, theme, bounds);
+            }
+        }
+    }
+
+    /// The widget with the id its draw binds to.
+    fn sem(self, id: SemId) -> Self {
+        match self {
+            Spec::Button(b) => Spec::Button(b.sem(id)),
+            Spec::Icon(b) => Spec::Icon(b.sem(id)),
+            Spec::Submit(b) => Spec::Submit(b.sem(id)),
+            Spec::Tooltip(t, _) => Spec::Tooltip(t, Some(id)),
+        }
+    }
+
+    fn sem_id(&self) -> Option<&SemId> {
+        match self {
+            Spec::Button(b) => b.sem_id(),
+            Spec::Icon(b) => b.sem_id(),
+            Spec::Submit(b) => b.sem_id(),
+            Spec::Tooltip(_, id) => id.as_ref(),
+        }
+    }
+
+    fn set_focused(&mut self, on: bool) {
+        match self {
+            Spec::Button(b) => b.set_focused(on),
+            Spec::Icon(b) => b.set_focused(on),
+            Spec::Submit(b) => b.set_focused(on),
+            // A label: the reader's focus reads it, nothing rings.
+            Spec::Tooltip(..) => {}
+        }
+    }
+
+    /// The widget as the comps projects it, under `parent`, described by
+    /// `states`: a labeled button by its label, an icon-only one by its
+    /// icon, the submit button as "submit", the tooltip as a label named
+    /// by its text.
+    fn project(&self, b: &mut SnapshotBuilder, id: &SemId, parent: &SemId, states: &str) {
+        let mut node = match self {
+            Spec::Button(w) => w.project(b, id, Some(parent)),
+            Spec::Icon(w) => w.project(b, id, w.icon, Some(parent)),
+            Spec::Submit(w) => w.project(b, id, "submit", Some(parent)),
+            Spec::Tooltip(t, _) => {
+                let mut node = b.node(id, Role::Label, t.text.as_str());
+                node.parent(parent);
+                node
+            }
+        };
+        node.description(states);
+    }
+}
+
+struct Card {
+    /// The chip: which states this card shows.
+    title: &'static str,
+    /// Columns of the row the card takes, out of the row's `span`.
+    spec: Spec,
+}
+
+struct Group {
+    title: &'static str,
+    /// Cards per row at full width (the page's `span`).
+    columns: usize,
+    cards: Vec<Card>,
+}
+
+pub struct ButtonPage {
+    root: Option<SemId>,
+    groups: Vec<Group>,
+    /// The card, `(group, card)`, whose widget a screen reader focused
+    /// (its ring shows); Escape or a click lets it go.
+    focus: Option<(usize, usize)>,
+}
+
+/// `button_page.group[<g>]`.
+fn group_id(root: &SemId, g: usize) -> Option<SemId> {
+    child_id(Some(root), "group").map(|family| family.key(g.to_string()))
+}
+
+/// `button_page.group[<g>].card[<c>]`.
+fn card_id(root: &SemId, g: usize, c: usize) -> Option<SemId> {
+    child_id(group_id(root, g).as_ref(), "card").map(|family| family.key(c.to_string()))
+}
+
+const STATES: &str = "Default, Hover, Press, Focus";
+
+/// The page's usual group: one card for the live states, one disabled.
+fn pair(title: &'static str, make: impl Fn(bool) -> Spec) -> Group {
+    Group {
+        title,
+        columns: 2,
+        cards: vec![
+            Card {
+                title: STATES,
+                spec: make(false),
+            },
+            Card {
+                title: "Disabled",
+                spec: make(true),
+            },
+        ],
+    }
+}
+
+impl ButtonPage {
+    /// The Button page: every group of the kit's ButtonsPage.
+    pub fn new() -> Self {
+        Self::with("button_page", Self::groups())
+    }
+
+    /// The Icon Button page: the ButtonsPage's groups of icon-only buttons
+    /// (`:186`, `:219`, `:252`, `:320`), the same cards as on the Button
+    /// page.
+    pub fn icons() -> Self {
+        let mut groups = Self::groups();
+        groups.retain(|g| g.cards.iter().all(|c| matches!(c.spec, Spec::Icon(_))));
+        Self::with("icon_button_page", groups)
+    }
+
+    /// Every group of the kit's ButtonsPage, in its order.
+    fn groups() -> Vec<Group> {
+        let button = |variant: ButtonVariant, size: ButtonSize, icon: Option<&'static str>| {
+            move |disabled: bool| {
+                let mut b = Button::new("Button")
+                    .variant(variant)
+                    .size(size)
+                    .disabled(disabled);
+                if let Some(icon) = icon {
+                    b = b.icon(icon);
+                }
+                Spec::Button(b)
+            }
+        };
+        let icon = |variant: IconButtonVariant, size: IconButtonSize, name: &'static str| {
+            move |disabled: bool| {
+                Spec::Icon(
+                    IconButton::new(name)
+                        .variant(variant)
+                        .size(size)
+                        .disabled(disabled),
+                )
+            }
+        };
+        let mut groups = vec![
+            pair(
+                "Button, medium",
+                button(ButtonVariant::Primary, ButtonSize::Md, None),
+            ),
+            pair(
+                "Button, medium with icon",
+                button(ButtonVariant::Primary, ButtonSize::Md, Some("link")),
+            ),
+            pair(
+                "Button, small",
+                button(ButtonVariant::Primary, ButtonSize::Sm, None),
+            ),
+            pair(
+                "Button, small with icon",
+                button(ButtonVariant::Primary, ButtonSize::Sm, Some("link")),
+            ),
+            pair(
+                "Call to action",
+                button(ButtonVariant::Secondary, ButtonSize::Md, None),
+            ),
+            pair(
+                "Warning button",
+                button(ButtonVariant::Warning, ButtonSize::Md, None),
+            ),
+            pair("Sign in button", |disabled| {
+                Spec::Button(
+                    Button::new("Sign in with Google")
+                        .icon("globe")
+                        .disabled(disabled),
+                )
+            }),
+            pair(
+                "Ghost icon button",
+                icon(IconButtonVariant::Outline, IconButtonSize::Lg, "x"),
+            ),
+            pair(
+                "Large icon button",
+                icon(IconButtonVariant::Ghost, IconButtonSize::Md, "plus"),
+            ),
+            pair(
+                "Small icon button",
+                icon(IconButtonVariant::Ghost, IconButtonSize::Sm, "plus"),
+            ),
+            pair("Like button", |disabled| {
+                Spec::Button(
+                    Button::new("200")
+                        .variant(ButtonVariant::Outline)
+                        .size(ButtonSize::Lg)
+                        .icon("heart")
+                        .icon_color(hoff_core::RED.0)
+                        .disabled(disabled),
+                )
+            }),
+        ];
+        groups.push(Group {
+            title: "Toolbar button",
+            columns: 3,
+            cards: vec![
+                Card {
+                    title: "Default, Hover",
+                    spec: Spec::Icon(
+                        IconButton::new("send")
+                            .variant(IconButtonVariant::Toolbar)
+                            .size(IconButtonSize::Lg),
+                    ),
+                },
+                Card {
+                    title: "Disabled",
+                    spec: Spec::Icon(
+                        IconButton::new("send")
+                            .variant(IconButtonVariant::Toolbar)
+                            .size(IconButtonSize::Lg)
+                            .disabled(true),
+                    ),
+                },
+                Card {
+                    title: "Active",
+                    spec: Spec::Icon(
+                        IconButton::new("send")
+                            .variant(IconButtonVariant::Toolbar)
+                            .size(IconButtonSize::Lg)
+                            .active(true),
+                    ),
+                },
+            ],
+        });
+        groups.push(pair("Like comment", |disabled| {
+            Spec::Button(
+                Button::new("2")
+                    .variant(ButtonVariant::Outline)
+                    .size(ButtonSize::Xs)
+                    .icon("thumbs-up")
+                    .disabled(disabled),
+            )
+        }));
+        groups.push(Group {
+            title: "Submit button",
+            columns: 3,
+            cards: vec![
+                Card {
+                    title: "Default, Hover, Focus",
+                    spec: Spec::Submit(SubmitButton::new()),
+                },
+                Card {
+                    title: "Disabled",
+                    spec: Spec::Submit(SubmitButton::new().disabled(true)),
+                },
+                Card {
+                    title: "Active",
+                    spec: Spec::Submit(SubmitButton::new().active(true)),
+                },
+            ],
+        });
+        // `<Tooltip>Copy prompt</Tooltip>`, one card the row's width.
+        groups.push(Group {
+            title: "Tooltip",
+            columns: 1,
+            cards: vec![Card {
+                title: "Text",
+                spec: Spec::Tooltip(Tooltip::new("Copy prompt"), None),
+            }],
+        });
+        groups
+    }
+
+    /// The page of `groups` under the root `name`, each card's widget
+    /// with its id, `<name>.group[<g>].card[<c>]`.
+    fn with(name: &str, mut groups: Vec<Group>) -> Self {
+        let root = root_id(name);
+        if let Some(root) = &root {
+            for (g, group) in groups.iter_mut().enumerate() {
+                for (c, card) in std::mem::take(&mut group.cards).into_iter().enumerate() {
+                    let spec = match card_id(root, g, c) {
+                        Some(id) => card.spec.sem(id),
+                        None => card.spec,
+                    };
+                    group.cards.push(Card { spec, ..card });
+                }
+            }
+        }
+        Self {
+            root,
+            groups,
+            focus: None,
+        }
+    }
+
+    /// The card whose widget is `id`.
+    fn at(&self, id: &SemId) -> Option<(usize, usize)> {
+        self.groups.iter().enumerate().find_map(|(g, group)| {
+            let c = group
+                .cards
+                .iter()
+                .position(|c| c.spec.sem_id() == Some(id))?;
+            Some((g, c))
+        })
+    }
+
+    /// The reader's focus on the widget of one card, or on none.
+    fn set_focus(&mut self, at: Option<(usize, usize)>) {
+        self.focus = at;
+        for (g, group) in self.groups.iter_mut().enumerate() {
+            for (c, card) in group.cards.iter_mut().enumerate() {
+                card.spec.set_focused(at == Some((g, c)));
+            }
+        }
+    }
+
+    /// Per group: the title's top, the card rects, the rule (the
+    /// showcase mold).
+    fn layout(&self, content: Rect, theme: &Theme) -> Vec<GroupLayout> {
+        let groups = self
+            .groups
+            .iter()
+            .map(|g| (g.title, g.columns, g.cards.len()));
+        showcase::layout_measured(groups, content, theme, |g, c, _| {
+            self.groups[g].cards[c].spec.preferred_size(theme).1
+        })
+    }
+
+    /// The widget centered in its card at the size it asks, never wider
+    /// than the card's room (a button cuts its label to it).
+    fn widget_rect(spec: &Spec, card: Rect, theme: &Theme) -> Rect {
+        let (w, h) = spec.preferred_size(theme);
+        showcase::centered((w.min(showcase::room(card.w, theme)), h), card)
+    }
+
+    /// Center of the first card's widget (the view tests probe hover
+    /// there).
+    #[cfg(test)]
+    pub(crate) fn first_widget_center(&self, content: Rect, theme: &Theme) -> (f32, f32) {
+        let card = self.layout(content, theme)[0].cards[0];
+        let r = Self::widget_rect(&self.groups[0].cards[0].spec, card, theme);
+        (r.x + r.w / 2.0, r.y + r.h / 2.0)
+    }
+
+    pub fn content_height(&self, content: Rect, theme: &Theme) -> f32 {
+        showcase::content_height(&self.layout(content, theme), content)
+    }
+
+    pub fn handle_event(
+        &mut self,
+        event: &WidgetEvent,
+        content: Rect,
+        theme: &Theme,
+    ) -> EventResult {
+        let mut result = EventResult::IGNORED;
+        if matches!(event, WidgetEvent::MouseDown { .. }) && self.blur() {
+            result = EventResult::changed();
+        }
+        let layout = self.layout(content, theme);
+        for (group, at) in self.groups.iter_mut().zip(&layout) {
+            for (card, rect) in group.cards.iter_mut().zip(&at.cards) {
+                let bounds = Self::widget_rect(&card.spec, *rect, theme);
+                result = result.merge(card.spec.handle_event(event, bounds));
+            }
+        }
+        result
+    }
+
+    pub fn render(&self, c: &mut Compositor, content: Rect, theme: &Theme) {
+        let layout = self.layout(content, theme);
+        let last = self.groups.len() - 1;
+        for (i, (group, at)) in self.groups.iter().zip(&layout).enumerate() {
+            showcase::title(c, group.title, content, at.title_y, theme);
+            for (card, rect) in group.cards.iter().zip(&at.cards) {
+                showcase::card(c, *rect, card.title, theme);
+                card.spec
+                    .render(c, Self::widget_rect(&card.spec, *rect, theme), theme);
+            }
+            // The rule under the group (`border-b`, none on the last).
+            if i != last {
+                showcase::rule(c, content, at.rule_y, theme);
+            }
+        }
+    }
+}
+
+impl Component for ButtonPage {
+    fn root(&self) -> Option<&SemId> {
+        self.root.as_ref()
+    }
+
+    fn project(&self, b: &mut SnapshotBuilder, root: &SemId) {
+        for (g, group) in self.groups.iter().enumerate() {
+            let Some(at) = group_id(root, g) else {
+                continue;
+            };
+            b.node(&at, Role::Group, group.title).parent(root);
+            for card in &group.cards {
+                if let Some(id) = card.spec.sem_id() {
+                    card.spec.project(b, id, &at, card.title);
+                }
+            }
+        }
+        let focused = self
+            .focus
+            .and_then(|(g, c)| self.groups.get(g)?.cards.get(c))
+            .and_then(|card| card.spec.sem_id());
+        if let Some(id) = focused {
+            b.focus(id);
+        }
+    }
+
+    /// A button's `activate`: it presses, and nothing else happens, as
+    /// for a click.
+    fn run(&mut self, req: &Request) -> Result<After, String> {
+        let pressable =
+            |(g, c): (usize, usize)| !matches!(self.groups[g].cards[c].spec, Spec::Tooltip(..));
+        match (self.at(&req.target), req.action.as_str()) {
+            (Some(at), "activate") if pressable(at) => Ok(After::Nothing),
+            _ => Err(format!(
+                "the button page has no {} on {}",
+                req.action, req.target
+            )),
+        }
+    }
+
+    fn focus(&mut self, id: &SemId) -> bool {
+        if !self.root.as_ref().is_some_and(|root| under(root, id)) {
+            return false;
+        }
+        self.set_focus(self.at(id));
+        true
+    }
+
+    fn blur(&mut self) -> bool {
+        let had = self.focus.is_some();
+        self.set_focus(None);
+        had
+    }
+}
+
+#[cfg(test)]
+mod tests;

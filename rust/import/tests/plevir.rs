@@ -6,12 +6,12 @@
 //! the parse (independent of the resolver); every IR node with its source.
 //!
 //! To write the goldens again after an intentional change:
-//! UPDATE_GOLDEN=1 cargo test -p import --test ir
+//! UPDATE_GOLDEN=1 cargo test -p import --test suite plevir::
 
 // shared with the other test binaries (the html and figma helpers are
 // theirs).
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use import::formats::gpui::parse::{GExpr, GFn};
 use import::formats::react::parse::{TsxChild, TsxNode};
@@ -137,7 +137,8 @@ fn the_separator_ir_and_its_report() {
     assert_eq!(at(133, ".flex()"), Category::Supported);
     assert_eq!(at(136, ".justify_center()"), Category::Impossible);
     assert_eq!(at(145, ".px_2()"), Category::Approximated);
-    assert_eq!(at(148, ".text_xs()"), Category::Approximated);
+    // tailwind text-xs, 12/16, is the caption role on the 4 px grid: exact
+    assert_eq!(at(148, ".text_xs()"), Category::Transformed);
     assert_eq!(at(82, ".h(px(1.))"), Category::Transformed);
     assert_eq!(at(151, ".child(label)"), Category::Transformed);
     for c in Category::ALL {
@@ -372,7 +373,10 @@ fn the_tolerances_measured_on_hoff() {
     assert!(close(color(ColorRole::Surface), 1.0));
     assert!(close(color(ColorRole::BgHover), 3.5));
     assert!(close(color(ColorRole::Divider), 3.5));
-    assert!(close(color(ColorRole::TextMid), 25.5));
+    // text_mid's neighbour is text_dim, and the theme settles it to AA
+    // (task-104m, `theme::legibility`): n2(0.50) read 4.45:1 on bg_hover and
+    // is n2(0.507) now, so the gap is 49.13 levels where it was 51
+    assert!(close(color(ColorRole::TextMid), 24.565));
     assert!(close(color(ColorRole::Text), 31.875));
     let spacing = |s: SpacingToken| {
         let v = t.spacing_of(s).expect("a spacing");

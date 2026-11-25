@@ -1,0 +1,64 @@
+{
+  "nodes": [
+    {
+      "id": "panel_header_page",
+      "role": "region",
+      "label": "Panel Header"
+    },
+    {
+      "id": "panel_header_page.group[0]",
+      "role": "group",
+      "label": "Panel Header",
+      "parent": "panel_header_page"
+    },
+    {
+      "id": "panel_header_page.group[0].card[0]",
+      "role": "label",
+      "label": "Notifications",
+      "parent": "panel_header_page.group[0]"
+    },
+    {
+      "id": "panel_header_page.group[0].card[1]",
+      "role": "label",
+      "label": "Changes",
+      "parent": "panel_header_page.group[0]",
+      "state": {
+        "badge": {
+          "kind": "text",
+          "value": "12"
+        }
+      }
+    },
+    {
+      "id": "panel_header_page.group[0].card[2]",
+      "role": "label",
+      "label": "Comments",
+      "description": "Three unread since yesterday",
+      "parent": "panel_header_page.group[0]",
+      "state": {
+        "badge": {
+          "kind": "text",
+          "value": "3"
+        }
+      }
+    },
+    {
+      "id": "panel_header_page.group[1]",
+      "role": "group",
+      "label": "Panel Header, ranges",
+      "parent": "panel_header_page"
+    },
+    {
+      "id": "panel_header_page.group[1].card[0]",
+      "role": "label",
+      "label": "Every asset of the scene and its animation timeline",
+      "parent": "panel_header_page.group[1]",
+      "state": {
+        "badge": {
+          "kind": "text",
+          "value": "128"
+        }
+      }
+    }
+  ]
+}

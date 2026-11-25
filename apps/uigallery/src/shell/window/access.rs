@@ -39,7 +39,7 @@ impl Access {
 
     /// What the screen reader asked, on the main thread: a request goes
     /// through the active page's dispatcher as `Actor::Assistive`, a focus
-    /// move to the page's focus.
+    /// move to the page's focus, a scroll into view to the page's scroll.
     pub(crate) fn carry_out(&mut self, view: &mut ShowcaseView) {
         let Some(bridge) = self.bridge.as_mut() else {
             return;
@@ -58,6 +58,11 @@ impl Access {
                 engine::control::accessibility::Assist::Focus(id) => {
                     if !view.assist_focus(&id) {
                         log::debug!("accessibility: no page takes focus on {id}");
+                    }
+                }
+                engine::control::accessibility::Assist::Reveal(id) => {
+                    if !view.assist_reveal(&id) {
+                        log::debug!("accessibility: no page scrolls {id} into view");
                     }
                 }
             }
@@ -132,13 +137,29 @@ mod tests {
 
     #[test]
     fn with_nothing_over_the_page_the_reader_is_shown_the_page_as_it_is() {
+        // the page as it is, and the sidebar after it (task-104 front H)
         let view = view_on("todo");
-        assert_eq!(view.reader_semantics(), view.semantics());
-        let view = view_on("card");
+        let page = view.semantics().unwrap();
+        let seen = view.reader_semantics().unwrap();
+        assert_eq!(seen, view.keyboard_semantics().unwrap());
+        for (id, node) in page.nodes() {
+            assert_eq!(seen.get(id), Some(node), "{id}: the page's own");
+        }
+        let rest: Vec<&str> = seen
+            .nodes()
+            .keys()
+            .filter(|id| page.get(id).is_none())
+            .map(|id| id.as_str())
+            .collect();
         assert_eq!(
-            view.reader_semantics(),
-            None,
-            "a page without meaning: the window"
+            rest,
+            ["shell.sidebar", "shell.sidebar.pin", "shell.sidebar.search"]
+        );
+        let view = view_on("separator");
+        let seen = view.reader_semantics().unwrap();
+        assert!(
+            seen.nodes().keys().all(|id| view.is_sidebar(id)),
+            "a page without meaning: the window and the sidebar"
         );
     }
 
@@ -215,7 +236,7 @@ mod tests {
 
     #[test]
     fn a_toast_on_a_page_without_meaning_is_heard_too() {
-        let mut view = view_on("card");
+        let mut view = view_on("separator");
         let theme = view.theme.clone();
         view.toasts.push("copied", Intent::Informational, &theme);
         let (u, ids, s) = tree(&mut view);
@@ -258,7 +279,7 @@ mod tests {
             .cloned();
         assert_eq!(said, Some(accord::Value::from("silences detected: 2 cuts")));
         // a page without meaning hears it too
-        let mut view = view_on("card");
+        let mut view = view_on("separator");
         view.set_notice("done");
         let (u, ids, _) = tree(&mut view);
         assert_eq!(node(&u, &ids, "shell.notice").value(), Some("done"));

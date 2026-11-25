@@ -29,7 +29,7 @@
 use std::borrow::Cow;
 
 use engine::drawing::compositor::{SceneNode, TextNodeKey};
-use engine::drawing::text::{TextMeasurer, TextStyle};
+use engine::drawing::text::{OverflowWrap, TextMeasurer, TextStyle};
 
 /// a place of a frame whose drawing does not travel: `rect`, `(x, y, w,
 /// h)` in logical pixels, on the layer `layer` (the app's `LayerId`).
@@ -145,6 +145,8 @@ fn text_extent(key: &TextNodeKey, x: f32, y: f32) -> [f32; 4] {
         font_weight: key.font_weight,
         letter_spacing: f32::from_bits(key.letter_spacing_bits),
         font_family: key.font_family.clone(),
+        features: key.features,
+        overflow_wrap: key.overflow_wrap,
     };
     let wrap = key.max_width_bits.map(f32::from_bits);
     let (w, h) = TextMeasurer::measure_styled(&key.text, &style, wrap);
@@ -191,6 +193,8 @@ fn secret_box([x, y, w, h]: [f32; 4]) -> [SceneNode; 4] {
                 font_weight: 500,
                 letter_spacing_bits: 0.0f32.to_bits(),
                 font_family: None,
+                features: engine::drawing::text::TextFeatures::NONE,
+                overflow_wrap: OverflowWrap::Normal,
             },
             x: x + 8.0,
             y: y + ((h - line) / 2.0).max(0.0),

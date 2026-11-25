@@ -25,16 +25,21 @@
 // screen sits on the graphite container, never on pure black.
 // ============================================================================
 
-use super::Theme;
 use super::intent::MotionPhysics;
+use super::roles::TypeRoles;
 use super::scales::{
-    ControlTokens, DurationScale, LayoutTokens, ShadowTokens, ShapeTokens, SizeTokens,
+    ControlTokens, DurationScale, LayoutTokens, ShadowSpec, ShadowTokens, ShapeTokens, SizeTokens,
 };
 use super::tokens::{
-    ColorTokens, EffectTokens, GlassTokens, RadiusScale, SpacingScale, TypographyScale,
+    ColorTokens, EffectTokens, GlassTokens, MONO_FAMILY, RadiusScale, SpacingScale, TypographyScale,
+};
+use super::{
+    DisclosureTokens, FormTokens, MessageTokens, NavigationTokens, OverlayTokens, SelectionTokens,
+    Theme,
 };
 use crate::styling::color::Color;
 use crate::widgets::buttons::tokens::ButtonTokens;
+use crate::widgets::header::tokens::HeaderTokens;
 
 const N2_F: f32 = 248.0 / 255.0;
 
@@ -128,9 +133,11 @@ impl TypographyScale {
             title_sm: 20.0,
             title: 32.0,
             display: 36.0,
-            line_height_ratio: 1.4,
             family: None,
+            mono_family: MONO_FAMILY,
             tracking_em: 0.0,
+            roles: TypeRoles::derive([10.0, 12.0, 14.0, 16.0, 20.0, 32.0, 36.0], 0.0),
+            text_scale: super::text_scale::TextScale::IDENTITY,
         }
     }
 }
@@ -138,8 +145,17 @@ impl TypographyScale {
 impl Theme {
     /// The HOFF dark-glass theme — plev's default.
     pub fn hoff() -> Self {
+        // placeholders: the recipes are derived again below, from the theme
+        let dark = Self::dark().colors;
         let mut theme = Self {
-            button: ButtonTokens::derive(&Self::dark().colors),
+            button: Box::new(ButtonTokens::derive(&dark)),
+            form: Box::new(FormTokens::hoff_core()),
+            overlay: Box::new(OverlayTokens::hoff_core()),
+            message: Box::new(MessageTokens::hoff_core()),
+            disclosure: Box::new(DisclosureTokens::hoff_core()),
+            selection: Box::new(SelectionTokens::hoff_core()),
+            navigation: Box::new(NavigationTokens::hoff_core()),
+            header: Box::new(HeaderTokens::hoff_core()),
             colors: ColorTokens {
                 // The composed container tone (#303030), NOT the hidden body
                 // #444444 — every screen sits on this graphite, measured live.
@@ -162,6 +178,7 @@ impl Theme {
                 info: GREEN_LIGHT,
                 divider: Color::rgba(1.0, 1.0, 1.0, 0.05),
                 border_active: Color::rgba(1.0, 1.0, 1.0, 0.10),
+                swatches: &[],
             },
             typography: TypographyScale::hoff(),
             spacing: SpacingScale {
@@ -217,9 +234,13 @@ impl Theme {
                 text_placeholder: n2(0.25),
                 text_active: n2(0.76),
                 text_default: n2(0.56),
-                disabled_alpha: 0.5,
+                disabled_alpha: 0.30,
                 wash_alpha: 0.14,
                 wash_hover_alpha: 0.22,
+                rim_fade: 0.0,
+                // `inset 2px 4px 16px rgba(248,248,248,.06)`: `xs / 2, xs`
+                // off, blurred by `lg`.
+                keylight: Some(ShadowSpec::inset([2.0, 4.0], 16.0, 0.0, n2(0.06))),
             },
             shape: ShapeTokens::hoff(),
             control: ControlTokens::hoff(),
@@ -228,7 +249,10 @@ impl Theme {
             layout: LayoutTokens::hoff(),
             shadows: ShadowTokens::hoff(),
         };
-        theme.button = ButtonTokens::derive(&theme.colors);
+        theme.settle_colors(super::Bar::AA);
+        *theme.button = ButtonTokens::derive(&theme.colors);
+        theme.derive_front_slots();
+        theme.hold_edges(super::Bar::AA);
         theme
     }
 }
@@ -241,7 +265,7 @@ impl Theme {
     /// one notch below the raised sidebar surface, like in dark mode.
     pub fn hoff_light() -> Self {
         let dark = Self::hoff();
-        Self {
+        let mut theme = Self {
             colors: ColorTokens {
                 bg: Color::hex(0xCECECE),
                 surface: Color::hex(0xD1D1D1),
@@ -258,6 +282,7 @@ impl Theme {
                 info: Color::rgba(43.0 / 255.0, 177.0 / 255.0, 99.0 / 255.0, 0.7),
                 divider: Color::rgba(0.0, 0.0, 0.0, 0.05),
                 border_active: Color::rgba(0.0, 0.0, 0.0, 0.10),
+                swatches: &[],
             },
             glass: GlassTokens {
                 surface: ink(0.02),
@@ -283,9 +308,21 @@ impl Theme {
                 disabled_alpha: dark.glass.disabled_alpha,
                 wash_alpha: dark.glass.wash_alpha,
                 wash_hover_alpha: dark.glass.wash_hover_alpha,
+                rim_fade: dark.glass.rim_fade,
+                keylight: Some(ShadowSpec::inset(
+                    [2.0, 4.0],
+                    16.0,
+                    0.0,
+                    Color::rgba(1.0, 1.0, 1.0, 0.35),
+                )),
             },
             shadows: ShadowTokens::hoff(),
             ..dark
-        }
+        };
+        // Its own buttons, from its own palette: the dark theme's would
+        // put a pale call to action on the pale page.
+        *theme.button = ButtonTokens::derive(&theme.colors);
+        theme.derive_front_slots();
+        theme
     }
 }

@@ -47,7 +47,7 @@ pub struct GradientRectParams {
 
 impl Compositor {
     pub fn push(&mut self, node: SceneNode) {
-        self.push_to_layer(LayerId::DEFAULT, node);
+        self.push_to_layer(self.target, node);
     }
 
     pub fn push_to_layer(&mut self, layer_id: LayerId, node: SceneNode) {

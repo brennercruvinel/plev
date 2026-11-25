@@ -1,0 +1,232 @@
+//! The selection recipe of every theme but the core kit, derived from
+//! the theme built without it: the kit's relations on the theme's
+//! palette.
+
+use crate::styling::color::Color;
+use crate::styling::theme::{ButtonRecipe, ButtonSurface, Theme};
+
+use super::legible::{MARK_CONTRAST, full, hue_sextant, legible, legible_at, reads_on};
+use super::tokens::*;
+
+impl SelectionTokens {
+    /// The recipe of any other theme, from the theme built without it
+    /// (`Theme::derive_front_slots` fills the slots last): the well is the
+    /// hover tone ringed by the divider, the thumb the background ringed
+    /// by the active border, the labels the theme's text and its mid tone.
+    pub fn derive(theme: &Theme) -> Self {
+        let kit = Self::hoff_core();
+        let c = &theme.colors;
+        let track = ButtonSurface {
+            fill: [c.bg_hover; 2],
+            overlay: NONE,
+            shadow: vec![ring(c.divider)],
+            text: c.text,
+        };
+        let thumb = ButtonSurface {
+            fill: [c.bg; 2],
+            overlay: NONE,
+            shadow: vec![ring(c.border_active)],
+            text: c.text,
+        };
+        let button_group = ButtonGroupTokens {
+            shell: ButtonSurface {
+                fill: [c.surface; 2],
+                overlay: NONE,
+                shadow: vec![ring(c.divider)],
+                text: c.text,
+            },
+            separator: c.divider,
+            ..kit.button_group
+        };
+        // the kit's call to action is ink on paper, the page's colors
+        // turned over: so is a derived theme's
+        let chosen = ButtonSurface {
+            fill: [c.text; 2],
+            overlay: NONE,
+            shadow: Vec::new(),
+            text: c.bg,
+        };
+        // the kit's well is a step off the page and its on the ink at
+        // 70%: the hover tone ringed by the divider, and the text at the
+        // same strength; the knob is the page
+        let strength = kit.switch.on.fill[0].0[3];
+        let on = Color::rgba(
+            c.text.0[0],
+            c.text.0[1],
+            c.text.0[2],
+            c.text.0[3] * strength,
+        );
+        // the well off and the thumb ringed by the divider where it reads
+        // at 3:1 on all they border (1.4.11), else the mid tone, else the
+        // text
+        let edges = [c.divider, c.text_mid, c.text];
+        let well_edge = mark_on(&edges, &[&[c.bg], &[c.bg, c.bg_hover]]);
+        let switch = SwitchTokens {
+            off: ButtonSurface {
+                fill: [c.bg_hover; 2],
+                overlay: NONE,
+                shadow: vec![ring(well_edge)],
+                text: c.text,
+            },
+            on: ButtonSurface {
+                fill: [on; 2],
+                overlay: NONE,
+                shadow: Vec::new(),
+                text: c.text,
+            },
+            knob: ButtonSurface {
+                fill: [c.bg; 2],
+                overlay: NONE,
+                shadow: vec![ring(c.divider)],
+                text: c.text,
+            },
+            ..kit.switch
+        };
+        // the well a step off the page, filled with the quiet text at the
+        // kit's strength (on its own alpha, as the switch's ink); the thumb
+        // is the page, ringed where it reads
+        let part = kit.slider.fill.0[3];
+        let fill = Color::rgba(
+            c.text_mid.0[0],
+            c.text_mid.0[1],
+            c.text_mid.0[2],
+            c.text_mid.0[3] * part,
+        );
+        let thumb_edge = mark_on(&edges, &[&[c.bg, c.bg_hover], &[c.bg, c.bg_hover, fill]]);
+        // where the ring cannot read on the fill (a palette held at more
+        // contrast lights the quiet text), the fill gives way to the ring,
+        // in steps of 2% of its strength
+        let mut fill = fill;
+        while fill.0[3] > 0.0 && !reads_on(MARK_CONTRAST, thumb_edge, &[&[c.bg, c.bg_hover, fill]])
+        {
+            fill.0[3] = (fill.0[3] - 0.02).max(0.0);
+        }
+        let slider = SliderTokens {
+            track: ButtonSurface {
+                fill: [c.bg_hover; 2],
+                overlay: NONE,
+                shadow: Vec::new(),
+                text: c.text,
+            },
+            fill,
+            thumb: ButtonSurface {
+                shadow: vec![ring(thumb_edge)],
+                ..switch.knob.clone()
+            },
+            ..kit.slider
+        };
+        // the tag on the page ringed by the divider, its quiet text where
+        // it reads; chosen, the hover tone
+        let tag = |fill: Color, edge: Color, text: Color| ButtonSurface {
+            fill: [fill; 2],
+            overlay: NONE,
+            shadow: vec![border(edge)],
+            text,
+        };
+        let chip = ChipTokens {
+            rest: tag(c.bg, c.divider, legible(c.text_mid, c.text, c.bg, c.bg)),
+            rest_hover: tag(c.bg, c.divider, c.text),
+            on: tag(c.bg_hover, NONE, c.text),
+            on_hover: tag(c.divider, NONE, c.text),
+            // the theme's info, else the kit's, else the accent: the first
+            // that stands apart from the success on the color wheel
+            info: [c.info, kit.chip.info]
+                .into_iter()
+                .find(|h| hue_sextant(*h) != hue_sextant(c.success))
+                .unwrap_or(c.accent),
+            ..kit.chip
+        };
+        let edge = legible_at(MARK_CONTRAST, c.divider, c.text_mid, c.bg_hover, c.bg);
+        let checkbox = CheckboxTokens {
+            off: ButtonSurface {
+                shadow: vec![ring(edge)],
+                ..switch.off.clone()
+            },
+            off_hover: ButtonSurface {
+                overlay: c.bg_hover,
+                shadow: vec![ring(edge)],
+                ..switch.off.clone()
+            },
+            on: full(&switch.on),
+            mark: switch.knob.fill[0],
+            mark_disabled: mark_on(
+                &[switch.knob.fill[0], c.text_mid, c.text],
+                &[&[
+                    c.bg,
+                    faded(full(&switch.on).fill[0], kit.checkbox.disabled_alpha),
+                ]],
+            ),
+            label: c.text,
+            ..kit.checkbox
+        };
+        let radio = RadioTokens {
+            row_hover: c.bg_hover,
+            label: c.text,
+            ..kit.radio
+        };
+        // the folder picker's words on its hover over the popover glass:
+        // the color where it reads at AAA, else the text, else the text
+        // whole
+        let glass = theme.overlay.popover.panel.fill[0];
+        let lit: &[&[Color]] = &[&[c.bg, glass, c.bg_hover]];
+        let whole = Color::rgba(c.text.0[0], c.text.0[1], c.text.0[2], 1.0);
+        let words = |color: Color| {
+            legible_on(
+                TEXT_CONTRAST,
+                color,
+                legible_on(TEXT_CONTRAST, c.text, whole, lit),
+                lit,
+            )
+        };
+        Self {
+            segmented: SegmentedTokens {
+                text: legible(c.text_mid, c.text, track.fill[0], c.bg),
+                track,
+                thumb,
+                text_hover: c.text,
+                ..kit.segmented
+            },
+            // the panel is the theme's popover glass, the box and the hover
+            // its hover tone, the marks its mid tone where they read
+            folders: FoldersTokens {
+                label: words(c.text),
+                panel: theme.overlay.popover.panel.clone(),
+                search: ButtonSurface {
+                    fill: [c.bg_hover; 2],
+                    overlay: NONE,
+                    shadow: vec![border(c.divider)],
+                    text: c.text,
+                },
+                row_hover: c.bg_hover,
+                naming: ButtonSurface {
+                    fill: [c.bg_hover; 2],
+                    overlay: NONE,
+                    shadow: vec![border(c.divider)],
+                    text: c.text,
+                },
+                naming_icon: mark_on(&[c.accent, c.text], &[&[c.bg, glass, c.bg_hover]]),
+                mark: mark_on(&[c.text_mid, c.text], &[&[c.bg], &[c.bg, c.bg_hover]]),
+                hues: [c.warning, c.success, c.info, c.danger],
+                ..kit.folders.clone()
+            },
+            button_group,
+            switch,
+            checkbox,
+            slider,
+            chip,
+            radio,
+            calendar: CalendarTokens {
+                weekday: legible(c.text_mid, c.text, c.surface, c.bg),
+                today: legible_at(MARK_CONTRAST, c.border_active, c.text, c.surface, c.bg),
+                today_w: theme.control.edge_width,
+                chosen: ButtonRecipe {
+                    rest: chosen.clone(),
+                    hover: chosen.clone(),
+                    active: chosen,
+                    ..kit.calendar.chosen
+                },
+                ..kit.calendar
+            },
+        }
+    }
+}

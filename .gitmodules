@@ -1,0 +1,7 @@
+[submodule "apps/quartzweb"]
+	path = apps/quartzweb
+	url = https://github.com/tiamatio/quartz.git
+	branch = plev
+[submodule "apps/zolaviews/themes/ametrine"]
+	path = apps/zolaviews/themes/ametrine
+	url = https://codeberg.org/daudix/ametrine.git

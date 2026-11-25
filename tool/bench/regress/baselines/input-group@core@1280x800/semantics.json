@@ -1,0 +1,377 @@
+{
+  "nodes": [
+    {
+      "id": "input_group_page",
+      "role": "region",
+      "label": "Input Group"
+    },
+    {
+      "id": "input_group_page.group[0]",
+      "role": "group",
+      "label": "Search",
+      "parent": "input_group_page"
+    },
+    {
+      "id": "input_group_page.group[0].card[0]",
+      "role": "text_input",
+      "label": "Search...",
+      "description": "⌘ K",
+      "parent": "input_group_page.group[0]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_group_page.group[0].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[0].card[0].action",
+      "role": "button",
+      "label": "search",
+      "parent": "input_group_page.group[0]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[1]",
+      "role": "group",
+      "label": "Invite",
+      "parent": "input_group_page"
+    },
+    {
+      "id": "input_group_page.group[1].card[0]",
+      "role": "text_input",
+      "label": "Email, name...",
+      "parent": "input_group_page.group[1]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_group_page.group[1].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[1].card[0].choice",
+      "role": "select",
+      "label": "access",
+      "parent": "input_group_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "can view"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "input_group_page.group[1].card[0].choice:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "input_group_page.group[1].card[0].choice:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "input_group_page.group[1].card[0].choice:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "can view",
+          "can edit"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[2]",
+      "role": "group",
+      "label": "Addons",
+      "parent": "input_group_page"
+    },
+    {
+      "id": "input_group_page.group[2].card[0]",
+      "role": "text_input",
+      "label": "hoff.dev",
+      "parent": "input_group_page.group[2]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_group_page.group[2].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[2].card[1]",
+      "role": "text_input",
+      "label": "sophie",
+      "parent": "input_group_page.group[2]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_group_page.group[2].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[2].card[2]",
+      "role": "text_input",
+      "label": "Search...",
+      "parent": "input_group_page.group[2]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_group_page.group[2].card[2]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[2].card[2].action",
+      "role": "button",
+      "label": "search",
+      "parent": "input_group_page.group[2]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[3]",
+      "role": "group",
+      "label": "Disabled",
+      "parent": "input_group_page"
+    },
+    {
+      "id": "input_group_page.group[3].card[0]",
+      "role": "text_input",
+      "label": "Search...",
+      "description": "⌘ K",
+      "parent": "input_group_page.group[3]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_group_page.group[3].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[3].card[0].action",
+      "role": "button",
+      "label": "search",
+      "parent": "input_group_page.group[3]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[4]",
+      "role": "group",
+      "label": "Content",
+      "parent": "input_group_page"
+    },
+    {
+      "id": "input_group_page.group[4].card[0]",
+      "role": "text_input",
+      "label": "Search...",
+      "description": "⌘ K",
+      "parent": "input_group_page.group[4]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "an invoice from the first quarter of the research grant"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_group_page.group[4].card[0]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[4].card[0].action",
+      "role": "button",
+      "label": "search",
+      "parent": "input_group_page.group[4]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[4].card[1]",
+      "role": "text_input",
+      "label": "Search...",
+      "description": "⌘ K",
+      "parent": "input_group_page.group[4]",
+      "state": {
+        "text": {
+          "kind": "text",
+          "value": "חיפוש במסמכים"
+        }
+      },
+      "actions": [
+        {
+          "name": "set_value",
+          "reads": [
+            "input_group_page.group[4].card[1]:text"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        }
+      ],
+      "constraints": {
+        "editable": true
+      },
+      "focusable": true
+    },
+    {
+      "id": "input_group_page.group[4].card[1].action",
+      "role": "button",
+      "label": "search",
+      "parent": "input_group_page.group[4]",
+      "actions": [
+        {
+          "name": "activate"
+        }
+      ],
+      "focusable": true
+    }
+  ]
+}

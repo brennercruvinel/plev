@@ -13,8 +13,9 @@
 //! `theme.control`, `theme.shadows`...). Non-HOFF palettes derive an
 //! equivalent recipe, so every widget renders under every theme.
 //!
-//! Categories (docs/ref/architecture/component-catalog.md):
+//! Categories (docs/Research/Structure/component-catalog.md):
 //! - [`buttons`]: button, icon button, chip, badge
+//! - [`header`]: the kit's top bars and its logo (task-104 front F)
 //! - [`form`]: text field, checkbox, switch, slider, select
 //! - [`nav`]: tabs, nav link, sidebar, panel header, breadcrumb, split
 //!   pane
@@ -22,6 +23,8 @@
 //!   empty state, virtual list, tree, separator
 //! - [`feedback`]: modal, context menu, toast, tooltip, progress, spinner,
 //!   scrollbar
+//! - [`message`]: the conversation (task-104 front C)
+//! - [`selection`]: toggles, groups, radios and dates (task-104 front E)
 //! - [`overlay`]: the overlay stack (menus, modals, toasts) with spring
 //!   motion
 //! - [`charts`]: pure chart geometry plus scene emission
@@ -33,9 +36,12 @@
 //! - [`icons`]: the lucide set, tessellated and cached
 //! - [`core`] and [`recipe`]: the widget contract and the glass drawing
 //!   recipes every category shares
+//! - [`hit`]: the press area of a control, grown to the minimum target
+//!   (WCAG 2.5.8; the touch minimum with a finger) around its drawing
 //! - [`wake`]: what a tick asks of the loop (a frame now, the next
 //!   deadline), and the caret clock the text widgets share
 
+pub mod hit;
 pub mod recipe;
 pub mod wake;
 
@@ -44,7 +50,9 @@ pub mod icons;
 pub mod content;
 pub mod feedback;
 pub mod form;
+pub mod message;
 pub mod nav;
+pub mod selection;
 
 pub mod charts;
 pub mod editor;
@@ -53,11 +61,13 @@ pub mod overlay;
 pub mod shell;
 
 pub mod buttons;
+pub mod header;
 #[cfg(test)]
 mod tests;
 pub mod widget;
 
 pub use crate::styling::theme::{self, Intent, Theme};
+pub use hit::hit_rect;
 pub use wake::Wake;
 pub use widget::{EventResult, Rect, WidgetEvent};
 

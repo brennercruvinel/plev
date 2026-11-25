@@ -38,36 +38,79 @@ use uigallery::views::{PAGES, ShowcaseView};
 /// Dialog" shows the Dialog page, "Toggle Group" the todo page's
 /// example), and the apps of phase 1. Every other page is in `SILENT`.
 const PROJECTING: &[&str] = &[
+    "Accordion",
+    "Alert",
     "Alert Dialog",
+    "Aspect Ratio",
+    "Attachment",
+    "Avatar",
+    "Badge",
     "Breadcrumb",
+    "Bubble",
     "Button",
     "Button Group",
+    "Calendar",
+    "Card",
+    "Carousel",
+    "Chart",
     "Checkbox",
     "Chip",
+    "Code Block",
+    "Collapsible",
     "Combobox",
+    "Command",
+    "Comments",
+    "Context Menu",
     "Data Table",
+    "Date Picker",
     "Dialog",
+    "Drawer",
+    "Dropdown Menu",
     "Field",
+    "Graph",
+    "Home",
     "Hover Card",
     "Icon Button",
     "Input",
+    "Input Group",
+    "Input OTP",
     "Item",
     "Kbd",
     "Label",
+    "Marker",
+    "Menubar",
+    "Menus",
+    "Message",
+    "Message Scroller",
+    "Modals",
     "Navigation Menu",
+    "Notifications",
+    "Pagination",
+    "Panel",
+    "Panel Header",
     "Popover",
+    "Progress",
+    "Prompt Input",
+    "Radio Group",
     "Resizable",
     "Scroll Area",
     "Select",
+    "Sheet",
+    "Sidebar",
+    "Skeleton",
     "Slider",
     "Spinner",
+    "Stat",
     "Switch",
     "Table",
     "Tabs",
+    "Textarea",
     "Toast",
     "Toggle",
     "Toggle Group",
+    "Toolbar",
     "Tooltip",
+    "Topbar",
     "Tree",
     "Todo",
     "Surface",
@@ -98,104 +141,21 @@ const SILENT: &[(&str, Why)] = &[
         "Theme",
         Unprojected("the palette cards are drawn by hand: options pressed by shell.theme"),
     ),
-    ("Typography", Nothing("a type specimen")),
-    ("Icons", Nothing("a grid of icons, hover only")),
-    ("Effects", Nothing("samples of shadow, blur and gradient")),
-    ("Accordion", PLACEHOLDER),
-    ("Alert", PLACEHOLDER),
-    ("Aspect Ratio", PLACEHOLDER),
-    ("Attachment", PLACEHOLDER),
+    ("Typography", Nothing("a type specimen table")),
+    ("Icons", Nothing("a grid of icons")),
     (
-        "Avatar",
-        Unprojected("Avatar: an image named by the person, online or not"),
-    ),
-    ("Badge", Unprojected("Badge: a label with its count or tag")),
-    (
-        "Bubble",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
-    ("Calendar", PLACEHOLDER),
-    (
-        "Card",
-        Unprojected("Card: a group per variant with its words and numbers"),
-    ),
-    ("Carousel", PLACEHOLDER),
-    (
-        "Chart",
-        Unprojected("the charts: an image with a text alternative, or a table of the data"),
-    ),
-    (
-        "Code Block",
-        Unprojected("CodeBlock: a label with the code, named by its caption"),
-    ),
-    ("Collapsible", PLACEHOLDER),
-    ("Command", PLACEHOLDER),
-    (
-        "Context Menu",
-        Unprojected("the area a right click opens the menu in: a trigger with an open action"),
-    ),
-    ("Date Picker", PLACEHOLDER),
-    (
-        "Drawer",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
-    (
-        "Dropdown Menu",
-        Unprojected("the area a right click opens the menu in: a trigger with an open action"),
+        "Effects",
+        Nothing("samples of the shadow stacks, blur and gradient"),
     ),
     (
         "Empty",
         Unprojected("EmptyState: a group named by its title, its message, its call to action"),
     ),
-    (
-        "Graph",
-        Unprojected("GraphView: a canvas of nodes to select, pan and zoom as actions"),
-    ),
-    ("Input Group", PLACEHOLDER),
-    ("Input OTP", PLACEHOLDER),
-    ("Marker", PLACEHOLDER),
-    ("Menubar", PLACEHOLDER),
-    (
-        "Message",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
-    (
-        "Message Scroller",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
-    ),
-    ("Pagination", PLACEHOLDER),
-    ("Panel", Nothing("the glass surface alone")),
-    (
-        "Panel Header",
-        Unprojected("PanelHeader: a heading with its blurb and badge"),
-    ),
-    (
-        "Progress",
-        Unprojected("ProgressBar: a value from 0 to 1, as capture.level"),
-    ),
     ("Questionnaire", PLACEHOLDER),
-    ("Radio Group", PLACEHOLDER),
     ("Separator", Nothing("rules between captions")),
     (
-        "Sheet",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
-    (
-        "Sidebar",
-        Unprojected("Sidebar: a navigation region of its links, each group folded by an action"),
-    ),
-    (
-        "Skeleton",
-        Unprojected("Skeleton: a busy placeholder; the pulse a click starts, an action"),
-    ),
-    (
-        "Stat",
-        Unprojected("Stat: a label with its value, unit and delta"),
-    ),
-    ("Textarea", PLACEHOLDER),
-    (
         "Dock",
-        Unprojected("the dock is drawn by hand: a list of messages, a field, the contacts"),
+        Unprojected("the dock is drawn by hand: its contacts and a field, over a stage of bubbles"),
     ),
     (
         "Editor",
@@ -212,12 +172,13 @@ const SILENT: &[(&str, Why)] = &[
 ];
 
 /// The actions a reader can ask of a node: what the tree offers.
-const OFFERED: [Action; 5] = [
+const OFFERED: [Action; 6] = [
     Action::Click,
     Action::Focus,
     Action::SetValue,
     Action::Increment,
     Action::Decrement,
+    Action::ScrollIntoView,
 ];
 
 const CHROME: Chrome<'static> = Chrome {
@@ -331,8 +292,22 @@ fn every_page_is_a_valid_tree_and_the_silent_ones_are_the_known_ones() {
     for page in PAGES {
         let seen = see(page.title);
         assert_valid(page.title, &seen.update);
-        if seen.shown.snapshot.is_empty() {
-            assert_eq!(seen.update.nodes.len(), 1, "{}: the window", page.title);
+        // the sidebar is every page's (task-104 front H): a page is silent
+        // when the tree has nothing of its own beside it
+        let snapshot = &seen.shown.snapshot;
+        let chrome = snapshot
+            .nodes()
+            .keys()
+            .filter(|id| seen.view.is_sidebar(id))
+            .count();
+        if snapshot.len() == chrome {
+            let window = 1 + chrome;
+            assert_eq!(
+                seen.update.nodes.len(),
+                window,
+                "{}: the window",
+                page.title
+            );
             silent.push(page.title);
         } else {
             projected.push(page.title);
@@ -411,7 +386,7 @@ fn tab_and_the_reader_walk_the_same_order_and_the_page_takes_the_focus() {
         for id in tab {
             let mut fresh = see(title);
             assert!(fresh.view.assist_focus(id), "{title}: {id} refused");
-            let now = fresh.view.semantics().unwrap_or_default();
+            let now = fresh.view.keyboard_semantics().unwrap_or_default();
             if now.focused() != Some(id) {
                 unprojected.push(id.to_string());
             }
@@ -459,7 +434,7 @@ fn every_action_the_tree_offers_is_a_request_the_dispatcher_admits() {
                             refused.push(format!("{title}: {} {}", r.target, r.action));
                         }
                     }
-                    Ok(Assist::Focus(to)) => assert_eq!(&to, id, "{title}"),
+                    Ok(Assist::Focus(to) | Assist::Reveal(to)) => assert_eq!(&to, id, "{title}"),
                     Err(e) => panic!("{title}: {id} offers {action:?} and it maps to nothing: {e}"),
                 }
             }
@@ -505,11 +480,23 @@ fn told_disabled(seen: &Seen, id: &SemId) -> bool {
 /// adds the Resizable page's split: a group whose `set_ratio` no action of
 /// the tree reaches (a value is set through `set_value` or a select's
 /// `select`, and the contract has no splitter role, AccessKit's
-/// `Splitter`); an agent asks it, and a person drags.
+/// `Splitter`); an agent asks it, and a person drags. Task-104 put a
+/// stacked split beside it, the same.
+///
+/// The sidebar's landmark (task-104 front H) is every page's and left out
+/// of this list: a navigation landmark offers no press, and a reader
+/// shows the panel by moving its focus into it (`SIDEBAR_BY_FOCUS`); an
+/// agent asks its `toggle_expanded`.
 const UNREACHABLE: &[&str] = &[
     "Files: files.drop drop_files",
+    "Resizable: resizable_page.group[1].card[0] set_ratio",
     "Resizable: resizable_page.split set_ratio",
 ];
+
+/// What a reader reaches by its focus and not by an action of the tree:
+/// the sidebar shows while the focus is in it (its pin takes the focus
+/// while it is out).
+const SIDEBAR_BY_FOCUS: &str = "shell.sidebar toggle_expanded";
 
 /// Whether the node's press is off now: its primary action, or the node,
 /// is disabled, so the tree does not offer the press until it is on (a
@@ -574,7 +561,8 @@ fn the_actions_no_reader_can_reach_are_the_known_ones() {
                 }
             }
             for decl in &node.actions {
-                if !reached.contains(&decl.name.as_str()) {
+                let by_focus = format!("{id} {}", decl.name) == SIDEBAR_BY_FOCUS;
+                if !reached.contains(&decl.name.as_str()) && !by_focus {
                     unreachable.push(format!("{title}: {id} {}", decl.name));
                 }
             }
@@ -627,8 +615,33 @@ fn every_status_line_is_a_live_region_that_says_its_words() {
     assert_eq!(
         lines,
         [
+            // task-104 front C: the inline alerts, by intent (#156)
+            "alert_page.group[0].card[0].alert[0]",
+            "alert_page.group[0].card[1].alert[0]",
+            "alert_page.group[0].card[2].alert[0]",
+            "alert_page.group[0].card[3].alert[0]",
+            "alert_page.group[1].card[0].alert[0]",
+            "alert_page.group[1].card[1].alert[0]",
+            "alert_page.group[1].card[2].alert[0]",
+            "alert_page.group[1].card[3].alert[0]",
+            "alert_page.group[2].card[0].alert[0]",
+            "alert_page.group[2].card[0].alert[1]",
+            "alert_page.group[2].card[0].alert[2]",
+            "alert_page.group[2].card[0].alert[3]",
+            "alert_page.group[3].card[0].alert[0]",
+            "alert_page.group[3].card[1].alert[0]",
             "capture.status",
+            // task-104t: the empty states that read as what they show
+            "combobox_page.group[3].card[0]",
+            "comments_page.group[1].card[3].empty",
             "files.status",
+            // task-104 front C, wave 3: the notification variations (the
+            // dropdown's rows are list items)
+            "notifications_page.group[0].card[0].alert",
+            "notifications_page.group[0].card[1].alert",
+            "notifications_page.group[0].card[2].alert",
+            "notifications_page.group[0].card[3].alert",
+            "notifications_page.group[0].card[4].alert",
             "silences.counts",
             "silences.status",
             "silences_surface.status",

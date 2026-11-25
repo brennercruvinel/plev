@@ -1,5 +1,5 @@
-//! Showcase view: the app chrome (sidebar tree by breakpoint, header)
-//! around one page at a time. This file holds the view's state and
+//! Showcase view: the app chrome (the kit's sidebar where the shell's
+//! dock puts it, the header) around one page at a time. This file holds the view's state and
 //! layout; `input.rs` routes events, `render.rs` builds the frame,
 //! `pages.rs` is the page table (the sidebar tree), `panes.rs` holds the
 //! pages' state, `dispatch.rs` routes layout, events, ticks and drawing
@@ -10,7 +10,9 @@
 mod apps;
 mod components;
 mod foundations;
+mod navigation;
 mod pages;
+mod palette;
 
 pub mod compositor;
 mod dispatcher;
@@ -31,10 +33,14 @@ use dispatcher::keyboard::Walk;
 
 use winit::keyboard::{Key, ModifiersState};
 
+use engine::control::input::reveal::{FocusReveal, Glide};
 use engine::control::input::scroll::ScrollState;
 use engine::drawing::compositor::LayerId;
-use engine::styling::theme::Theme;
-use engine::widgets::nav::{NavGroup, NavLink, PanelHeader, Sidebar};
+use engine::styling::theme::{Prefs, Theme};
+use engine::widgets::form::command_dialog::CommandDialog;
+use engine::widgets::nav::{PanelHeader, SidebarDock};
+use engine::widgets::overlay::drawer::Drawer;
+use engine::widgets::overlay::sheet::Sheet;
 use engine::widgets::overlay::{OverlayId, OverlayManager};
 use engine::widgets::prelude::{AppShell, ContextMenu, Modal, Rect, ToastManager};
 
@@ -46,6 +52,9 @@ const HOTKEY_PAGES: usize = 10;
 // Active overlay bookkeeping
 // ---------------------------------------------------------------------------
 
+// task-104 front B, overlays (#155): this block is the front's. The new
+// overlays (popover, hover card, dropdown menu, alert dialog, menubar,
+// sheet, drawer) register here and in `dispatcher/overlay/`.
 enum ActiveOverlay {
     Modal {
         id: OverlayId,
@@ -57,13 +66,46 @@ enum ActiveOverlay {
         x: f32,
         y: f32,
     },
+    /// A sheet held to an edge of the window (the Sheet page's).
+    Sheet {
+        id: OverlayId,
+        widget: Box<Sheet>,
+    },
+    /// The navigation drawer (the Drawer page's).
+    Drawer {
+        id: OverlayId,
+        widget: Box<Drawer>,
+    },
+    /// The gallery's command palette, ⌘K on any page (task-104 front H,
+    /// `palette.rs`): the tabs, the themes and the sidebar's pin.
+    Palette {
+        id: OverlayId,
+        widget: Box<CommandDialog>,
+        commands: Vec<palette::Cmd>,
+        /// The part of the sidebar the focus was on when it opened: it
+        /// gets the focus back when the palette closes.
+        opener: Option<accord::SemId>,
+    },
 }
 
 impl ActiveOverlay {
     fn id(&self) -> OverlayId {
         match self {
-            ActiveOverlay::Modal { id, .. } | ActiveOverlay::Menu { id, .. } => *id,
+            ActiveOverlay::Modal { id, .. }
+            | ActiveOverlay::Menu { id, .. }
+            | ActiveOverlay::Sheet { id, .. }
+            | ActiveOverlay::Drawer { id, .. }
+            | ActiveOverlay::Palette { id, .. } => *id,
         }
+    }
+
+    /// Whether it slides from an edge (the sheet, the drawer) rather than
+    /// fades: its layer stays opaque and it draws its entry's progress.
+    fn slides(&self) -> bool {
+        matches!(
+            self,
+            ActiveOverlay::Sheet { .. } | ActiveOverlay::Drawer { .. }
+        )
     }
 }
 
@@ -77,11 +119,19 @@ pub struct ShowcaseView {
     pub scale_factor: f32,
     pub theme: Theme,
     pub theme_name: String,
+    /// The person's preferences (ADR 0086): `theme` is the named theme
+    /// adapted to them.
+    prefs: Prefs,
     /// Index into [`PAGES`].
     pub page: usize,
-    /// The app chrome: sidebar by breakpoint (full, rail, drawer), the
-    /// page header, and the content rect the page lays out in.
+    /// The app chrome: the dock that places the sidebar (peeking from
+    /// the window's edge, pinned beside the page, a drawer where the
+    /// window cannot hold both), the page
+    /// header, and the content rect the page lays out in.
     pub shell: AppShell,
+    /// The sidebar the dock places: the kit's HomeSidebar over the page
+    /// table.
+    pub nav: navigation::Navigation,
     /// Page-level vertical scroll, one per page: HOFF pages are taller
     /// than the window (Card, Theme, …); without this the wheel is dead
     /// everywhere outside the virtualized list.
@@ -89,6 +139,18 @@ pub struct ShowcaseView {
     /// A page offset requested before the first layout (launch argument
     /// for snapshots); applied once the content height is known.
     pending_scroll: Option<f32>,
+    /// Focus into view (WCAG 2.4.11, `compositor/reveal.rs`): the focus
+    /// the page showed last, and the glide that brings a new one into
+    /// the page's window.
+    reveal: FocusReveal,
+    glide: Glide,
+    /// Something that can move the focus ran since the last frame (a key,
+    /// the pointer, a reader's or an agent's request): the next frame
+    /// looks where the focus is. A frame that only animates does not.
+    reveal_armed: bool,
+    /// A node a screen reader asked to see (`ScrollIntoView`), shown at
+    /// the next frame whether or not it has the focus.
+    pending_reveal: Option<accord::SemId>,
 
     pub overlay_mgr: OverlayManager,
     layers: Option<Layers>,
@@ -101,6 +163,10 @@ pub struct ShowcaseView {
     overlay_focus: Option<accord::SemId>,
     /// The shift key is held: Tab walks backward (`dispatcher::keyboard`).
     shift: bool,
+    /// The part of the sidebar the keyboard focus is on (the pin, a
+    /// dropdown, a tab; `dispatcher/shell/sidebar.rs`); `None`, the page
+    /// has it, or nothing does.
+    sidebar_focus: Option<accord::SemId>,
 
     /// One struct per pane, the pages' state.
     panes: pages::panes::Panes,
@@ -113,48 +179,47 @@ pub struct ShowcaseView {
 struct Layers {
     list: LayerId,
     overlay: LayerId,
+    /// A page's anchored panels (task-104 front B: the popover), above
+    /// the page and the overlay layer: its opacity is the open panel's
+    /// fade, which the page sets each frame.
+    anchored: LayerId,
     toast: LayerId,
 }
 
 impl ShowcaseView {
     pub fn new(width: f32, height: f32) -> Self {
         let theme = Theme::hoff_core();
-        let links = PAGES
-            .iter()
-            .enumerate()
-            .map(|(i, p)| {
-                let link = NavLink::new(p.title).icon(p.icon);
-                if i < HOTKEY_PAGES {
-                    link.hint(format!("{}", (i + 1) % 10))
-                } else {
-                    link
-                }
-            })
-            .collect();
-        let groups = Group::ALL
-            .iter()
-            .map(|g| NavGroup::new(g.label(), g.pages()))
-            .collect();
-        let sidebar = Sidebar::new(links)
-            .groups(groups)
-            .brand("plev", "HOFF DESIGN SYSTEM")
-            .footer(vec![
-                "T  cycle core / hoff / dark / light".into(),
-                "Esc  close overlays".into(),
-            ]);
         let first = &PAGES[0];
         let header = PanelHeader::new(first.title).blurb(first.blurb);
+        // peeking: the page has the window, the pin keeps the panel
+        let sidebar = accord::SemId::parse(dispatcher::SIDEBAR).ok();
+        let mut dock = SidebarDock::new();
+        let mut nav = navigation::Navigation::new(0);
+        nav.set_theme(&theme);
+        if let Some(id) = sidebar {
+            if let Ok(search) = id.child("search") {
+                nav.search = nav.search.clone().sem(search);
+            }
+            dock = dock.sem(id.clone());
+            nav.sidebar = nav.sidebar.sem(id);
+        }
         Self {
             width,
             height,
             scale_factor: 1.0,
-            shell: AppShell::new(sidebar, header, width, height),
+            shell: AppShell::docked(dock, header, width, height),
+            nav,
             panes: pages::panes::Panes::new(&theme),
             theme,
             theme_name: "core".to_string(),
+            prefs: Prefs::default(),
             page: 0,
             page_scroll: (0..PAGES.len()).map(|_| ScrollState::new()).collect(),
             pending_scroll: None,
+            reveal: FocusReveal::new(),
+            glide: Glide::default(),
+            reveal_armed: false,
+            pending_reveal: None,
             overlay_mgr: OverlayManager::new(),
             layers: None,
             toasts: match dispatcher::overlay::id(dispatcher::overlay::TOASTS) {
@@ -164,6 +229,7 @@ impl ShowcaseView {
             active_overlay: None,
             overlay_focus: None,
             shift: false,
+            sidebar_focus: None,
             clipboard: None,
         }
     }
@@ -192,6 +258,19 @@ impl ShowcaseView {
     /// over the modal or the menu, the widget the focus is in
     /// (`dispatcher::keyboard`).
     pub fn handle_nav(&mut self, key: NavKey) -> bool {
+        self.arm_reveal();
+        if self.palette_open() {
+            return self.palette_nav(matches!(key, NavKey::Down));
+        }
+        // A focused text that runs over lines, or a list under a filter,
+        // takes the arrows first (`TextHost::handle_nav`).
+        let pane = self.pane();
+        if !self.overlay_holds_pointer()
+            && let Some(host) = self.panes.text_host_mut(pane)
+            && host.handle_nav(matches!(key, NavKey::Down))
+        {
+            return true;
+        }
         if self.walks() {
             let walk = match key {
                 NavKey::Up => Walk::Up,
@@ -228,18 +307,28 @@ impl ShowcaseView {
     /// link, header title and blurb).
     fn set_page(&mut self, index: usize) {
         let index = index.min(PAGES.len() - 1);
+        if index != self.page {
+            // the next frame takes the new page's focus as it stands
+            self.reveal.reset();
+            self.glide.stop();
+            self.reveal_armed = true;
+            self.pending_reveal = None;
+        }
         self.page = index;
         let page = &PAGES[index];
-        self.shell.sidebar.set_active(index);
+        self.nav.set_current(index);
         self.shell.header = PanelHeader::new(page.title).blurb(page.blurb);
     }
 
     /// Content area the shell hands the page: past the sidebar, under
-    /// the header, inside the gutter, never narrower than a card.
+    /// the header, inside the gutter, never narrower than a card. Its
+    /// height is the window's (a low window gives a short viewport that
+    /// scrolls; a floor here would place menus and panels past the
+    /// window's bottom).
     fn content_rect(&self) -> Rect {
         let mut r = self.shell.layout(&self.theme).content;
         r.w = r.w.max(self.theme.size.card_min_w);
-        r.h = r.h.max(self.theme.size.field_min_w);
+        r.h = r.h.max(0.0);
         r
     }
 
@@ -266,24 +355,24 @@ impl ShowcaseView {
         self.pane().is_some_and(Pane::is_app)
     }
 
-    /// Height of the note an alias page shows above the shared example
-    /// (zero for the other pages).
-    fn note_h(&self) -> f32 {
-        match self.current().body {
-            Body::Alias { .. } => {
-                self.theme.typography.caption_r().line_height + self.theme.spacing.xl
-            }
-            _ => 0.0,
-        }
-    }
-
     /// Current page scroll offset of the active page.
     pub fn page_offset(&self) -> f32 {
         self.page_scroll[self.page].offset()
     }
 
-    /// Content rect shifted up by the page scroll offset and down by
-    /// the alias note. Pages lay out, hit-test and render against this
+    /// The window height that shows the whole active page at the current
+    /// width, header and gutter included (a sweep's tall frame); the
+    /// window's own for an app, which fills whatever it gets.
+    pub fn page_height(&self) -> f32 {
+        if self.is_app() {
+            return self.height;
+        }
+        let content = self.content_rect();
+        let chrome = self.height - content.h;
+        (chrome + self.pane_content_height(content)).max(self.height)
+    }
+
+    /// Content rect shifted up by the page scroll offset. Pages lay out, hit-test and render against this
     /// rect so events and pixels always agree; the render clips it back
     /// to the content viewport.
     fn page_rect(&self) -> Rect {
@@ -292,32 +381,52 @@ impl ShowcaseView {
         }
         let mut rect = self.content_rect();
         rect.y -= self.page_offset();
-        rect.y += self.note_h();
-        rect.h -= self.note_h();
         rect
     }
 
     /// Sync the active page's scroll limits with the viewport.
     fn sync_page_scroll(&mut self) {
         let content = self.content_rect();
-        let height = self.page_content_height(content);
+        let height = self.pane_content_height(content);
         let scroll = &mut self.page_scroll[self.page];
         scroll.set_viewport(content.h);
         scroll.set_content(height);
     }
 
     fn set_theme(&mut self, name: &str) {
-        if let Some(theme) = foundations::theme::resolve(name) {
+        if let Some(theme) = foundations::theme::resolve(name).map(|t| t.adapted(&self.prefs)) {
             self.panes.editor.set_theme(&theme);
-            self.panes.git.set_theme(name);
+            self.panes.git.set_theme(&theme);
+            self.nav.set_theme(&theme);
             self.theme = theme;
             self.theme_name = name.to_string();
         }
     }
 
+    /// The theme adapted again when the system's contrast changed since
+    /// (the window reads it when it takes the focus).
+    pub fn follow_contrast(&mut self) {
+        let contrast = engine::styling::theme::Contrast::from_system();
+        self.set_prefs(self.prefs.with_contrast(contrast));
+    }
+
     /// Apply a theme by name (launch argument / snapshot tooling).
     pub fn apply_theme(&mut self, name: &str) {
         self.set_theme(name);
+    }
+
+    /// The person's preferences (the system's text size, a launch
+    /// argument): the theme is adapted to them again.
+    pub fn set_prefs(&mut self, prefs: Prefs) {
+        if prefs != self.prefs {
+            self.prefs = prefs;
+            let name = self.theme_name.clone();
+            self.set_theme(&name);
+        }
+    }
+
+    pub fn prefs(&self) -> &Prefs {
+        &self.prefs
     }
 
     /// Scroll the active page to `offset` px once it has laid out

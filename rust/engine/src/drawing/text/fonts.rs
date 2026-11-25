@@ -24,7 +24,14 @@
 //! is embedded so the full upstream upright set is available, but no style
 //! slot uses it.
 //!
-//! The non-Latin scripts (docs/adr/rendering/0071-embedded-fonts-by-script.md) come from
+//! The mono face is **JetBrains Mono** Regular, one weight, the Latin range
+//! only (`tool/tasks/subsetter.py`): the code family every theme names
+//! (`TypographyScale::mono_family`), the generic monospace default too. Its
+//! one weight is enough because every shaping path asks for the weight the
+//! named family has nearest ([`matched_weight`]); a glyph past its range
+//! falls back like any other.
+//!
+//! The non-Latin scripts (docs/adr/Rendering/0071-embedded-fonts-by-script/0071-embedded-fonts-by-script.md) come from
 //! Noto Sans subsets, Regular and Bold: Arabic, Hebrew, Devanagari, SC, JP,
 //! KR. No family names them: a word whose glyphs the requested face lacks
 //! reaches cosmic-text's last fallback step, every face in the database
@@ -222,6 +229,11 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
     db.load_font_data(include_bytes!("../../../assets/fonts/Inter-Medium.ttf").to_vec());
     db.load_font_data(include_bytes!("../../../assets/fonts/Inter-SemiBold.ttf").to_vec());
 
+    // JetBrains Mono (SIL OFL, assets/fonts/LICENSE-JetBrainsMono-OFL.txt),
+    // the code face: after Inter, so a glyph the sans lacks still reaches
+    // Inter before it.
+    db.load_font_data(include_bytes!("../../../assets/fonts/JetBrainsMono-Regular.ttf").to_vec());
+
     // Codicons, the VS Code icon font (CC BY 4.0; texto em assets/fonts/).
     db.load_font_data(include_bytes!("../../../assets/fonts/codicons.ttf").to_vec());
 
@@ -240,11 +252,9 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
     // installed on most systems, so default-family text would resolve through
     // the per-word fallback chain (arbitrary faces once weight != 400). Pin
     // sans-serif to Inclusive Sans for deterministic shaping. Monospace is
-    // pinned to the same family: no mono face is embedded, so leaving the
-    // cosmic-text default would send `Family::Monospace` text through the
-    // platform fallback chain.
+    // pinned to the embedded mono face for the same reason.
     db.set_sans_serif_family("Inclusive Sans");
-    db.set_monospace_family("Inclusive Sans");
+    db.set_monospace_family("JetBrains Mono");
     let embedded: Vec<ID> = db
         .faces()
         .filter(|f| !before.contains(&f.id))
@@ -252,6 +262,32 @@ pub(super) fn register_embedded_fonts(db: &mut Database) -> Vec<ID> {
         .collect();
     remove_system_twins(db, &embedded);
     embedded
+}
+
+/// The weight a named family actually has nearest to `weight`, by the css
+/// font-matching rules as fontdb's query applies them: the exact weight;
+/// else above 500 the nearest heavier, then lighter; at or below 500 the
+/// nearest lighter, then heavier, with the spec's 400 to 500 gap cut at
+/// 450 (500 first below it, 400 first from it). cosmic-text keeps a family
+/// only on an exact weight match and otherwise falls to another family's
+/// face (a monospace one, for Inter at 700), so every shaping path asks for
+/// this weight instead: a family with no face of the weight asked draws in
+/// its nearest one. `weight` itself when no family is named (the default
+/// sans has every weight) or the family is not in `db`.
+pub(super) fn matched_weight(db: &Database, family: Option<&str>, weight: u16) -> u16 {
+    use cosmic_text::fontdb::{Family, Query, Stretch, Style, Weight};
+    let Some(family) = family else {
+        return weight;
+    };
+    let query = Query {
+        families: &[Family::Name(family)],
+        weight: Weight(weight),
+        stretch: Stretch::Normal,
+        style: Style::Normal,
+    };
+    db.query(&query)
+        .and_then(|id| db.face(id))
+        .map_or(weight, |face| face.weight.0)
 }
 
 /// Removes every face loaded before the embedded ones (a desktop's system

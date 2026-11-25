@@ -60,7 +60,10 @@ fn the_shell_projects_its_capabilities_and_who_may_ask() {
             "shell.theme",
             "shell.detach",
             "shell.show",
-            "shell.print"
+            "shell.print",
+            "shell.sidebar",
+            "shell.sidebar.pin",
+            "shell.sidebar.search"
         ]
     );
 
@@ -226,18 +229,21 @@ fn the_keys_ask_through_the_dispatcher_and_leave_receipts() {
 fn the_theme_cards_and_the_sidebar_ask_the_same_way() {
     use engine::widgets::prelude::WidgetEvent;
     let mut view = view("Theme");
+    // tall enough for the palettes, the page's last group, to show
+    view.resize(1200.0, 2000.0, 1.0);
     let content = view.page_rect();
     // a point on a card that is not the current theme, found by asking the
     // page itself (its geometry is its own)
     let mut on_card = None;
-    let (mut y, bottom) = (content.y, content.y + 400.0);
+    let (mut y, bottom) = (content.y, content.y + content.h);
     'scan: while y < bottom {
         let mut x = content.x;
         while x < content.x + content.w {
-            let (_, picked) = view
-                .panes
-                .themes
-                .handle_event(&WidgetEvent::MouseDown { x, y }, content);
+            let (_, picked) = view.panes.themes.handle_event(
+                &WidgetEvent::MouseDown { x, y },
+                content,
+                &view.theme,
+            );
             if let Some(name) = picked.filter(|n| *n != view.theme_name) {
                 on_card = Some((x, y, name));
                 break 'scan;
@@ -255,15 +261,11 @@ fn the_theme_cards_and_the_sidebar_ask_the_same_way() {
     assert_eq!(first.request.param, text(name));
     assert_eq!(first.request.actor, Actor::Human);
 
-    // a sidebar link is `shell.page`
-    let rect = view
-        .shell
-        .sidebar
-        .rect(&view.theme, view.width, view.height)
-        .expect("a sidebar");
-    let mode = view.shell.sidebar.mode(&view.theme, view.width);
-    let links = view.shell.sidebar.link_rects(rect, &view.theme, mode);
-    let (x, y) = links[3].center();
+    // a sidebar tab is `shell.page`
+    view.pin_sidebar(true);
+    let panel = view.panel_rect().expect("the pinned sidebar");
+    let tab = view.nav.tab_rect(3, panel, &view.theme).expect("open");
+    let (x, y) = tab.center();
     assert!(view.handle_event(&WidgetEvent::MouseDown { x, y }));
     view.handle_event(&WidgetEvent::MouseUp { x, y });
     assert_eq!(view.page_title(), PAGES[3].title);
@@ -368,7 +370,9 @@ fn the_gallery_carries_the_shell_and_the_page_and_the_page_projection_stays_alon
         "the page's projection is the page's"
     );
     let gallery = view.gallery_semantics().unwrap();
-    assert_eq!(gallery.len(), page.len() + 6);
+    // the shell's six and the sidebar's landmark, pin and Search
+    // (peeking)
+    assert_eq!(gallery.len(), page.len() + 9);
     for (id, node) in page.nodes() {
         assert_eq!(
             gallery.get(id),
@@ -382,7 +386,7 @@ fn the_gallery_carries_the_shell_and_the_page_and_the_page_projection_stays_alon
     assert!(view.is_shell(&sid("shell.theme")));
 
     // a page without a projection leaves the shell alone
-    view.jump_to_page("Card");
+    view.jump_to_page("Separator");
     assert!(view.semantics().is_none());
     let gallery = view.gallery_semantics().unwrap();
     let ids: Vec<&str> = gallery.nodes().keys().map(SemId::as_str).collect();
@@ -394,7 +398,10 @@ fn the_gallery_carries_the_shell_and_the_page_and_the_page_projection_stays_alon
             "shell.theme",
             "shell.detach",
             "shell.show",
-            "shell.print"
+            "shell.print",
+            "shell.sidebar",
+            "shell.sidebar.pin",
+            "shell.sidebar.search"
         ]
     );
 }

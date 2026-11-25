@@ -1,0 +1,106 @@
+//! The Menus page as a text host: the folder picker's search box, the
+//! new folder's name and the zoom's level take the keys, the input method
+//! and the clipboard.
+
+use engine::styling::theme::Theme;
+use engine::widgets::prelude::Rect;
+use engine::widgets::selection::Folders;
+
+use super::super::EditKey;
+use super::MenusPage;
+use crate::views::ImeEvent;
+use crate::views::text_input::clipboard::Keys;
+use crate::views::text_input::host::TextHost;
+
+impl TextHost for MenusPage {
+    /// Type `s` into the focused box. `false` when none is focused.
+    fn handle_text(&mut self, s: &str) -> bool {
+        let typed = self.text_field_mut().is_some_and(|f| f.insert(s));
+        self.sync_level();
+        typed
+    }
+
+    /// The editing keys edit the focused box; Tab is the view's.
+    fn handle_edit_key(&mut self, key: EditKey) -> bool {
+        if key == EditKey::Tab {
+            return false;
+        }
+        let edited = self.text_field_mut().is_some_and(|f| f.edit(key.into()));
+        self.sync_level();
+        edited
+    }
+
+    /// The input method composes in the focused box; `Disabled` drops a
+    /// composition wherever one is.
+    fn handle_ime(&mut self, ime: ImeEvent<'_>) -> bool {
+        let (committed, preedit, cursor) = match ime {
+            ImeEvent::Disabled => {
+                let mut dropped = self.zoom_mut().is_some_and(|z| z.field.end_compose());
+                if let Some(folders) = self.folders_mut() {
+                    dropped |= folders.search.end_compose();
+                    if let Some(f) = folders.naming_mut() {
+                        dropped |= f.end_compose();
+                    }
+                }
+                self.sync_level();
+                return dropped;
+            }
+            ImeEvent::Preedit(text, cursor) => ("", text, cursor),
+            ImeEvent::Commit(text) => (text, "", None),
+        };
+        let composed = self
+            .text_field_mut()
+            .is_some_and(|f| f.compose(committed, preedit, cursor));
+        self.sync_level();
+        composed
+    }
+
+    fn ime_area(&self, content: Rect, theme: &Theme) -> Option<Rect> {
+        if let Some(z) = self.zoom().filter(|z| z.field.is_focused()) {
+            let at = self.zoom_rect(content, theme)?;
+            return Some(z.field.ime_area(z.text_rect(at, theme), theme));
+        }
+        let f = self.folders()?;
+        let field = f.field()?;
+        let (search, name) = self.field_rects(content, theme);
+        let at = if field.is_focused() && f.search.is_focused() {
+            search?
+        } else {
+            name?
+        };
+        Some(field.ime_area_in(at, theme, Folders::slots(theme)))
+    }
+
+    /// A right-click on a box gives it the keys, for its menu.
+    fn right_click(&mut self, x: f32, y: f32, content: Rect, theme: &Theme) -> bool {
+        let (search, name) = self.field_rects(content, theme);
+        let on_name = name.is_some_and(|r| r.contains(x, y));
+        if !on_name && !search.is_some_and(|r| r.contains(x, y)) {
+            return false;
+        }
+        if let Some(f) = self.folders_mut() {
+            f.focus_field(on_name);
+        }
+        true
+    }
+
+    fn keys(&mut self) -> Keys<'_> {
+        match self.text_field_mut() {
+            Some(f) => Keys::Field(f),
+            None => Keys::Nobody,
+        }
+    }
+
+    fn handle_escape(&mut self) -> bool {
+        MenusPage::handle_escape(self)
+    }
+
+    /// Enter in the name's box adds the folder.
+    fn handle_enter(&mut self) -> bool {
+        let naming = self
+            .folders()
+            .and_then(Folders::naming)
+            .is_some_and(|f| f.is_focused());
+        naming && self.commit_name()
+    }
+}

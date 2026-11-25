@@ -29,16 +29,18 @@
 //! `UserEvent::GpuReady` on the event loop proxy. On desktop and mobile
 //! GPU init blocks inside `resumed` instead.
 
+mod devmode;
 pub mod system;
 pub mod window;
 
 use crate::views::ShowcaseView;
 use engine::compose::animation::FrameClock;
 use engine::drawing::gpu::GpuContext;
+use engine::runtime::perf::stages::{self, Stage};
 #[cfg(test)]
 use engine::runtime::window::WindowHost;
 use engine::runtime::window::Windows;
-use engine::widgets::prelude::WidgetEvent;
+use engine::widgets::prelude::{SafeArea, WidgetEvent};
 use winit::application::ApplicationHandler;
 use winit::event::{StartCause, WindowEvent};
 #[cfg(target_arch = "wasm32")]
@@ -132,6 +134,9 @@ pub struct App {
     /// Where the app's links come from (`links`; `None` before the main
     /// window is up).
     links: Option<Box<dyn engine::runtime::platform::links::LinkSource>>,
+    /// The dev mode over any page (`engine::runtime::dev`): there when
+    /// the launch has `PLEV_DEV=1`.
+    dev: engine::runtime::dev::DevMode,
     /// View source (`source`): a cmd+click taking the button until it is
     /// released, a literal edited in place.
     #[cfg(all(
@@ -171,7 +176,25 @@ impl App {
         if let Some(offset) = args.next().and_then(|a| a.parse::<f32>().ok()) {
             view.scroll_page_to(offset);
         }
+        view.set_prefs(Self::launch_prefs());
         view
+    }
+
+    /// The person's preferences (ADR 0086), as the system says them
+    /// (`runtime::platform::prefs`), the text size overridden by
+    /// `PLEV_TEXT_SCALE` where the app is given one (macOS has no system
+    /// value: there it is the app's).
+    fn launch_prefs() -> engine::styling::theme::Prefs {
+        #[cfg_attr(target_arch = "wasm32", allow(unused_mut))] // the override is native
+        let mut prefs = engine::runtime::platform::prefs::read();
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(f) = std::env::var("PLEV_TEXT_SCALE")
+            .ok()
+            .and_then(|v| v.trim().parse::<f32>().ok())
+        {
+            prefs.text_scale = engine::styling::theme::TextScale::new(f);
+        }
+        prefs
     }
 
     /// The shell around `view`, with no window yet.
@@ -202,6 +225,7 @@ impl App {
             #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
             focus: None,
             links: None,
+            dev: engine::runtime::dev::DevMode::from_launch(),
             #[cfg(all(
                 debug_assertions,
                 any(target_os = "macos", target_os = "linux", target_os = "windows")
@@ -299,6 +323,16 @@ impl App {
         let (lw, lh) = host.logical_size();
         let sf = host.scale_factor() as f32;
         if Some(id) == self.main {
+            // the host's insets are physical, the view's logical
+            let sa = host.safe_area();
+            self.view.set_safe_area(SafeArea {
+                top: sa.top / sf,
+                right: sa.right / sf,
+                bottom: sa.bottom / sf,
+                left: sa.left / sf,
+            });
+            // the open dev mode takes its share of the window
+            let (lw, lh) = self.dev.page_size(lw, lh);
             self.view.resize(lw, lh, sf);
         } else if self.is_page_window(id) {
             self.view.resize_detached(lw, lh, sf);
@@ -310,6 +344,11 @@ impl App {
     /// alone in its own window, to the whole view in the main one. `true`
     /// when a frame is needed.
     fn pointer(&mut self, id: WindowId, event: &WidgetEvent) -> bool {
+        if let Some(changed) = self.dev_event(id, event) {
+            return changed;
+        }
+        // the page's own handling is the frame's input stage: one event
+        let _input = stages::span(Stage::Input).items(1);
         if self.is_page_window(id) {
             self.view.detached_event(event)
         } else {
@@ -413,6 +452,19 @@ impl ApplicationHandler<UserEvent> for App {
 
         // Native: the window and its device (blocking, as before). Wasm:
         // the window alone, the device below.
+        // the dev mode reads the GPU's own times: its device asks for the
+        // timestamps, which no other launch does
+        #[cfg(not(target_arch = "wasm32"))]
+        let id = {
+            let config = engine::drawing::gpu::RenderConfig {
+                gpu_timestamps: self.dev.is_available(),
+                ..Default::default()
+            };
+            self.windows
+                .open_with_config(event_loop, attrs, config)
+                .unwrap()
+        };
+        #[cfg(target_arch = "wasm32")]
         let id = self.windows.open(event_loop, attrs).unwrap();
         self.main = Some(id);
         // read on the desktop and the web only; mobile just checks it opened
@@ -535,7 +587,7 @@ impl ApplicationHandler<UserEvent> for App {
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {}
 
-    /// The loop ends (the window closed, or Escape quit): the recording's
+    /// The loop ends (the window closed, or the platform's quit key): the recording's
     /// window is saved.
     #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
     fn exiting(&mut self, _event_loop: &ActiveEventLoop) {
@@ -561,7 +613,9 @@ pub use window::entry::uigallery_ios_main;
 /// `uigallery --render`: one frame of a page without a window, as png, as
 /// svg with its report, and as the page's semantic projection.
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
-pub use window::headless::{RenderError, StagedPage, render_page, semantics_json, stage_page};
+pub use window::headless::{
+    RenderError, StagedPage, render_page, semantics_json, stage_page, stage_page_with,
+};
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android", target_os = "ios")))]
 use window::access::Access;

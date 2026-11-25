@@ -32,15 +32,6 @@ fn every_pane_has_exactly_one_page_of_its_own_and_titles_are_unique() {
     for (i, pane) in own.iter().enumerate() {
         assert!(!own[i + 1..].contains(pane), "{pane:?} owns two pages");
     }
-    for p in PAGES {
-        if let Some(pane) = p.pane() {
-            assert!(
-                own.contains(&pane),
-                "{} aliases a pane without a page",
-                p.title
-            );
-        }
-    }
     let mut titles: Vec<&str> = PAGES.iter().map(|p| p.title).collect();
     titles.sort_unstable();
     titles.dedup();
@@ -50,6 +41,7 @@ fn every_pane_has_exactly_one_page_of_its_own_and_titles_are_unique() {
 #[test]
 fn find_is_case_insensitive() {
     assert_eq!(find("theme"), Some(0));
-    assert_eq!(find("BUTTON"), Some(index_of(Pane::Button)));
+    let button = PAGES.iter().position(|p| p.pane() == Some(Pane::Button));
+    assert_eq!(find("BUTTON"), button);
     assert_eq!(find("nope"), None);
 }

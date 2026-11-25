@@ -5,6 +5,10 @@
 use crate::drawing::text::TextStyle;
 use crate::styling::color::Color;
 
+use super::roles::TypeRoles;
+use super::scales::ShadowSpec;
+use super::text_scale::TextScale;
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct SpacingScale {
     pub xs: f32,
@@ -15,13 +19,9 @@ pub struct SpacingScale {
     pub xxl: f32,
 }
 
-/// Letter spacing of the body family (`=body`, `=body-2*`, `=hairline`),
-/// converted to px per style. The HOFF sass reference tracks `0.025em` —
-/// calibrated for Rubik, a narrow face. Inclusive Sans is ~10% wider with
-/// generous built-in sidebearings, so the same tracking reads as gaps;
-/// the body family tracks `0.0` (font's natural spacing) since the
-/// Inclusive Sans swap (2026-08).
-pub const BODY_LETTER_SPACING_EM: f32 = 0.0;
+/// The embedded code face (JetBrains Mono Regular, the Latin range), the
+/// mono family every built-in theme names.
+pub const MONO_FAMILY: &str = "JetBrains Mono";
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TypographyScale {
@@ -33,30 +33,30 @@ pub struct TypographyScale {
     pub title_sm: f32,
     pub title: f32,
     pub display: f32,
-    pub line_height_ratio: f32,
     /// Face every style resolves to; `None` is the engine default
     /// (Inclusive Sans). The hoff core theme points this at Inter.
     pub family: Option<&'static str>,
+    /// Face of the code styles ([`Self::mono`], [`Self::exact_mono`]):
+    /// [`MONO_FAMILY`] in every built-in theme.
+    pub mono_family: &'static str,
     /// Tracking applied to every style, in em (css `tracking-[-0.02em]`
     /// on the core body). Zero for the HOFF ramp.
     pub tracking_em: f32,
+    /// The scale by role ([`super::roles`]): what every recipe resolves
+    /// its text against.
+    pub roles: TypeRoles,
+    /// The person's text size (ADR 0086): every style below passes
+    /// through it, after the fluid roles took their width. The identity
+    /// in every built-in theme; `Theme::adapted` sets it.
+    pub text_scale: TextScale,
 }
 
 impl TypographyScale {
-    /// Generic fallback ratio. Prefer the named styles below: each HOFF
-    /// mixin has its own exact line-height.
-    pub fn line_height(&self, font_size: f32) -> f32 {
-        font_size * self.line_height_ratio
-    }
-
-    fn style(&self, size: f32, lh_factor: f32, weight: u16) -> TextStyle {
-        self.exact(size, size * lh_factor, weight)
-    }
-
     /// A style with an explicit line height in px, in this scale's
     /// family and tracking. The core ramp is written this way (14/20,
     /// 12/16...).
     pub fn exact(&self, size: f32, line_height: f32, weight: u16) -> TextStyle {
+        let (size, line_height) = self.scaled(size, line_height);
         let style = TextStyle::new(size)
             .with_line_height(line_height)
             .with_weight(weight)
@@ -67,118 +67,22 @@ impl TypographyScale {
         }
     }
 
-    fn body_style(&self, size: f32, lh_factor: f32, weight: u16) -> TextStyle {
-        let style = self.style(size, lh_factor, weight);
-        let tracking = (self.tracking_em + BODY_LETTER_SPACING_EM) * size;
-        style.with_letter_spacing(tracking)
+    /// A code style with an explicit line height in px: the mono family
+    /// at its own spacing, the scale's tracking left out (the tracking is
+    /// the UI face's, and a mono face keeps its grid).
+    pub fn exact_mono(&self, size: f32, line_height: f32, weight: u16) -> TextStyle {
+        let (size, line_height) = self.scaled(size, line_height);
+        TextStyle::new(size)
+            .with_line_height(line_height)
+            .with_weight(weight)
+            .with_family(self.mono_family)
     }
 
-    // -- The HOFF type ramp (styles/variables.sass:39-127), one method per
-    // -- mixin. Line heights and letter spacing are exact, not the generic
-    // -- ratio.
-
-    /// `=h4`: display size, line-height 1, weight 500.
-    pub fn h4(&self) -> TextStyle {
-        self.style(self.display, 1.0, 500)
-    }
-
-    /// `=title`: 20px in HOFF, line-height 1.2, weight 500.
-    pub fn title(&self) -> TextStyle {
-        self.style(self.title_sm, 1.2, 500)
-    }
-
-    /// `=base-r`: 16px, line-height 1.5.
-    pub fn base_r(&self) -> TextStyle {
-        self.style(self.body, 1.5, 400)
-    }
-
-    /// `=base-m`: 16px, line-height 1.5, weight 500.
-    pub fn base_m(&self) -> TextStyle {
-        self.style(self.body, 1.5, 500)
-    }
-
-    /// `=base-2r`: 14px, line-height 1.4.
-    pub fn base_2r(&self) -> TextStyle {
-        self.style(self.body_sm, 1.4, 400)
-    }
-
-    /// `=base-2m`: 14px, line-height 1.4, weight 500.
-    pub fn base_2m(&self) -> TextStyle {
-        self.style(self.body_sm, 1.4, 500)
-    }
-
-    /// `=base-2sm`: 14px, line-height 1.4, weight 600.
-    pub fn base_2sm(&self) -> TextStyle {
-        self.style(self.body_sm, 1.4, 600)
-    }
-
-    /// `=base-2b`: 14px, line-height 1.4, weight 700.
-    pub fn base_2b(&self) -> TextStyle {
-        self.style(self.body_sm, 1.4, 700)
-    }
-
-    /// `=caption-r`: 12px, line-height 1.33.
-    pub fn caption_r(&self) -> TextStyle {
-        self.style(self.caption, 1.33, 400)
-    }
-
-    /// `=caption-sm`: 12px, line-height 1.33, weight 600.
-    pub fn caption_sm(&self) -> TextStyle {
-        self.style(self.caption, 1.33, 600)
-    }
-
-    /// `=small`: 10px, line-height 1.2.
-    pub fn small_r(&self) -> TextStyle {
-        self.style(self.small, 1.2, 400)
-    }
-
-    /// `=small-sm`: 10px, line-height 1.2, weight 600.
-    pub fn small_sm(&self) -> TextStyle {
-        self.style(self.small, 1.2, 600)
-    }
-
-    /// `=body`: 16px, line-height 1.5.
-    pub fn body(&self) -> TextStyle {
-        self.body_style(self.body, 1.5, 400)
-    }
-
-    /// `=body-2r`: 14px, line-height 1.7.
-    pub fn body_2r(&self) -> TextStyle {
-        self.body_style(self.body_sm, 1.7, 400)
-    }
-
-    /// `=body-2m`: 14px, line-height 1.7, weight 500.
-    pub fn body_2m(&self) -> TextStyle {
-        self.body_style(self.body_sm, 1.7, 500)
-    }
-
-    /// `=body-2b`: like `=body-2m` (the reference sets weight 500 on both).
-    pub fn body_2b(&self) -> TextStyle {
-        self.body_style(self.body_sm, 1.7, 500)
-    }
-
-    /// `=hairline`: 12px, line-height 1.65, weight 500.
-    pub fn hairline(&self) -> TextStyle {
-        self.body_style(self.caption, 1.65, 500)
-    }
-
-    /// `=headline`: 32px, line-height 1.25, weight 500. The stat card
-    /// value and page headlines.
-    pub fn headline(&self) -> TextStyle {
-        self.style(self.title, 1.25, 500)
-    }
-
-    /// Code and readouts: body-sm at line-height 1.4 in the single
-    /// embedded UI family (there is no separate mono face; the family is
-    /// tabular enough for short runs). One definition instead of the
-    /// `code_style` helper each gallery section grew.
-    pub fn mono(&self) -> TextStyle {
-        self.style(self.body_sm, 1.4, 400)
-    }
-
-    /// Small readout under a specimen or a chart axis: `small` at 1.5.
-    pub fn readout(&self) -> TextStyle {
-        self.style(self.small, 1.5, 400)
+    /// A designed size and line height as the person's text size draws
+    /// them ([`TextScale`]); as given at the identity.
+    pub fn scaled(&self, size: f32, line_height: f32) -> (f32, f32) {
+        let s = &self.text_scale;
+        (s.size(size), s.line(size, line_height))
     }
 }
 
@@ -195,6 +99,14 @@ pub struct RadiusScale {
 // ============================================================================
 // ColorTokens -- semantic color palette
 // ============================================================================
+
+/// A group of a design system's named colors, as its colors page lists
+/// them (`Shades`, `Colors`), each with the name the system gives it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SwatchGroup {
+    pub title: &'static str,
+    pub colors: &'static [(&'static str, Color)],
+}
 
 #[derive(Clone, Debug)]
 pub struct ColorTokens {
@@ -213,6 +125,10 @@ pub struct ColorTokens {
     pub info: Color,
     pub divider: Color,
     pub border_active: Color,
+    /// The design system's own palette, named, beyond the roles above (a
+    /// shade or an accent no role holds); empty for a theme that is only
+    /// its roles.
+    pub swatches: &'static [SwatchGroup],
 }
 
 // ============================================================================
@@ -275,6 +191,19 @@ pub struct GlassTokens {
     /// are tokens.
     pub wash_alpha: f32,
     pub wash_hover_alpha: f32,
+    /// How much of the rim's top color [`glass_pill`] keeps at the
+    /// bottom: 0 fades the rim out downward (the HOFF top-lit edge), 1
+    /// keeps it whole (a plain border, the core kit's `border`).
+    ///
+    /// [`glass_pill`]: crate::widgets::recipe::glass_pill
+    pub rim_fade: f32,
+    /// The inset key-light [`inset_keylight`] lays over a glass surface,
+    /// a soft highlight bleeding in from the top-left (HOFF: `inset 2px
+    /// 4px 16px rgba(248,248,248,.06)`); `None` draws none (the core kit
+    /// lights no surface).
+    ///
+    /// [`inset_keylight`]: crate::widgets::recipe::inset_keylight
+    pub keylight: Option<ShadowSpec>,
 }
 
 impl GlassTokens {
@@ -312,6 +241,10 @@ impl GlassTokens {
             disabled_alpha: 0.5,
             wash_alpha: 0.14,
             wash_hover_alpha: 0.22,
+            rim_fade: 0.0,
+            // The dark ladder these themes are built on: the key-light
+            // offset `xs / 2, xs` and blurred by `lg` (4 and 24).
+            keylight: Some(ShadowSpec::inset([2.0, 4.0], 24.0, 0.0, tint(0.06))),
         }
     }
 }

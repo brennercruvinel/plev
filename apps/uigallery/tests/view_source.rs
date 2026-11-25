@@ -124,15 +124,21 @@ fn a_static_title_leads_to_its_one_literal() {
 
 #[test]
 fn a_text_several_literals_hold_is_listed_and_not_opened() {
-    let page = staged("Todo");
-    let origin = origin_of(&page, on_text(page.compositor(), "plev"));
+    // the Tooltip page's title: the page table holds it, and so do the
+    // pages that name a group and a depth after the widget. (The brand
+    // is no such text: it is the sidebar's logo, a control, and the
+    // sidebar peeks, out of a staged frame.)
+    let page = staged("Tooltip");
+    let origin = origin_of(&page, on_text(page.compositor(), "Tooltip"));
     let Origin::Literal { text, sites } = &origin else {
         panic!("{origin}");
     };
-    assert_eq!(text, "plev");
+    assert_eq!(text, "Tooltip");
     assert!(sites.len() > 1, "{origin}");
     assert!(
-        sites.iter().all(|s| source_at(s).starts_with("\"plev\"")),
+        sites
+            .iter()
+            .all(|s| source_at(s).starts_with("\"Tooltip\"")),
         "{origin}"
     );
     assert!(

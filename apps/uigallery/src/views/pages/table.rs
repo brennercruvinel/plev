@@ -1,517 +1,539 @@
 //! The page table: every page in sidebar order, the groups in
-//! `Group::ALL` order, the components alphabetical. Data only.
+//! `Group::ALL` order, the components alphabetical. Data only; the
+//! constructors are in `build.rs`.
 
-use super::{Body, Group, Page, Pane};
-
-const fn page(
-    group: Group,
-    title: &'static str,
-    icon: &'static str,
-    blurb: &'static str,
-    pane: Pane,
-) -> Page {
-    Page {
-        group,
-        title,
-        icon,
-        blurb,
-        body: Body::Pane(pane),
-    }
-}
-
-const fn alias(
-    title: &'static str,
-    icon: &'static str,
-    blurb: &'static str,
-    pane: Pane,
-    gap: &'static str,
-) -> Page {
-    Page {
-        group: Group::Components,
-        title,
-        icon,
-        blurb,
-        body: Body::Alias { pane, gap },
-    }
-}
-
-const fn placeholder(title: &'static str) -> Page {
-    Page {
-        group: Group::Components,
-        title,
-        icon: "circle",
-        blurb: "Not in comps yet. The slot is here so the tree reads complete.",
-        body: Body::Placeholder,
-    }
-}
-
-use Group::{AppsDemo as A, Components as C, Foundations as F};
+use super::build::{app, component, foundation, placeholder};
+use super::{Page, Pane};
 
 pub const PAGES: &[Page] = &[
     // -- Foundations --------------------------------------------------------
-    page(
-        F,
+    foundation(
         "Theme",
         "sun",
-        "HOFF tokens and every built-in palette. Click a card to apply it.",
+        "The theme's colors as the kit's colors page shows them, and every built-in palette: click one to apply it.",
         Pane::Theme,
     ),
-    page(
-        F,
+    foundation(
         "Typography",
         "info",
-        "The HOFF scale set in Inclusive Sans: every weight embedded, every readout measured live.",
+        "The kit's type styles set in the theme's face; a value the theme does not hold reads as the kit's.",
         Pane::Typography,
     ),
-    page(
-        F,
+    foundation(
         "Icons",
         "eye",
-        "Lucide icon set, tessellated to GPU paths with per-size caching.",
+        "The Lucide set at the theme's icon sizes, in the kit's iconography cards.",
         Pane::Icons,
     ),
-    page(
-        F,
+    foundation(
         "Effects",
         "moon",
-        "Analytic shadows, gradients, backdrop blur, clip stack and tessellated vector shapes.",
+        "The theme's shadow stacks as the kit's depths page lifts them, then gradients, backdrop blur, clip and paths.",
         Pane::Effects,
     ),
     // -- Components ---------------------------------------------------------
-    placeholder("Accordion"),
-    placeholder("Alert"),
-    alias(
+    component(
+        "Accordion",
+        "chevron-down",
+        "Sections that open and close, one at a time or several, from the kit's assets sidebar.",
+        Pane::Accordion,
+    ),
+    component(
+        "Alert",
+        "info",
+        "Inline alerts by intent, the kit's notifications: read one with a click, answer an invite.",
+        Pane::Alert,
+    ),
+    component(
         "Alert Dialog",
         "alert-triangle",
-        "The destructive dialog: a warning button opens it, confirm is the dangerous action.",
-        Pane::Dialog,
-        "its own page, apart from the plain dialog",
+        "A question that blocks the page until it is answered.",
+        Pane::AlertDialog,
     ),
-    placeholder("Aspect Ratio"),
-    placeholder("Attachment"),
-    page(
-        C,
+    component(
+        "Aspect Ratio",
+        "square",
+        "A proportion that turns the width a frame gets into its height, from the kit's asset card.",
+        Pane::AspectRatio,
+    ),
+    component(
+        "Attachment",
+        "file",
+        "Pictures, files and 3D objects on a message: remove one, add another.",
+        Pane::Attachment,
+    ),
+    component(
         "Avatar",
         "circle",
-        "Initials in three sizes, with the online dot.",
+        "The kit's ladder, the online dot and the stack that counts the rest.",
         Pane::Avatar,
     ),
-    page(
-        C,
-        "Badge",
-        "info",
-        "Counts and tags, per intent.",
-        Pane::Badge,
-    ),
-    page(
-        C,
+    component("Badge", "info", "Counts and tags, per intent.", Pane::Badge),
+    component(
         "Breadcrumb",
         "chevron-right",
         "A trail that collapses when narrow. Click a crumb.",
         Pane::Breadcrumb,
     ),
-    alias(
+    component(
         "Bubble",
         "send",
-        "The message dock's bubbles.",
-        Pane::Dock,
-        "a bubble widget of its own, apart from the dock",
+        "Chat bubbles read and unread, from either side, growing with their words.",
+        Pane::Bubble,
     ),
-    page(
-        C,
+    component(
         "Button",
         "square",
-        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit; one card per state.",
+        "The hoff core buttons: primary, call to action, warning, icon, like, toolbar, submit, and the tooltip; one card per state.",
         Pane::Button,
     ),
-    alias(
+    component(
         "Button Group",
         "layout-grid",
-        "The toolbar group of the buttons page.",
-        Pane::Button,
-        "a segmented group widget",
+        "The hoff core toolbar: a tool picker, actions and toggles that wrap when the width runs out.",
+        Pane::ButtonGroup,
     ),
-    placeholder("Calendar"),
-    page(
-        C,
+    component(
+        "Calendar",
+        "history",
+        "One month to choose a day: today ringed, the chosen day the call to action, a range that refuses the rest.",
+        Pane::Calendar,
+    ),
+    component(
         "Card",
         "clipboard",
-        "The HOFF card deck: one glass shell, six preview families with live data.",
+        "The kit's cards page: pricing, slide, asset, scene, explore and asset items.",
         Pane::Card,
     ),
-    placeholder("Carousel"),
-    page(
-        C,
+    component(
+        "Carousel",
+        "layers",
+        "Square slides that page under a counter, as many to a page as the width holds.",
+        Pane::Carousel,
+    ),
+    component(
         "Chart",
         "git-branch",
         "Line, bars, stacked area and donut, drawn from a pure tested geometry core.",
         Pane::Chart,
     ),
-    page(
-        C,
+    component(
         "Checkbox",
         "check",
         "Checked, unchecked, disabled. Tab moves the focus ring.",
         Pane::Checkbox,
     ),
-    page(
-        C,
+    component(
         "Chip",
         "minus",
         "Selected, per intent, interactive: the last one toggles on click.",
         Pane::Chip,
     ),
-    page(
-        C,
+    component(
         "Code Block",
         "code",
-        "Mono block with a caption.",
+        "Code on a well: wrapped, captioned, and a diff with its marker column.",
         Pane::CodeBlock,
     ),
-    placeholder("Collapsible"),
-    alias(
+    component(
+        "Collapsible",
+        "chevron-right",
+        "A trigger that reveals a list under a rail, from the kit's home sidebar.",
+        Pane::Collapsible,
+    ),
+    component(
         "Combobox",
         "search",
-        "The select, until typing filters it.",
-        Pane::Select,
-        "typing and filtering",
+        "A select that filters as you type: Up and Down highlight, Enter picks, Escape closes.",
+        Pane::Combobox,
     ),
-    placeholder("Command"),
-    page(
-        C,
+    component(
+        "Command",
+        "terminal",
+        "A command palette inline: type to filter, Up and Down highlight, Enter runs.",
+        Pane::Command,
+    ),
+    component(
+        "Comments",
+        "message-square",
+        "The comment cursor and pin, a thread beside its pin with its reply, the new comment in each state, the quick comment.",
+        Pane::Comments,
+    ),
+    component(
         "Context Menu",
         "layers",
-        "Right-click anywhere in the area.",
+        "The kit's menus: a right click in the area opens the file menu at the pointer.",
         Pane::ContextMenu,
     ),
-    page(
-        C,
+    component(
         "Data Table",
         "layout-grid",
         "Virtualized rows; columns drop by priority when narrow.",
         Pane::Table,
     ),
-    placeholder("Date Picker"),
-    page(
-        C,
+    component(
+        "Date Picker",
+        "calendar",
+        "A field that opens the calendar in a popover: the day chosen fills it, a range refuses the rest.",
+        Pane::DatePicker,
+    ),
+    component(
         "Dialog",
         "copy",
         "Modal dialogs with spring motion per intent.",
         Pane::Dialog,
     ),
-    alias(
+    component(
         "Drawer",
         "chevron-left",
-        "The sidebar as a drawer: this gallery's own chrome on a phone.",
-        Pane::Sidebar,
-        "a drawer apart from the app shell",
+        "The kit's navigation, slid in from the edge over the page.",
+        Pane::Drawer,
     ),
-    alias(
+    component(
         "Dropdown Menu",
-        "chevron-down",
-        "The context menu, until it anchors to a button.",
-        Pane::ContextMenu,
-        "anchoring to a trigger button",
+        "layers",
+        "The kit's menus, open from a trigger or shown in their cards.",
+        Pane::DropdownMenu,
     ),
-    page(
-        C,
+    component(
         "Empty",
         "folder",
         "Empty state with and without a call to action.",
         Pane::Empty,
     ),
-    alias(
+    component(
         "Field",
         "file",
-        "A text field, until it has a label, helper and error line.",
-        Pane::Input,
-        "label, helper and error",
+        "A text field with its label, link, icon, check or eye, and error or helper line.",
+        Pane::Field,
     ),
-    page(
-        C,
+    component(
         "Graph",
         "git-branch",
         "Pan, wheel and click a node.",
         Pane::Graph,
     ),
-    alias(
+    component(
+        "Home",
+        "house",
+        "The kit's home, its branding: the logo's symbol, its wordmark and both.",
+        Pane::Home,
+    ),
+    component(
         "Hover Card",
         "eye",
-        "The tooltip, until it holds rich content.",
-        Pane::Tooltip,
-        "rich content and a hover-in delay of its own",
+        "Rest the pointer on the handle; the card follows.",
+        Pane::HoverCard,
     ),
-    page(
-        C,
+    component(
         "Icon Button",
         "settings",
-        "Solid, outline, ghost, toolbar; two sizes; disabled.",
+        "The kit's icon buttons: bordered, large and small plain, each live and disabled; the toolbar tool at rest, disabled and active.",
         Pane::IconButton,
     ),
-    page(
-        C,
+    component(
         "Input",
         "file",
         "Single-line text fields. Click to place the caret, Tab cycles, Escape blurs.",
         Pane::Input,
     ),
-    placeholder("Input Group"),
-    placeholder("Input OTP"),
-    alias(
+    component(
+        "Input Group",
+        "search",
+        "A text field with addons: an icon button, a shortcut hint, a prefix or a suffix.",
+        Pane::InputGroup,
+    ),
+    component(
+        "Input OTP",
+        "square",
+        "A one-time code, a cell per digit: type, paste, Backspace; the arrows move between cells.",
+        Pane::InputOtp,
+    ),
+    component(
         "Item",
         "file",
-        "The virtualized list's rows.",
-        Pane::ScrollArea,
-        "an item row widget of its own",
+        "The kit's folder row and asset tile, chosen one at a time.",
+        Pane::Item,
     ),
-    alias(
+    component(
         "Kbd",
         "terminal",
-        "The shortcut hints on the nav links.",
-        Pane::NavigationMenu,
-        "a key cap widget",
+        "The kit's key cap, alone and on the nav links that carry a shortcut.",
+        Pane::Kbd,
     ),
-    alias(
+    component(
         "Label",
         "info",
-        "The caption over a field.",
-        Pane::Input,
-        "a label widget in comps (the gallery draws its group labels by hand)",
+        "The text that names a control, and a section's caption.",
+        Pane::Label,
     ),
-    placeholder("Marker"),
-    placeholder("Menubar"),
-    alias(
+    component(
+        "Marker",
+        "scan",
+        "Comment pins read and unread, the comment cursor in its four states, markers on a canvas.",
+        Pane::Marker,
+    ),
+    component(
+        "Menubar",
+        "layout-grid",
+        "File, Edit and View: menus in a row, one open at a time.",
+        Pane::Menubar,
+    ),
+    component(
+        "Menus",
+        "folder",
+        "The kit's menu page: zoom, file, folders, AI model, upload, filters and profile, each open in its card.",
+        Pane::Menus,
+    ),
+    component(
         "Message",
         "send",
-        "The message dock.",
-        Pane::Dock,
-        "a message widget apart from the dock",
+        "Comment rows of a thread and the quick comment, with the like chip.",
+        Pane::Message,
     ),
-    alias(
+    component(
         "Message Scroller",
         "send",
-        "The message dock's scrolling band.",
-        Pane::Dock,
-        "a scroller apart from the dock",
+        "A comment thread that scrolls past its height, by wheel, touch and keyboard.",
+        Pane::MessageScroller,
     ),
-    page(
-        C,
+    component(
+        "Modals",
+        "layers",
+        "The kit's modals: variations, sharing a post, a profile and a file, a quick comment, a delete confirm, export and settings with their sections.",
+        Pane::Modals,
+    ),
+    component(
         "Navigation Menu",
         "layout-grid",
         "Nav links in every state, and the rail form.",
         Pane::NavigationMenu,
     ),
-    placeholder("Pagination"),
-    page(
-        C,
+    component(
+        "Notifications",
+        "info",
+        "The kit's notification in its variations, and the dropdown: All and Unread over a list that scrolls.",
+        Pane::Notifications,
+    ),
+    component(
+        "Pagination",
+        "chevron-right",
+        "Page numbers between two arrows, as many as the width holds.",
+        Pane::Pagination,
+    ),
+    component(
         "Panel",
         "square",
         "The glass surface with rim and key light.",
         Pane::Panel,
     ),
-    page(
-        C,
+    component(
         "Panel Header",
         "layout-grid",
         "The column head every panel starts with, badge included.",
         Pane::PanelHeader,
     ),
-    alias(
+    component(
         "Popover",
         "copy",
-        "The tooltip, until it opens on click.",
-        Pane::Tooltip,
-        "click to open, arbitrary content",
+        "Click the value; the panel answers its container.",
+        Pane::Popover,
     ),
-    page(C, "Progress", "arrow-up", "Three intents.", Pane::Progress),
+    component(
+        "Progress",
+        "arrow-up",
+        "The kit's rail: its value, its intents, its narrowest.",
+        Pane::Progress,
+    ),
+    component(
+        "Prompt Input",
+        "send",
+        "The kit's prompt box: the line, its files, setting and model menus, voice input, premade prompts.",
+        Pane::PromptInput,
+    ),
     placeholder("Questionnaire"),
-    placeholder("Radio Group"),
-    page(
-        C,
+    component(
+        "Radio Group",
+        "circle",
+        "One choice of a list: the kit's list line with its switch as the disc, stacked or in a line.",
+        Pane::RadioGroup,
+    ),
+    component(
         "Resizable",
         "layers",
         "Split pane: drag the divider.",
         Pane::Resizable,
     ),
-    page(
-        C,
+    component(
         "Scroll Area",
         "file",
         "Virtualized list of 10,000 rows with the fading scrollbar.",
         Pane::ScrollArea,
     ),
-    page(
-        C,
+    component(
         "Select",
         "chevron-down",
         "The pill select and its dropdown.",
         Pane::Select,
     ),
-    page(
-        C,
+    component(
         "Separator",
         "minus",
         "Horizontal and vertical rules.",
         Pane::Separator,
     ),
-    alias(
+    component(
         "Sheet",
         "chevron-left",
-        "The sidebar as a drawer sheet.",
-        Pane::Sidebar,
-        "a sheet from any edge, apart from the app shell",
+        "A panel held to any edge, blocking the page until it is answered.",
+        Pane::Sheet,
     ),
-    page(
-        C,
+    component(
         "Sidebar",
         "layout-grid",
-        "The sidebar widget embedded in the page: brand, grouped links, footer.",
+        "The kit's sidebar page: the scene and assets, design and animation, home and guideline sidebars.",
         Pane::Sidebar,
     ),
-    page(
-        C,
+    component(
         "Skeleton",
         "square",
-        "Disc, lines, block. Click to make them breathe.",
+        "The kit's scene card and the shapes it is made of. Click to make them breathe.",
         Pane::Skeleton,
     ),
-    page(
-        C,
+    component(
         "Slider",
         "minus",
         "Continuous, stepped, disabled; live values beside them.",
         Pane::Slider,
     ),
-    page(
-        C,
+    component(
         "Spinner",
         "history",
         "Three sizes; the button starts the motion.",
         Pane::Spinner,
     ),
-    page(
-        C,
+    component(
         "Stat",
         "arrow-up",
         "Readouts with unit and delta, three sizes.",
         Pane::Stat,
     ),
-    page(
-        C,
+    component(
         "Switch",
         "check",
         "Spring toggles, one disabled.",
         Pane::Switch,
     ),
-    alias(
+    component(
         "Table",
         "layout-grid",
-        "The data table.",
-        Pane::Table,
-        "a static example without virtualization",
+        "Every row shown, no scroll; columns drop by priority when narrow.",
+        Pane::StaticTable,
     ),
-    page(
-        C,
+    component(
         "Tabs",
         "layers",
-        "Segmented strip sized from its measured labels.",
+        "The kit's tab strip, three tabs and two, long and translated labels.",
         Pane::Tabs,
     ),
-    placeholder("Textarea"),
-    page(
-        C,
+    component(
+        "Textarea",
+        "file",
+        "Text over several lines: Enter breaks the line, Up and Down move one; one box grows with its text.",
+        Pane::Textarea,
+    ),
+    component(
         "Toast",
         "send",
-        "One button per intent; click to queue.",
+        "A toast at rest per intent; the buttons queue a live one.",
         Pane::Toast,
     ),
-    alias(
+    component(
         "Toggle",
         "check",
-        "The interactive chip toggles on click.",
-        Pane::Chip,
-        "a toggle widget of its own",
+        "The hoff core toolbar action as a toggle: icon, label, icon and label; one card per state.",
+        Pane::Toggle,
     ),
-    alias(
+    component(
         "Toggle Group",
         "layout-grid",
-        "The todo app's filter pills.",
-        Pane::Todo,
-        "a toggle group widget, extracted from the todo app",
+        "The hoff core segmented control: one choice of a few, a thumb that slides under it.",
+        Pane::ToggleGroup,
     ),
-    page(
-        C,
+    component(
+        "Toolbar",
+        "mouse-pointer-2",
+        "The kit's toolbar page: the toolbar and its zoom panel, play mode, the video player, the view controller.",
+        Pane::Toolbar,
+    ),
+    component(
         "Tooltip",
         "info",
-        "Hover the button: 450 ms, then above the anchor, or below when there is no room.",
+        "The kit's tooltip: hover the toolbar's Undo 450 ms, or focus it; above it, or below when there is no room.",
         Pane::Tooltip,
     ),
-    page(
-        C,
+    component(
+        "Topbar",
+        "layout-grid",
+        "The kit's top bars: simple, with a filter or the search at the end, minimal, and the asset header with its thumbnails.",
+        Pane::Topbar,
+    ),
+    component(
         "Tree",
         "folder-open",
         "Branches expand and collapse; leaves select.",
         Pane::Tree,
     ),
     // -- Apps Demo ----------------------------------------------------------
-    page(
-        A,
+    app(
         "Todo",
         "check",
         "A complete small todo app: domain state, per-item animation, input.",
         Pane::Todo,
     ),
-    page(
-        A,
+    app(
         "Surface",
         "layers",
         "The todo as a surface materialized from verified plev IR, beside the fixed one.",
         Pane::Surface,
     ),
-    page(
-        A,
+    app(
         "Silences",
         "play",
         "Review the silences ffmpeg finds in a test video: a frame per cut, apply or reject each.",
         Pane::Silences,
     ),
-    page(
-        A,
+    app(
         "Files",
         "folder-open",
         "The file dialog and a drop zone as capabilities: open_file for a person, drop_files for anyone, the files received as state.",
         Pane::Files,
     ),
-    page(
-        A,
+    app(
         "Capture",
         "eye",
         "Camera and microphone as capabilities only a person turns on: the frame as a texture, the level as a meter, the permission as state.",
         Pane::Capture,
     ),
-    page(
-        A,
+    app(
         "Dock",
         "terminal",
         "Floating message dock: glass blur, hover lift, width morph on click.",
         Pane::Dock,
     ),
-    page(
-        A,
+    app(
         "Editor",
         "code",
         "The multi-cursor text editor (engine::widgets::editor): alt+click adds cursors, cmd-z undoes.",
         Pane::Editor,
     ),
-    page(
-        A,
+    app(
         "Git",
         "git-commit",
         "The ide workspace on this repository: changes, stacks and diff. s stages, c commits, right-click for more.",
         Pane::Git,
     ),
-    page(
-        A,
+    app(
         "Builder",
         "code",
         "Builder tour with real hit regions and measured, content-driven layout.",

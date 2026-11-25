@@ -1,0 +1,329 @@
+{
+  "nodes": [
+    {
+      "id": "graph_page",
+      "role": "region",
+      "label": "Graph"
+    },
+    {
+      "id": "graph_page.group[0]",
+      "role": "group",
+      "label": "Graph",
+      "parent": "graph_page"
+    },
+    {
+      "id": "graph_page.group[0].card[0][0]",
+      "role": "list_item",
+      "label": "node 0",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "graph_page.group[0].card[0][1]",
+      "role": "list_item",
+      "label": "node 1",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0][2]",
+      "role": "list_item",
+      "label": "node 2",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0][3]",
+      "role": "list_item",
+      "label": "node 3",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0][4]",
+      "role": "list_item",
+      "label": "node 4",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0][5]",
+      "role": "list_item",
+      "label": "node 5",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0][6]",
+      "role": "list_item",
+      "label": "node 6",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0][7]",
+      "role": "list_item",
+      "label": "node 7",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0][8]",
+      "role": "list_item",
+      "label": "node 8",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0][9]",
+      "role": "list_item",
+      "label": "node 9",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0][10]",
+      "role": "list_item",
+      "label": "node 10",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0][11]",
+      "role": "list_item",
+      "label": "node 11",
+      "parent": "graph_page.group[0].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[0].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[0].card[0]",
+      "role": "canvas",
+      "label": "Notes and their links",
+      "description": "Default, Hover, Selected, Focus, Pan, Zoom",
+      "parent": "graph_page.group[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "graph_page.group[1]",
+      "role": "group",
+      "label": "Edge tones",
+      "parent": "graph_page"
+    },
+    {
+      "id": "graph_page.group[1].card[0][0]",
+      "role": "list_item",
+      "label": "node 0",
+      "parent": "graph_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[1].card[0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "graph_page.group[1].card[0][1]",
+      "role": "list_item",
+      "label": "node 1",
+      "parent": "graph_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[1].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[1].card[0][2]",
+      "role": "list_item",
+      "label": "node 2",
+      "parent": "graph_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[1].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[1].card[0][3]",
+      "role": "list_item",
+      "label": "node 3",
+      "parent": "graph_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[1].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[1].card[0][4]",
+      "role": "list_item",
+      "label": "node 4",
+      "parent": "graph_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[1].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[1].card[0][5]",
+      "role": "list_item",
+      "label": "node 5",
+      "parent": "graph_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[1].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[1].card[0][6]",
+      "role": "list_item",
+      "label": "node 6",
+      "parent": "graph_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[1].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[1].card[0][7]",
+      "role": "list_item",
+      "label": "node 7",
+      "parent": "graph_page.group[1].card[0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "graph_page.group[1].card[0]:selected"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "graph_page.group[1].card[0]",
+      "role": "canvas",
+      "label": "Checks and their outcomes",
+      "description": "Structure, Success, Danger",
+      "parent": "graph_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": ""
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+---
+id: task-27
+title: "task-27: animation system"
+project: plev
+type: task
+status: done
+date: 2022-12-21
+date_basis: reconstructed
+recorded: 2026-03-13
+topics: [animation, signals, rendering]
+relations: [task-04]
+source: [docs/log/steps/task-27.md, docs/log/changes/task-27.md]
+source_revision: ec0a224c
+revised: 2026-10-30
+review: reviewed
+---
+
+# task-27: animation system
+
+Records plev's animation system: a `Tween<T>` that interpolates signal values from an `AnimationTick` (dt and elapsed) read in the render loop, with easing functions and, as an optional step, a spring. The delivery record lists the five phases, from the time infrastructure to the `animation_demo` example, and the task is marked as completed. It matters because the paper needed to show the reactive system in practical use.
+
+## objetivo
+sistema de animação baseado em signals, interpolação temporal de valores para transições, hover effects e movimentos. mínimo necessário para demos convincentes e para o paper mostrar o reactive system em uso prático.
+
+## dependências
+- task-04 (signal system)
+- render loop com `request_redraw()` contínuo
+
+## contexto técnico
+- o render loop já roda continuamente (winit `request_redraw()`)
+- signals não auto-triggeram re-render, mas views leem `.get()` a cada frame
+- existe frame counter (`ReadSignal<u64>`) mas **não há delta_time**
+- `std::time::Instant` não existe no WASM, precisa de solução cross-platform
+- builder `.bind()` é stub, animações devem funcionar diretamente com signals
+
+## design
+
+### abordagem: `Tween<T>` + `AnimationTick`
+
+```rust
+// Infra no render loop
+struct AnimationTick {
+    dt: f32,          // seconds since last frame
+    elapsed: f32,     // total seconds since app start
+}
+
+// API para o usuário
+let opacity = create_tween(0.0f32, Duration::from_millis(300), Easing::EaseOut);
+opacity.set_target(1.0);  // inicia animação rumo a 1.0
+
+// No render:
+let current = opacity.get(); // valor interpolado no frame atual
+div().opacity(current)
+```
+
+### alternativa avaliada e descartada
+`transition(property, duration, easing)` no builder, descartada porque:
+- builder elements são efêmeros (recriados a cada frame), não retêm estado
+- animação precisa de estado persistente entre frames -> signals são o lugar certo
+
+## checklist
+
+### fase a, infra de tempo
+- [ ] escolher crate para tempo cross-platform (`web-time` ou `instant`), pesquisar compatibilidade com wgpu 28 e WASM
+- [ ] adicionar `AnimationTick { dt: f32, elapsed: f32 }` ao render loop em `window.rs`
+- [ ] expor `dt` e `elapsed` como signals ou via `ViewContext`
+- [ ] garantir que funciona em WASM (sem `std::time::Instant`)
+- [ ] teste: dt > 0 em frames consecutivos (native)
+
+### fase b, easing functions
+- [ ] módulo `src/easing.rs` com enum `Easing`
+- [ ] implementar: linear, easein, easeout, easeinout (cubic)
+- [ ] implementar: cubicbezier(f32, f32, f32, f32) para custom
+- [ ] função `ease(t: f32, easing: Easing) -> f32` onde t ∈ [0, 1]
+- [ ] testes unitários para cada curva (valores em t=0, t=0.5, t=1)
+
+### fase c, tween<t>
+- [ ] struct `Tween<T>` em `src/animation.rs`
+- [ ] `create_tween(initial: T, duration: Duration, easing: Easing) -> Tween<T>`
+- [ ] `.set_target(value: T)`, inicia animação do valor atual para target
+- [ ] `.get() -> T`, retorna valor interpolado baseado em elapsed time
+- [ ] `.is_animating() -> bool`
+- [ ] trait `Interpolate` para tipos animáveis: `f32`, `[f32; 4]` (cores), `(f32, f32)` (posições)
+- [ ] integração com signal runtime: tween lê `elapsed` do tick e interpola
+- [ ] testes: tween de 0->1 em 1s, verificar valor em t=0.5
+
+### fase d, spring (opcional, stretch goal)
+- [ ] `create_spring(initial: T, stiffness, damping)`, animação física
+- [ ] útil para gestos (drag release -> snap back)
+- [ ] pode ser adiado para depois do paper
+
+### fase e, integration + example
+- [ ] `examples/animation_demo.rs` mostrando:
+  - fade in/out (opacity tween)
+  - slide (position tween)
+  - color transition (color tween)
+  - hover effect (mouse enter -> animate, leave -> animate back)
+- [ ] verificar: animações rodam suave a 60fps no macos
+- [ ] verificar: `cargo check --target wasm32-unknown-unknown` compila
+- [ ] documentar API no módulo (doc comments)
+
+## estimativa
+fase a-c: ~400-600 LOC. fase d: +200 LOC. fase e: ~150 LOC.
+
+## riscos
+- performance: se muitos tweens ativos, o overhead por frame deve ser negligível (são só lerps)
+- WASM time: `web-time` crate já é padrão da comunidade, baixo risco
+- borrow checker: tween precisa ler tick global, usar signal ou `thread_local!` como o runtime de signals
+
+## Delivery record
+
+### fase a: infra de tempo
+- [ ] web-time dependency adicionada
+- [ ] animationtick struct
+- [ ] dt/elapsed no render loop (window.rs)
+
+### fase b: easing
+- [ ] 30+ penner easings implementados
+- [ ] cubicbezier custom
+- [ ] testes por variante
+
+### fase c: tween
+- [ ] interpolate trait + impls (f32, [f32;2], [f32;3], [f32;4])
+- [ ] tween<t> com set_target/tick/get
+- [ ] testes
+
+### fase d: spring (opcional)
+- [ ] spring<t> damped harmonic oscillator
+
+### fase e: example + validacao
+- [ ] examples/animation_demo.rs
+- [ ] cargo test --workspace
+- [ ] cargo check --target wasm32-unknown-unknown
+
+<!-- related: written by tool/tasks/docbase.py index from the relations in the headers; edit the headers, not this list -->
+## Related
+
+- [task-04: signal system (reactivity)](../task-04-signal-system/task-04-signal-system.md)
+- [task-29: app demo real (proof of life)](../task-29-app-demo-real/task-29-app-demo-real.md)
+- [task-34: exploration and extraction of ideas from the reference repos](../task-34-exploration-extraction/task-34-exploration-extraction.md)
+- [task-35: fix spring<t>, analytical solver](../task-35-spring-analytical-solver/task-35-spring-analytical-solver.md)
+- [task-37: animation enhancements](../task-37-animation-enhancements/task-37-animation-enhancements.md)
+- [task-43: monster, binary animation codec v0](../task-43-monster-codec/task-43-monster-codec.md)
+- [task-49: prime number creatures, port of entropic life](../task-49-prime-creatures/task-49-prime-creatures.md)
+- [reference analysis: animation and motion](../../Research/Rendering/animation-motion.md)
+- [integration candidates, ranking](../../Research/Ecosystem/integration-candidates.md)
+- [linebender ecosystem, analysis for plev](../../Research/Ecosystem/linebender-ecosystem.md)
+- [technology radar, plev](../../Research/Ecosystem/technology-radar.md)
+- [animation pattern, frame-based exponential lerp](../../Research/Rendering/animation-pattern-lerp.md)
+<!-- /related -->

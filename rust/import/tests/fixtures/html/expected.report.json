@@ -22,10 +22,10 @@
     }
   ],
   "counts": {
-    "approximated": 17,
+    "approximated": 15,
     "impossible": 13,
     "supported": 32,
-    "transformed": 22
+    "transformed": 24
   },
   "entries": [
     {
@@ -128,25 +128,25 @@
     },
     {
       "at": "note-card.html:25",
-      "category": "approximated",
+      "category": "transformed",
       "construct": ".meta { font-size: 12px }",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "note_card.root.meta"
+      "node": "note_card.root.meta",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "note-card.html:26",
-      "category": "approximated",
+      "category": "transformed",
       "construct": ".meta { line-height: 16px }",
-      "difference": "12/16 px weight 400 is 0.04 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
-      "node": "note_card.root.meta"
+      "node": "note_card.root.meta",
+      "rule": "12/16 px weight 400 is theme.typography.caption_r (12/16 px weight 400) in the theme"
     },
     {
       "at": "note-card.html:27",
       "category": "approximated",
       "construct": ".meta { color: rgba(248, 248, 248, 0.66) }",
-      "difference": "`engine::styling::theme::hoff::n2(0.66)` is 10.2 levels from theme.colors.text_mid, within its tolerance of 25.5",
+      "difference": "`engine::styling::theme::hoff::n2(0.66)` is 10.2 levels from theme.colors.text_mid, within its tolerance of 24.56",
       "ir": "props.color = text_mid",
       "node": "note_card.root.meta"
     },
@@ -351,7 +351,7 @@
       "at": "note-card.html:68",
       "category": "approximated",
       "construct": ".badge { font-size: 12px }",
-      "difference": "12/15.6 px weight 400 is 0.36 px from theme.typography.caption_r (12/15.96 px weight 400), within its tolerance of 1",
+      "difference": "12/15.6 px weight 400 is 0.4 px from theme.typography.caption_r (12/16 px weight 400), within its tolerance of 1",
       "ir": "props.typography = caption_r",
       "node": "note_card.root.badge"
     },

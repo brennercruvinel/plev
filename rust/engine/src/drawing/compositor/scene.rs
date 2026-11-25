@@ -1,7 +1,9 @@
 use rustc_hash::FxHasher;
 use std::hash::{Hash, Hasher};
 
-// PartialEq is the monster codec prerequisite (docs/ref/architecture/monster-format-v0.md): structural
+use crate::drawing::text::OverflowWrap;
+
+// PartialEq is the monster codec prerequisite (docs/Research/Importing/monster-format-v0.md): structural
 // round-trip tests compare decoded scenes against originals.
 #[derive(Clone, Debug, PartialEq)]
 pub enum SceneNode {
@@ -114,6 +116,12 @@ pub struct TextNodeKey {
     /// different glyph positions.
     pub letter_spacing_bits: u32,
     pub font_family: Option<String>,
+    /// The run's OpenType features (tabular figures): they change the
+    /// glyphs, so they key the shaping too.
+    pub features: crate::drawing::text::TextFeatures,
+    /// What a word wider than `max_width` does (CSS `overflow-wrap`):
+    /// part of the shaping, so of the key.
+    pub overflow_wrap: OverflowWrap,
 }
 
 /// The string as the source has it now (literal hot reload), else as given.
@@ -122,7 +130,8 @@ fn live_text(text: &str) -> String {
     if let Some(now) = crate::runtime::hot_reload::literals::text(text) {
         return now;
     }
-    text.to_string()
+    // pseudo-localization (a test mode): draw what was measured
+    crate::drawing::text::pseudo::localized(text).into_owned()
 }
 
 impl TextNodeKey {
@@ -135,6 +144,8 @@ impl TextNodeKey {
             font_weight: 400,
             letter_spacing_bits: 0.0_f32.to_bits(),
             font_family: None,
+            features: crate::drawing::text::TextFeatures::NONE,
+            overflow_wrap: OverflowWrap::Normal,
         }
     }
 
@@ -154,6 +165,8 @@ impl TextNodeKey {
             font_weight: style.font_weight,
             letter_spacing_bits: style.letter_spacing.to_bits(),
             font_family: style.font_family.clone(),
+            features: style.features,
+            overflow_wrap: style.overflow_wrap,
         }
     }
 

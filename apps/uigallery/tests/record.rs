@@ -190,6 +190,9 @@ fn the_recorded_session_holds_the_agent_the_person_the_frames_and_where_each_con
     let dir = tempfile::TempDir::new().expect("a temp dir");
     let mut recording = Recording::new(dir.path().join("sessions"), Limits::default());
     let mut view = ShowcaseView::new(1200.0, 800.0);
+    // the sidebar pinned beside the page: at the width that leaves, the
+    // cuts card and its "apply all" are on the first screen
+    view.pin_sidebar(true);
     view.jump_to_page("silences");
     assert_eq!(view.page_title(), "Silences");
     view.resize(1200.0, 800.0, 1.0);
