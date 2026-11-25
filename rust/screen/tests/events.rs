@@ -6,7 +6,7 @@
 // shared with the other surface tests: this binary uses the fixtures, the
 // page and the app.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{Actor, Change, Rejection, Request, SemId, Stage, StateRef, Value};
 use engine::drawing::compositor::Compositor;

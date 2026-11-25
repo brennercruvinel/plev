@@ -5,7 +5,7 @@
 
 // shared with the other surface tests: this binary uses the fixtures.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use engine::drawing::compositor::Compositor;
 use engine::styling::theme::Theme;

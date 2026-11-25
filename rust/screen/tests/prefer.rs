@@ -10,7 +10,7 @@
 // shared with the other surface tests: this binary uses the fixtures and
 // the page.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{Actor, Snapshot};
 use engine::styling::theme::Theme;
