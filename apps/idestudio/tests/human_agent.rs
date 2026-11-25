@@ -4,7 +4,7 @@
 //! index right before `git commit`, a valid commit comes back with its sha
 //! and files, and every step has a receipt that says who asked.
 
-mod support;
+use crate::support;
 
 use std::cell::RefCell;
 use std::rc::Rc;

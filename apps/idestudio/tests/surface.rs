@@ -8,7 +8,7 @@
 
 // shared with the other ide tests: this binary uses part of the rig.
 #[allow(dead_code)]
-mod support;
+use crate::support;
 
 use accord::{Actor, Role, SemId, Snapshot, Stage, Value};
 use engine::drawing::compositor::Compositor;
