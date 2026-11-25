@@ -1,0 +1,52 @@
+name: Bug report
+description: Something does not work as it should.
+type: Bug
+labels: [bug, needs-triage]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected to see.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: The command you ran and the steps after it. A recorded session (.monster) or a screenshot helps a lot.
+      placeholder: |
+        1. cargo run -p uigallery
+        2. Open the Typography page
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options:
+        - macOS (Metal)
+        - Linux (Vulkan)
+        - Web (WebGPU)
+        - iOS (Metal)
+        - Android (Vulkan)
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Revision
+      description: The commit you are on (git rev-parse --short HEAD).
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS version, GPU, and the browser and its version for the web target.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Terminal or console output, if there is any.
+      render: text
