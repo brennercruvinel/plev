@@ -11,7 +11,7 @@ topics: [workspace, performance, process, agents]
 relations: [task-102, operations-orchestrate-coding-agents-on-this-repo]
 source: "https://github.com/brennercruvinel/plev/issues/185"
 source_revision: f7695626
-revised: 2026-11-24
+revised: 2026-11-25
 review: pending
 ---
 
@@ -133,10 +133,10 @@ A new checkout, through `builddir.sh seed`: the seed took 5 s and no disk, and `
 
 ## What was not verified
 
-- A real iOS or Android build with the plain libraries. No mobile target and no cargo-ndk is installed on the machine of this task; `cargo rustc --crate-type staticlib` and `cdylib` were run on the host triple, and cargo-ndk's forwarding of a `rustc` subcommand was read in its source. Two defects a review found in the mobile script were fixed and tried on stand-ins only: the iOS build read the library from a fixed `target/` (it asks cargo now, so `CARGO_TARGET_DIR` is honored), and the Android build no longer cleared an old `libengine.so` from a reused `jniLibs`.
+- A real iOS or Android build with the plain libraries. The machine of this task has Xcode, but no Rust target for iOS, no Android NDK and no cargo-ndk; `cargo rustc --crate-type staticlib` and `cdylib` were run on the host triple, and cargo-ndk's forwarding of a `rustc` subcommand was read in its source. Two defects a review found in the mobile script were fixed and tried on stand-ins only: the iOS build read the library from a fixed `target/` (it asks cargo now, so `CARGO_TARGET_DIR` is honored), and the Android build no longer cleared an old `libengine.so` from a reused `jniLibs`.
 - Sharing one build directory between the root workspace and urnadbapp's, now that the engine's file name carries the hash. The gate's leg keeps its own subdirectory.
-- The packaging of the web build of `graphs`. `tool/tasks/webtarget.sh graphs build` compiles the wasm release build to the end; trunk then needs wasm-bindgen 0.2.123, the lockfile's version, and the machine of this task has 0.2.129.
-- The gate on a clean runner. The `gatecheck` workflow is disabled and its last runs, on 2026-10-16, did not start for the account's billing, so the pinned toolchain, the linux leg of the matrix and the structural regression job were not run by CI.
+- The last step of the packaging of the web build of `graphs`. `tool/tasks/webtarget.sh graphs build --release` compiles the wasm release build to the end, and wasm-bindgen 0.2.123, the lockfile's version, writes its JavaScript and its wasm (92 KB and 5.6 MB) into trunk's staging folder. trunk then asks for wasm-opt, binaryen `version_131`, which the machine of this task does not have: its download timed out five times, so the size pass did not run and `demo/graphs/dist` was not replaced.
+- The gate on a clean runner. The `gatecheck` workflow is disabled and its last runs, on 2026-10-16, did not start for the account's billing, so the pinned toolchain, the linux leg of the matrix and the structural regression job were not run by CI. The gate was run on the machine of this task instead, part by part, at the branch's last commit; that run cannot be written in the commit it measures, so it is in [pull request 190](https://github.com/brennercruvinel/plev/pull/190), with the sha.
 
 ## Open
 
@@ -149,6 +149,7 @@ A new checkout, through `builddir.sh seed`: the seed took 5 s and no disk, and `
 
 - `.design`, `.devops` and `.secops` are gone from the root for good, the owner's decision. The task first restored them, reading their deletion as an accident because the tree's own test, the gate, CI, the readme and the atlas still named them; that was undone. What `.devops/check` held (the lychee, nextest and typos contracts) is in `.config`, beside hakari's, and every reference points there. nextest finds its file there with no flag.
 
+- The branch point is in `main`: pull request 184, the one commit of task-105 this task was built on (`f7695626`), was merged on 2026-11-25, and pull request 190 points at `main` since. Its diff is the task's 38 commits and nothing else, 125 files.
 - The toolchain is pinned: `rust-toolchain.toml` names 1.99.1, the compiler `stable` already was, and every CI job runs `rustup toolchain install`, which reads the same file. The CI change is not verified: no workflow has run on the repository since 2026-10-16.
 - `human_agent`'s commit author in `idestudio` followed `GIT_AUTHOR_NAME` when a session exported it. The test compares with the author git gave the commit, and the gate drops the identity variables before its tests.
 
