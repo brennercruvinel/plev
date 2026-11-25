@@ -1,0 +1,621 @@
+{
+  "format": "regress.baseline.v1",
+  "hash": "regress.layer.v1",
+  "page": "Surface",
+  "theme": "core",
+  "width": 1280.0,
+  "height": 800.0,
+  "scale": 1.0,
+  "settle": {
+    "steps": 2,
+    "settled": true
+  },
+  "semantics": {
+    "revision": "6afa19f4c897b5e7",
+    "nodes": 38
+  },
+  "layers": [
+    {
+      "name": "todo+surface_page+todo_panel",
+      "z": 0,
+      "hash": "d388cfbda791aacc",
+      "nodes": 101,
+      "bounds": [
+        0.0,
+        24.0,
+        1280.0,
+        728.0
+      ]
+    },
+    {
+      "name": "z10",
+      "z": 10,
+      "hash": "c853f02ec00cb9d8",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1000",
+      "z": 1000,
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1200",
+      "z": 1200,
+      "hash": "ef5874151115e51e",
+      "nodes": 0,
+      "bounds": null
+    }
+  ],
+  "bindings": [
+    {
+      "id": "todo",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        48.0,
+        153.0,
+        576.0,
+        599.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo.input",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        72.0,
+        177.0,
+        528.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo.item[1]",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        72.0,
+        239.0,
+        528.0,
+        44.0
+      ],
+      "clip": [
+        72.0,
+        239.0,
+        528.0,
+        443.0
+      ]
+    },
+    {
+      "id": "todo.item[2]",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        72.0,
+        283.0,
+        528.0,
+        44.0
+      ],
+      "clip": [
+        72.0,
+        239.0,
+        528.0,
+        443.0
+      ]
+    },
+    {
+      "id": "todo.item[3]",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        72.0,
+        327.0,
+        528.0,
+        44.0
+      ],
+      "clip": [
+        72.0,
+        239.0,
+        528.0,
+        443.0
+      ]
+    },
+    {
+      "id": "todo.filter[all]",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        328.0,
+        707.0,
+        89.333336,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo.filter[active]",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        417.33334,
+        707.0,
+        89.333336,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo.filter[completed]",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        506.6667,
+        707.0,
+        89.333336,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "surface_page",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        656.0,
+        153.0,
+        576.0,
+        104.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "surface_page.intent",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        656.0,
+        153.0,
+        370.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "surface_page.proposer",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        1034.0,
+        153.0,
+        88.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "surface_page.propose",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        1130.0,
+        157.0,
+        102.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "surface_page.cancel",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        1140.0,
+        209.0,
+        92.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "surface_page.status",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        656.0,
+        221.0,
+        476.0,
+        16.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.card",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        656.0,
+        309.0,
+        576.0,
+        342.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.entry",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        329.0,
+        536.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.input",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        329.0,
+        455.0,
+        48.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.add",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        1139.0,
+        333.0,
+        73.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.items",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        389.0,
+        536.0,
+        80.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.item[1]",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        389.0,
+        536.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.item[1].text",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        393.0,
+        474.0,
+        16.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.item[1].done",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        1158.0,
+        389.0,
+        54.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.item[2]",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        417.0,
+        536.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.item[2].text",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        421.0,
+        474.0,
+        16.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.item[2].done",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        1158.0,
+        417.0,
+        54.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.item[3]",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        445.0,
+        536.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.item[3].text",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        449.0,
+        474.0,
+        16.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.item[3].done",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        1158.0,
+        445.0,
+        54.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.filter",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        481.0,
+        536.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.filter.all",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        481.0,
+        39.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.filter.active",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        719.0,
+        481.0,
+        58.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.filter.completed",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        781.0,
+        481.0,
+        82.0,
+        26.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.counts",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        519.0,
+        536.0,
+        112.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.active",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        519.0,
+        536.0,
+        52.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "todo_panel.done",
+      "layer": "todo+surface_page+todo_panel",
+      "rect": [
+        676.0,
+        579.0,
+        536.0,
+        52.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    }
+  ]
+}

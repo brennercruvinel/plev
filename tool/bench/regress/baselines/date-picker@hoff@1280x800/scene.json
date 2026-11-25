@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "a8fcdab6c9d226f5",
+    "nodes": 77
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "date_picker_page",
       "z": 0,
-      "hash": "654f02ff47f4d6a8",
-      "nodes": 8,
+      "hash": "530c88481d4f7999",
+      "nodes": 131,
       "bounds": [
-        283.0,
-        49.0,
-        725.0,
-        222.6
+        25.584782,
+        35.810867,
+        1222.4152,
+        732.18915
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "318e36033b90becd",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,1158 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "date_picker_page.group[0].card[0]",
+      "layer": "date_picker_page",
+      "rect": [
+        174.0,
+        263.0,
+        320.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[0].card[1]",
+      "layer": "date_picker_page",
+      "rect": [
+        786.0,
+        437.0,
+        320.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0]",
+      "layer": "date_picker_page",
+      "rect": [
+        174.0,
+        877.0,
+        320.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar",
+      "layer": "date_picker_page",
+      "rect": [
+        182.0,
+        941.0,
+        304.0,
+        320.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-01]",
+      "layer": "date_picker_page",
+      "rect": [
+        314.0,
+        1005.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-02]",
+      "layer": "date_picker_page",
+      "rect": [
+        358.0,
+        1005.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-03]",
+      "layer": "date_picker_page",
+      "rect": [
+        402.0,
+        1005.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-04]",
+      "layer": "date_picker_page",
+      "rect": [
+        446.0,
+        1005.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-05]",
+      "layer": "date_picker_page",
+      "rect": [
+        182.0,
+        1049.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-06]",
+      "layer": "date_picker_page",
+      "rect": [
+        226.0,
+        1049.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-07]",
+      "layer": "date_picker_page",
+      "rect": [
+        270.0,
+        1049.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-08]",
+      "layer": "date_picker_page",
+      "rect": [
+        314.0,
+        1049.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-09]",
+      "layer": "date_picker_page",
+      "rect": [
+        358.0,
+        1049.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-10]",
+      "layer": "date_picker_page",
+      "rect": [
+        402.0,
+        1049.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-11]",
+      "layer": "date_picker_page",
+      "rect": [
+        446.0,
+        1049.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-12]",
+      "layer": "date_picker_page",
+      "rect": [
+        182.0,
+        1093.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-13]",
+      "layer": "date_picker_page",
+      "rect": [
+        226.0,
+        1093.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-14]",
+      "layer": "date_picker_page",
+      "rect": [
+        270.0,
+        1093.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-15]",
+      "layer": "date_picker_page",
+      "rect": [
+        314.0,
+        1093.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-16]",
+      "layer": "date_picker_page",
+      "rect": [
+        358.0,
+        1093.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-17]",
+      "layer": "date_picker_page",
+      "rect": [
+        402.0,
+        1093.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-18]",
+      "layer": "date_picker_page",
+      "rect": [
+        446.0,
+        1093.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-19]",
+      "layer": "date_picker_page",
+      "rect": [
+        182.0,
+        1137.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-20]",
+      "layer": "date_picker_page",
+      "rect": [
+        226.0,
+        1137.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-21]",
+      "layer": "date_picker_page",
+      "rect": [
+        270.0,
+        1137.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-22]",
+      "layer": "date_picker_page",
+      "rect": [
+        314.0,
+        1137.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-23]",
+      "layer": "date_picker_page",
+      "rect": [
+        358.0,
+        1137.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-24]",
+      "layer": "date_picker_page",
+      "rect": [
+        402.0,
+        1137.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-25]",
+      "layer": "date_picker_page",
+      "rect": [
+        446.0,
+        1137.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-26]",
+      "layer": "date_picker_page",
+      "rect": [
+        182.0,
+        1181.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-27]",
+      "layer": "date_picker_page",
+      "rect": [
+        226.0,
+        1181.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-28]",
+      "layer": "date_picker_page",
+      "rect": [
+        270.0,
+        1181.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-29]",
+      "layer": "date_picker_page",
+      "rect": [
+        314.0,
+        1181.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-30]",
+      "layer": "date_picker_page",
+      "rect": [
+        358.0,
+        1181.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar[2026-10-31]",
+      "layer": "date_picker_page",
+      "rect": [
+        402.0,
+        1181.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar.prev",
+      "layer": "date_picker_page",
+      "rect": [
+        434.0,
+        949.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[0].calendar.next",
+      "layer": "date_picker_page",
+      "rect": [
+        462.0,
+        949.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1]",
+      "layer": "date_picker_page",
+      "rect": [
+        786.0,
+        865.0,
+        320.0,
+        44.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar",
+      "layer": "date_picker_page",
+      "rect": [
+        794.0,
+        953.0,
+        304.0,
+        320.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-01]",
+      "layer": "date_picker_page",
+      "rect": [
+        926.0,
+        1017.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-02]",
+      "layer": "date_picker_page",
+      "rect": [
+        970.0,
+        1017.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-03]",
+      "layer": "date_picker_page",
+      "rect": [
+        1014.0,
+        1017.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-04]",
+      "layer": "date_picker_page",
+      "rect": [
+        1058.0,
+        1017.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-05]",
+      "layer": "date_picker_page",
+      "rect": [
+        794.0,
+        1061.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-06]",
+      "layer": "date_picker_page",
+      "rect": [
+        838.0,
+        1061.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-07]",
+      "layer": "date_picker_page",
+      "rect": [
+        882.0,
+        1061.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-08]",
+      "layer": "date_picker_page",
+      "rect": [
+        926.0,
+        1061.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-09]",
+      "layer": "date_picker_page",
+      "rect": [
+        970.0,
+        1061.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-10]",
+      "layer": "date_picker_page",
+      "rect": [
+        1014.0,
+        1061.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-11]",
+      "layer": "date_picker_page",
+      "rect": [
+        1058.0,
+        1061.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-12]",
+      "layer": "date_picker_page",
+      "rect": [
+        794.0,
+        1105.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-13]",
+      "layer": "date_picker_page",
+      "rect": [
+        838.0,
+        1105.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-14]",
+      "layer": "date_picker_page",
+      "rect": [
+        882.0,
+        1105.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-15]",
+      "layer": "date_picker_page",
+      "rect": [
+        926.0,
+        1105.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-16]",
+      "layer": "date_picker_page",
+      "rect": [
+        970.0,
+        1105.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-17]",
+      "layer": "date_picker_page",
+      "rect": [
+        1014.0,
+        1105.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-18]",
+      "layer": "date_picker_page",
+      "rect": [
+        1058.0,
+        1105.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-19]",
+      "layer": "date_picker_page",
+      "rect": [
+        794.0,
+        1149.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-20]",
+      "layer": "date_picker_page",
+      "rect": [
+        838.0,
+        1149.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-21]",
+      "layer": "date_picker_page",
+      "rect": [
+        882.0,
+        1149.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-22]",
+      "layer": "date_picker_page",
+      "rect": [
+        926.0,
+        1149.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-23]",
+      "layer": "date_picker_page",
+      "rect": [
+        970.0,
+        1149.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-24]",
+      "layer": "date_picker_page",
+      "rect": [
+        1014.0,
+        1149.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-25]",
+      "layer": "date_picker_page",
+      "rect": [
+        1058.0,
+        1149.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-26]",
+      "layer": "date_picker_page",
+      "rect": [
+        794.0,
+        1193.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-27]",
+      "layer": "date_picker_page",
+      "rect": [
+        838.0,
+        1193.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-28]",
+      "layer": "date_picker_page",
+      "rect": [
+        882.0,
+        1193.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-29]",
+      "layer": "date_picker_page",
+      "rect": [
+        926.0,
+        1193.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-30]",
+      "layer": "date_picker_page",
+      "rect": [
+        970.0,
+        1193.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar[2026-10-31]",
+      "layer": "date_picker_page",
+      "rect": [
+        1014.0,
+        1193.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar.prev",
+      "layer": "date_picker_page",
+      "rect": [
+        1046.0,
+        961.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "date_picker_page.group[1].card[1].calendar.next",
+      "layer": "date_picker_page",
+      "rect": [
+        1074.0,
+        961.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    }
+  ]
 }

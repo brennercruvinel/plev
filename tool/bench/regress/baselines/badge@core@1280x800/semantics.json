@@ -1,0 +1,372 @@
+{
+  "nodes": [
+    {
+      "id": "badge_page",
+      "role": "region",
+      "label": "Badge"
+    },
+    {
+      "id": "badge_page.group[0]",
+      "role": "group",
+      "label": "Tag",
+      "parent": "badge_page"
+    },
+    {
+      "id": "badge_page.group[0].card[0]",
+      "role": "list",
+      "label": "Rest, Focus",
+      "parent": "badge_page.group[0]"
+    },
+    {
+      "id": "badge_page.group[0].card[0].badge[0]",
+      "role": "label",
+      "label": "Card",
+      "parent": "badge_page.group[0].card[0]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "neutral"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[0].card[1]",
+      "role": "list",
+      "label": "Raised",
+      "parent": "badge_page.group[0]"
+    },
+    {
+      "id": "badge_page.group[0].card[1].badge[0]",
+      "role": "label",
+      "label": "Card",
+      "parent": "badge_page.group[0].card[1]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "neutral"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[0].card[2]",
+      "role": "list",
+      "label": "Intents",
+      "parent": "badge_page.group[0]"
+    },
+    {
+      "id": "badge_page.group[0].card[2].badge[0]",
+      "role": "label",
+      "label": "draft",
+      "parent": "badge_page.group[0].card[2]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "neutral"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[0].card[2].badge[1]",
+      "role": "label",
+      "label": "synced",
+      "parent": "badge_page.group[0].card[2]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "informational"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[0].card[2].badge[2]",
+      "role": "label",
+      "label": "staged",
+      "parent": "badge_page.group[0].card[2]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "constructive"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[0].card[2].badge[3]",
+      "role": "label",
+      "label": "conflict",
+      "parent": "badge_page.group[0].card[2]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "destructive"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[1]",
+      "role": "group",
+      "label": "Count",
+      "parent": "badge_page"
+    },
+    {
+      "id": "badge_page.group[1].card[0]",
+      "role": "list",
+      "label": "One digit",
+      "parent": "badge_page.group[1]"
+    },
+    {
+      "id": "badge_page.group[1].card[0].badge[0]",
+      "role": "label",
+      "label": "3",
+      "parent": "badge_page.group[1].card[0]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "destructive"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[1].card[1]",
+      "role": "list",
+      "label": "More",
+      "parent": "badge_page.group[1]"
+    },
+    {
+      "id": "badge_page.group[1].card[1].badge[0]",
+      "role": "label",
+      "label": "12",
+      "parent": "badge_page.group[1].card[1]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "destructive"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[1].card[1].badge[1]",
+      "role": "label",
+      "label": "128",
+      "parent": "badge_page.group[1].card[1]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "destructive"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[1].card[2]",
+      "role": "list",
+      "label": "Intents",
+      "parent": "badge_page.group[1]"
+    },
+    {
+      "id": "badge_page.group[1].card[2].badge[0]",
+      "role": "label",
+      "label": "4",
+      "parent": "badge_page.group[1].card[2]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "neutral"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[1].card[2].badge[1]",
+      "role": "label",
+      "label": "4",
+      "parent": "badge_page.group[1].card[2]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "informational"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[1].card[2].badge[2]",
+      "role": "label",
+      "label": "4",
+      "parent": "badge_page.group[1].card[2]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "constructive"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[1].card[2].badge[3]",
+      "role": "label",
+      "label": "4",
+      "parent": "badge_page.group[1].card[2]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "destructive"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[2]",
+      "role": "group",
+      "label": "Dot",
+      "parent": "badge_page"
+    },
+    {
+      "id": "badge_page.group[2].card[0]",
+      "role": "list",
+      "label": "New",
+      "parent": "badge_page.group[2]"
+    },
+    {
+      "id": "badge_page.group[2].card[0].badge[0]",
+      "role": "label",
+      "label": "New",
+      "parent": "badge_page.group[2].card[0]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "destructive"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[2].card[1]",
+      "role": "list",
+      "label": "Intents",
+      "parent": "badge_page.group[2]"
+    },
+    {
+      "id": "badge_page.group[2].card[1].badge[0]",
+      "role": "label",
+      "label": "draft",
+      "parent": "badge_page.group[2].card[1]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "neutral"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[2].card[1].badge[1]",
+      "role": "label",
+      "label": "synced",
+      "parent": "badge_page.group[2].card[1]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "informational"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[2].card[1].badge[2]",
+      "role": "label",
+      "label": "staged",
+      "parent": "badge_page.group[2].card[1]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "constructive"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[2].card[1].badge[3]",
+      "role": "label",
+      "label": "conflict",
+      "parent": "badge_page.group[2].card[1]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "destructive"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[3]",
+      "role": "group",
+      "label": "Content",
+      "parent": "badge_page"
+    },
+    {
+      "id": "badge_page.group[3].card[0]",
+      "role": "list",
+      "label": "Long label",
+      "parent": "badge_page.group[3]"
+    },
+    {
+      "id": "badge_page.group[3].card[0].badge[0]",
+      "role": "label",
+      "label": "Waiting for the second reviewer before the merge",
+      "parent": "badge_page.group[3].card[0]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "informational"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[3].card[1]",
+      "role": "list",
+      "label": "Mixed scripts",
+      "parent": "badge_page.group[3]"
+    },
+    {
+      "id": "badge_page.group[3].card[1].badge[0]",
+      "role": "label",
+      "label": "Olá · مرحبا · שלום · नमस्ते · 你好 · 안녕 🎉",
+      "parent": "badge_page.group[3].card[1]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "neutral"
+        }
+      },
+      "focusable": true
+    },
+    {
+      "id": "badge_page.group[3].card[2]",
+      "role": "list",
+      "label": "Capped count",
+      "parent": "badge_page.group[3]"
+    },
+    {
+      "id": "badge_page.group[3].card[2].badge[0]",
+      "role": "label",
+      "label": "99+",
+      "parent": "badge_page.group[3].card[2]",
+      "state": {
+        "intent": {
+          "kind": "text",
+          "value": "destructive"
+        }
+      },
+      "focusable": true
+    }
+  ]
+}

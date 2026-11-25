@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "9daaedf503f8ec58",
+    "nodes": 18
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "skeleton_page",
       "z": 0,
-      "hash": "7b210870a7e91ba7",
-      "nodes": 9,
+      "hash": "485faf4f9aabf0e6",
+      "nodes": 49,
       "bounds": [
-        283.0,
-        49.0,
-        957.0,
-        154.6
+        25.584782,
+        35.810867,
+        1222.4152,
+        732.18915
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "318e36033b90becd",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,118 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "skeleton_page.group[0].card[0].skeleton",
+      "layer": "skeleton_page",
+      "rect": [
+        204.0,
+        239.0,
+        260.0,
+        270.87396
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "skeleton_page.group[0].card[1].skeleton",
+      "layer": "skeleton_page",
+      "rect": [
+        652.0,
+        346.0,
+        588.0,
+        56.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "skeleton_page.group[1].card[0].skeleton",
+      "layer": "skeleton_page",
+      "rect": [
+        40.0,
+        777.0,
+        384.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "skeleton_page.group[1].card[1].skeleton",
+      "layer": "skeleton_page",
+      "rect": [
+        510.0,
+        696.0,
+        260.0,
+        198.62491
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "skeleton_page.group[1].card[2].skeleton",
+      "layer": "skeleton_page",
+      "rect": [
+        1022.0,
+        769.0,
+        52.800003,
+        52.800003
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "skeleton_page.group[2].card[0].skeleton",
+      "layer": "skeleton_page",
+      "rect": [
+        40.0,
+        1136.0,
+        588.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    },
+    {
+      "id": "skeleton_page.group[2].card[1].skeleton",
+      "layer": "skeleton_page",
+      "rect": [
+        652.0,
+        1080.0,
+        588.0,
+        136.0
+      ],
+      "clip": [
+        0.0,
+        124.0,
+        1280.0,
+        644.0
+      ]
+    }
+  ]
 }

@@ -10,18 +10,21 @@
     "steps": 2,
     "settled": true
   },
-  "semantics": null,
+  "semantics": {
+    "revision": "d31d6c7eab3552a3",
+    "nodes": 104
+  },
   "layers": [
     {
-      "name": "z0",
+      "name": "sidebar_page",
       "z": 0,
-      "hash": "ff41eac15c5e5111",
-      "nodes": 29,
+      "hash": "57237e68aa0ddc7b",
+      "nodes": 266,
       "bounds": [
-        283.0,
-        49.0,
-        484.97607,
-        503.59998
+        25.584782,
+        35.810867,
+        1222.4152,
+        732.18915
       ]
     },
     {
@@ -34,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "318e36033b90becd",
-      "nodes": 46,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -51,5 +56,1078 @@
       "bounds": null
     }
   ],
-  "bindings": []
+  "bindings": [
+    {
+      "id": "sidebar_page.scene",
+      "layer": "sidebar_page",
+      "rect": [
+        210.0,
+        477.0,
+        248.0,
+        663.0
+      ],
+      "clip": [
+        32.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.logo",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        489.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        32.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.tabs",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        598.0,
+        224.0,
+        44.0
+      ],
+      "clip": [
+        32.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.tabs[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        226.0,
+        602.0,
+        108.0,
+        36.0
+      ],
+      "clip": [
+        32.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.tabs[1]",
+      "layer": "sidebar_page",
+      "rect": [
+        334.0,
+        602.0,
+        108.0,
+        36.0
+      ],
+      "clip": [
+        32.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.item[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        218.0,
+        659.0,
+        232.0,
+        48.0
+      ],
+      "clip": [
+        210.0,
+        651.0,
+        248.0,
+        117.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.item[1]",
+      "layer": "sidebar_page",
+      "rect": [
+        218.0,
+        711.0,
+        232.0,
+        48.0
+      ],
+      "clip": [
+        210.0,
+        651.0,
+        248.0,
+        117.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.item[2]",
+      "layer": "sidebar_page",
+      "rect": [
+        218.0,
+        763.0,
+        232.0,
+        48.0
+      ],
+      "clip": [
+        210.0,
+        651.0,
+        248.0,
+        117.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.item[3]",
+      "layer": "sidebar_page",
+      "rect": [
+        218.0,
+        815.0,
+        232.0,
+        48.0
+      ],
+      "clip": [
+        210.0,
+        651.0,
+        248.0,
+        117.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.item[4]",
+      "layer": "sidebar_page",
+      "rect": [
+        218.0,
+        867.0,
+        232.0,
+        48.0
+      ],
+      "clip": [
+        210.0,
+        651.0,
+        248.0,
+        117.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.item[5]",
+      "layer": "sidebar_page",
+      "rect": [
+        218.0,
+        919.0,
+        232.0,
+        48.0
+      ],
+      "clip": [
+        210.0,
+        651.0,
+        248.0,
+        117.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.item[6]",
+      "layer": "sidebar_page",
+      "rect": [
+        218.0,
+        971.0,
+        232.0,
+        48.0
+      ],
+      "clip": [
+        210.0,
+        651.0,
+        248.0,
+        117.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.item[7]",
+      "layer": "sidebar_page",
+      "rect": [
+        218.0,
+        1023.0,
+        232.0,
+        48.0
+      ],
+      "clip": [
+        210.0,
+        651.0,
+        248.0,
+        117.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.search",
+      "layer": "sidebar_page",
+      "rect": [
+        218.0,
+        1088.0,
+        232.0,
+        44.0
+      ],
+      "clip": [
+        32.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.scene.search.action",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        1092.0,
+        32.0,
+        36.0
+      ],
+      "clip": [
+        32.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design",
+      "layer": "sidebar_page",
+      "rect": [
+        822.0,
+        255.0,
+        248.0,
+        1106.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.share",
+      "layer": "sidebar_page",
+      "rect": [
+        969.0,
+        263.0,
+        93.0,
+        40.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.tabs",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        320.0,
+        224.0,
+        44.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.tabs[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        838.0,
+        324.0,
+        108.0,
+        36.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.tabs[1]",
+      "layer": "sidebar_page",
+      "rect": [
+        946.0,
+        324.0,
+        108.0,
+        36.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[0].switch",
+      "layer": "sidebar_page",
+      "rect": [
+        1014.0,
+        389.0,
+        44.0,
+        24.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[1].select[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        485.0,
+        186.66667,
+        44.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[1].width",
+      "layer": "sidebar_page",
+      "rect": [
+        858.0,
+        537.0,
+        74.0,
+        44.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[1].height",
+      "layer": "sidebar_page",
+      "rect": [
+        960.0,
+        537.0,
+        74.0,
+        44.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[2].tile[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        649.0,
+        108.0,
+        108.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[2].tile[1]",
+      "layer": "sidebar_page",
+      "rect": [
+        950.0,
+        649.0,
+        108.0,
+        108.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[2].tile[2]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        765.0,
+        108.0,
+        108.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[2].tile[3]",
+      "layer": "sidebar_page",
+      "rect": [
+        950.0,
+        765.0,
+        108.0,
+        108.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[3].tile[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        941.0,
+        108.0,
+        108.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[3].tile[1]",
+      "layer": "sidebar_page",
+      "rect": [
+        950.0,
+        941.0,
+        108.0,
+        108.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[4].color",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        1117.0,
+        224.0,
+        44.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[4].color.hex",
+      "layer": "sidebar_page",
+      "rect": [
+        885.0,
+        1127.0,
+        101.0,
+        24.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[4].color.alpha",
+      "layer": "sidebar_page",
+      "rect": [
+        998.5,
+        1127.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[5].tabs",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        1229.0,
+        224.0,
+        44.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[5].tabs[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        838.0,
+        1233.0,
+        108.0,
+        36.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.design.block[5].tabs[1]",
+      "layer": "sidebar_page",
+      "rect": [
+        946.0,
+        1233.0,
+        108.0,
+        36.0
+      ],
+      "clip": [
+        644.0,
+        199.0,
+        604.0,
+        569.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home",
+      "layer": "sidebar_page",
+      "rect": [
+        210.0,
+        1815.0,
+        248.0,
+        492.0
+      ],
+      "clip": [
+        32.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.logo",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        1827.0,
+        92.0,
+        40.0
+      ],
+      "clip": [
+        32.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.row[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        1879.0,
+        224.0,
+        40.0
+      ],
+      "clip": [
+        210.0,
+        1879.0,
+        248.0,
+        -1111.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.row[0].panel",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        1921.0,
+        224.0,
+        64.0
+      ],
+      "clip": [
+        222.0,
+        1919.0,
+        224.0,
+        -1151.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.row[0].links[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        1921.0,
+        224.0,
+        32.0
+      ],
+      "clip": [
+        222.0,
+        1919.0,
+        224.0,
+        -1151.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.row[0].links[1]",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        1953.0,
+        224.0,
+        32.0
+      ],
+      "clip": [
+        222.0,
+        1919.0,
+        224.0,
+        -1151.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.row[1]",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        1989.0,
+        224.0,
+        40.0
+      ],
+      "clip": [
+        210.0,
+        1879.0,
+        248.0,
+        -1111.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.row[2]",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        2033.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        210.0,
+        1879.0,
+        248.0,
+        -1111.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.scenes",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        2121.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        210.0,
+        1879.0,
+        248.0,
+        -1111.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.new",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        2171.0,
+        224.0,
+        40.0
+      ],
+      "clip": [
+        210.0,
+        1879.0,
+        248.0,
+        -1111.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.folder[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        2213.0,
+        224.0,
+        40.0
+      ],
+      "clip": [
+        210.0,
+        1879.0,
+        248.0,
+        -1111.0
+      ]
+    },
+    {
+      "id": "sidebar_page.home.folder[1]",
+      "layer": "sidebar_page",
+      "rect": [
+        222.0,
+        2255.0,
+        224.0,
+        40.0
+      ],
+      "clip": [
+        210.0,
+        1879.0,
+        248.0,
+        -1111.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline.logo",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        1559.0,
+        92.0,
+        40.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline",
+      "layer": "sidebar_page",
+      "rect": [
+        822.0,
+        1547.0,
+        248.0,
+        1028.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[0]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        1645.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[1]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        1697.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[2]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        1749.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[3]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        1801.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[4]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        1853.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[5]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        1943.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[6]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        1995.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[7]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        2047.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[8]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        2099.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[9]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        2151.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[10]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        2203.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[11]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        2255.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[12]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        2307.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[13]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        2359.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[14]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        2411.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[15]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        2463.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    },
+    {
+      "id": "sidebar_page.guideline[16]",
+      "layer": "sidebar_page",
+      "rect": [
+        834.0,
+        2515.0,
+        224.0,
+        48.0
+      ],
+      "clip": [
+        644.0,
+        1491.0,
+        604.0,
+        -723.0
+      ]
+    }
+  ]
 }

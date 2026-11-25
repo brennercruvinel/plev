@@ -6,6 +6,12 @@
       "label": "Tabs"
     },
     {
+      "id": "tabs_page.group[0]",
+      "role": "group",
+      "label": "Tabs",
+      "parent": "tabs_page"
+    },
+    {
       "id": "tabs_page.tabs[0]",
       "role": "tab",
       "label": "Account",
@@ -54,11 +60,177 @@
       "id": "tabs_page.tabs",
       "role": "tab_list",
       "label": "sections",
-      "parent": "tabs_page",
+      "description": "Default, Hover, Press, Focus",
+      "parent": "tabs_page.group[0]",
       "state": {
         "selected": {
           "kind": "text",
           "value": "0"
+        }
+      }
+    },
+    {
+      "id": "tabs_page.strip[0-1][0]",
+      "role": "tab",
+      "label": "Preview",
+      "parent": "tabs_page.strip[0-1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.strip[0-1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.strip[0-1][1]",
+      "role": "tab",
+      "label": "Code",
+      "parent": "tabs_page.strip[0-1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.strip[0-1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.strip[0-1]",
+      "role": "tab_list",
+      "label": "view",
+      "description": "Two tabs",
+      "parent": "tabs_page.group[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "1"
+        }
+      }
+    },
+    {
+      "id": "tabs_page.group[1]",
+      "role": "group",
+      "label": "Long content",
+      "parent": "tabs_page"
+    },
+    {
+      "id": "tabs_page.strip[1-0][0]",
+      "role": "tab",
+      "label": "Everything",
+      "parent": "tabs_page.strip[1-0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.strip[1-0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.strip[1-0][1]",
+      "role": "tab",
+      "label": "Only the active ones",
+      "parent": "tabs_page.strip[1-0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.strip[1-0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.strip[1-0][2]",
+      "role": "tab",
+      "label": "Completed and archived",
+      "parent": "tabs_page.strip[1-0]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.strip[1-0]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.strip[1-0]",
+      "role": "tab_list",
+      "label": "show",
+      "description": "Long labels",
+      "parent": "tabs_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "0"
+        }
+      }
+    },
+    {
+      "id": "tabs_page.strip[1-1][0]",
+      "role": "tab",
+      "label": "Konto",
+      "parent": "tabs_page.strip[1-1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.strip[1-1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.strip[1-1][1]",
+      "role": "tab",
+      "label": "Darstellung",
+      "parent": "tabs_page.strip[1-1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.strip[1-1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.strip[1-1][2]",
+      "role": "tab",
+      "label": "Über",
+      "parent": "tabs_page.strip[1-1]",
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "tabs_page.strip[1-1]:selected"
+          ]
+        }
+      ],
+      "focusable": true
+    },
+    {
+      "id": "tabs_page.strip[1-1]",
+      "role": "tab_list",
+      "label": "Bereiche",
+      "description": "Translated labels",
+      "parent": "tabs_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "1"
         }
       }
     }

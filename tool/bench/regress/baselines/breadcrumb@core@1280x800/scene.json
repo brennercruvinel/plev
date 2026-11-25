@@ -11,20 +11,20 @@
     "settled": true
   },
   "semantics": {
-    "revision": "a0a1dd29ac4a13d0",
-    "nodes": 7
+    "revision": "59ae8ac77b09659f",
+    "nodes": 26
   },
   "layers": [
     {
       "name": "breadcrumb_page",
       "z": 0,
-      "hash": "d6bde8e1a47aa959",
-      "nodes": 13,
+      "hash": "93f8a1cc43afe419",
+      "nodes": 48,
       "bounds": [
-        283.0,
-        49.0,
-        297.86816,
-        106.649994
+        0.0,
+        24.0,
+        1280.0,
+        728.0
       ]
     },
     {
@@ -37,14 +37,16 @@
     {
       "name": "z1000",
       "z": 1000,
-      "hash": "0c2af62fdfe42342",
-      "nodes": 48,
-      "bounds": [
-        0.0,
-        0.0,
-        248.0,
-        800.0
-      ]
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
     },
     {
       "name": "z1200",
@@ -59,96 +61,304 @@
       "id": "breadcrumb_page.trail",
       "layer": "breadcrumb_page",
       "rect": [
-        288.0,
-        134.2,
-        360.0,
-        18.199999
+        193.0,
+        310.0,
+        298.21704,
+        24.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
       "id": "breadcrumb_page.trail[0]",
       "layer": "breadcrumb_page",
       "rect": [
-        288.0,
-        134.2,
-        36.6275,
-        18.199999
+        193.0,
+        310.0,
+        49.194298,
+        24.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
       "id": "breadcrumb_page.trail[1]",
       "layer": "breadcrumb_page",
       "rect": [
-        348.6275,
-        134.2,
-        40.131157,
-        18.199999
+        262.1943,
+        310.0,
+        61.581955,
+        24.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
       "id": "breadcrumb_page.trail[2]",
       "layer": "breadcrumb_page",
       "rect": [
-        412.75867,
-        134.2,
-        18.186796,
-        18.199999
+        343.77625,
+        310.0,
+        39.584923,
+        24.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
       "id": "breadcrumb_page.trail[3]",
       "layer": "breadcrumb_page",
       "rect": [
-        454.94547,
-        134.2,
-        44.721016,
-        18.199999
+        403.36118,
+        310.0,
+        87.85587,
+        24.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     },
     {
-      "id": "breadcrumb_page.trail[4]",
+      "id": "breadcrumb_page.single",
       "layer": "breadcrumb_page",
       "rect": [
-        523.6665,
-        134.2,
-        43.72469,
-        18.199999
+        913.0,
+        310.0,
+        49.194298,
+        24.0
       ],
       "clip": [
-        248.0,
-        134.2,
-        1032.0,
-        625.8
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.single[0]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        913.0,
+        310.0,
+        49.194298,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.folded",
+      "layer": "breadcrumb_page",
+      "rect": [
+        56.0,
+        648.0,
+        572.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.folded[0]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        56.0,
+        648.0,
+        79.7404,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.folded[5]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        202.97305,
+        648.0,
+        33.36203,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.folded[6]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        256.33508,
+        648.0,
+        48.56172,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.folded[7]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        324.8968,
+        648.0,
+        86.0043,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.folded[8]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        430.9011,
+        648.0,
+        84.574615,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.folded[9]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        535.4757,
+        648.0,
+        57.7968,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.translated",
+      "layer": "breadcrumb_page",
+      "rect": [
+        681.0,
+        648.0,
+        513.119,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.translated[0]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        681.0,
+        648.0,
+        45.80219,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.translated[1]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        746.8022,
+        648.0,
+        98.6261,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.translated[2]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        865.4283,
+        648.0,
+        153.69485,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "breadcrumb_page.translated[3]",
+      "layer": "breadcrumb_page",
+      "rect": [
+        1039.1232,
+        648.0,
+        154.99586,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
       ]
     }
   ]

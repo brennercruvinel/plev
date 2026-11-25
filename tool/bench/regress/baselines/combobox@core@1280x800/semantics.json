@@ -1,30 +1,40 @@
 {
   "nodes": [
     {
-      "id": "select_page",
+      "id": "combobox_page",
       "role": "region",
       "label": "Combobox"
     },
     {
-      "id": "select_page.select",
+      "id": "combobox_page.group[0]",
+      "role": "group",
+      "label": "Combobox",
+      "parent": "combobox_page"
+    },
+    {
+      "id": "combobox_page.group[0].card[0]",
       "role": "select",
-      "label": "appearance",
-      "parent": "select_page",
+      "label": "Select framework...",
+      "parent": "combobox_page.group[0]",
       "state": {
         "selected": {
           "kind": "text",
-          "value": "System default"
+          "value": ""
         },
         "expanded": {
           "kind": "bool",
           "value": false
+        },
+        "query": {
+          "kind": "text",
+          "value": ""
         }
       },
       "actions": [
         {
           "name": "select",
           "reads": [
-            "select_page.select:selected"
+            "combobox_page.group[0].card[0]:selected"
           ],
           "param": {
             "kind": "text",
@@ -34,26 +44,337 @@
         {
           "name": "open",
           "reads": [
-            "select_page.select:expanded"
+            "combobox_page.group[0].card[0]:expanded"
           ]
         },
         {
           "name": "close",
           "reads": [
-            "select_page.select:expanded"
+            "combobox_page.group[0].card[0]:expanded"
           ]
         }
       ],
       "constraints": {
         "editable": true,
         "options": [
-          "System default",
-          "Always dark",
-          "Always light",
-          "Scheduled"
+          "Next.js",
+          "SvelteKit",
+          "Nuxt",
+          "Remix",
+          "Astro",
+          "Leptos"
         ]
       },
       "focusable": true
+    },
+    {
+      "id": "combobox_page.group[0].card[1]",
+      "role": "select",
+      "label": "Select framework...",
+      "parent": "combobox_page.group[0]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Remix"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        },
+        "query": {
+          "kind": "text",
+          "value": "Remix"
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "combobox_page.group[0].card[1]:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "combobox_page.group[0].card[1]:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "combobox_page.group[0].card[1]:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Next.js",
+          "SvelteKit",
+          "Nuxt",
+          "Remix",
+          "Astro",
+          "Leptos"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "combobox_page.group[1]",
+      "role": "group",
+      "label": "Disabled",
+      "parent": "combobox_page"
+    },
+    {
+      "id": "combobox_page.group[1].card[0]",
+      "role": "select",
+      "label": "Select framework...",
+      "parent": "combobox_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": ""
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        },
+        "query": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "combobox_page.group[1].card[0]:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "combobox_page.group[1].card[0]:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "combobox_page.group[1].card[0]:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Next.js",
+          "SvelteKit",
+          "Nuxt",
+          "Remix",
+          "Astro",
+          "Leptos"
+        ]
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "combobox_page.group[1].card[1]",
+      "role": "select",
+      "label": "Select framework...",
+      "parent": "combobox_page.group[1]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "SvelteKit"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        },
+        "query": {
+          "kind": "text",
+          "value": "SvelteKit"
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "combobox_page.group[1].card[1]:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "combobox_page.group[1].card[1]:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "combobox_page.group[1].card[1]:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Next.js",
+          "SvelteKit",
+          "Nuxt",
+          "Remix",
+          "Astro",
+          "Leptos"
+        ]
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "combobox_page.group[2]",
+      "role": "group",
+      "label": "Content",
+      "parent": "combobox_page"
+    },
+    {
+      "id": "combobox_page.group[2].card[0]",
+      "role": "select",
+      "label": "Select city...",
+      "parent": "combobox_page.group[2]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": ""
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        },
+        "query": {
+          "kind": "text",
+          "value": ""
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "combobox_page.group[2].card[0]:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "combobox_page.group[2].card[0]:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "combobox_page.group[2].card[0]:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Lisbon",
+          "Madrid",
+          "Paris",
+          "Berlin",
+          "Vienna",
+          "Prague",
+          "Warsaw",
+          "Budapest",
+          "Athens",
+          "Rome",
+          "Oslo",
+          "Helsinki"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "combobox_page.group[2].card[1]",
+      "role": "select",
+      "label": "Select department...",
+      "parent": "combobox_page.group[2]",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Department of Molecular and Cellular Biology"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        },
+        "query": {
+          "kind": "text",
+          "value": "Department of Molecular and Cellular Biology"
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "combobox_page.group[2].card[1]:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "combobox_page.group[2].card[1]:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "combobox_page.group[2].card[1]:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Department of Molecular and Cellular Biology",
+          "Institute of Neuroscience"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "combobox_page.group[3]",
+      "role": "group",
+      "label": "Search",
+      "parent": "combobox_page"
+    },
+    {
+      "id": "combobox_page.group[3].card[0]",
+      "role": "status",
+      "label": "No framework matches.",
+      "description": "Elm",
+      "parent": "combobox_page.group[3]"
     }
   ]
 }

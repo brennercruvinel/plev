@@ -54,6 +54,349 @@
         ]
       },
       "focusable": true
+    },
+    {
+      "id": "select_page.ghost",
+      "role": "select",
+      "label": "ghost",
+      "parent": "select_page",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Value"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "select_page.ghost:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "select_page.ghost:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "select_page.ghost:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Value",
+          "Value 2",
+          "Value 3"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "select_page.properties",
+      "role": "select",
+      "label": "properties",
+      "parent": "select_page",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Value"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "select_page.properties:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "select_page.properties:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "select_page.properties:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Value",
+          "Value 2",
+          "Value 3"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "select_page.simple",
+      "role": "select",
+      "label": "simple",
+      "parent": "select_page",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Value"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "select_page.simple:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "select_page.simple:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "select_page.simple:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Value",
+          "Value 2",
+          "Value 3"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "select_page.small",
+      "role": "select",
+      "label": "small",
+      "parent": "select_page",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Value"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "select_page.small:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "select_page.small:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "select_page.small:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Value",
+          "Value 2",
+          "Value 3"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "select_page.minimal",
+      "role": "select",
+      "label": "minimal",
+      "parent": "select_page",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Value"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "select_page.minimal:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "select_page.minimal:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "select_page.minimal:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Value",
+          "Value 2",
+          "Value 3"
+        ]
+      },
+      "focusable": true
+    },
+    {
+      "id": "select_page.disabled",
+      "role": "select",
+      "label": "disabled",
+      "parent": "select_page",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Value"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "select_page.disabled:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "select_page.disabled:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "select_page.disabled:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Value",
+          "Value 2",
+          "Value 3"
+        ]
+      },
+      "enabled": false,
+      "focusable": true
+    },
+    {
+      "id": "select_page.long",
+      "role": "select",
+      "label": "long",
+      "parent": "select_page",
+      "state": {
+        "selected": {
+          "kind": "text",
+          "value": "Department of Molecular and Cellular Biology"
+        },
+        "expanded": {
+          "kind": "bool",
+          "value": false
+        }
+      },
+      "actions": [
+        {
+          "name": "select",
+          "reads": [
+            "select_page.long:selected"
+          ],
+          "param": {
+            "kind": "text",
+            "constrained": true
+          }
+        },
+        {
+          "name": "open",
+          "reads": [
+            "select_page.long:expanded"
+          ]
+        },
+        {
+          "name": "close",
+          "reads": [
+            "select_page.long:expanded"
+          ]
+        }
+      ],
+      "constraints": {
+        "editable": true,
+        "options": [
+          "Department of Molecular and Cellular Biology",
+          "Institute of Neuroscience"
+        ]
+      },
+      "focusable": true
     }
   ]
 }

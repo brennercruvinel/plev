@@ -1,0 +1,1085 @@
+{
+  "format": "regress.baseline.v1",
+  "hash": "regress.layer.v1",
+  "page": "Modals",
+  "theme": "core",
+  "width": 1280.0,
+  "height": 800.0,
+  "scale": 1.0,
+  "settle": {
+    "steps": 2,
+    "settled": true
+  },
+  "semantics": {
+    "revision": "6e7b5e7defb914ea",
+    "nodes": 87
+  },
+  "layers": [
+    {
+      "name": "modals_page",
+      "z": 0,
+      "hash": "4bdf192bf81e53ad",
+      "nodes": 378,
+      "bounds": [
+        0.0,
+        24.0,
+        1280.0,
+        728.0
+      ]
+    },
+    {
+      "name": "z10",
+      "z": 10,
+      "hash": "c853f02ec00cb9d8",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1000",
+      "z": 1000,
+      "hash": "d76c501533bcc4a3",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1100",
+      "z": 1100,
+      "hash": "25857fc492380fc2",
+      "nodes": 0,
+      "bounds": null
+    },
+    {
+      "name": "z1200",
+      "z": 1200,
+      "hash": "ef5874151115e51e",
+      "nodes": 0,
+      "bounds": null
+    }
+  ],
+  "bindings": [
+    {
+      "id": "modals_page.group[0].card[0].close",
+      "layer": "modals_page",
+      "rect": [
+        704.0,
+        274.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[0].card[0].tile[0]",
+      "layer": "modals_page",
+      "rect": [
+        552.0,
+        310.0,
+        84.0,
+        84.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[0].card[0].tile[1]",
+      "layer": "modals_page",
+      "rect": [
+        644.0,
+        310.0,
+        84.0,
+        84.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[0].card[0].tile[2]",
+      "layer": "modals_page",
+      "rect": [
+        552.0,
+        402.0,
+        84.0,
+        84.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[0].card[0].tile[3]",
+      "layer": "modals_page",
+      "rect": [
+        644.0,
+        402.0,
+        84.0,
+        84.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[1].card[0].social[0]",
+      "layer": "modals_page",
+      "rect": [
+        168.0,
+        1176.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[1].card[0].social[1]",
+      "layer": "modals_page",
+      "rect": [
+        216.0,
+        1176.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[1].card[0].social[2]",
+      "layer": "modals_page",
+      "rect": [
+        264.0,
+        1176.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[1].card[0].copy",
+      "layer": "modals_page",
+      "rect": [
+        312.0,
+        1176.0,
+        204.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[1].card[1].social[0]",
+      "layer": "modals_page",
+      "rect": [
+        811.5,
+        1072.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[1].card[1].social[1]",
+      "layer": "modals_page",
+      "rect": [
+        859.5,
+        1072.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[1].card[1].social[2]",
+      "layer": "modals_page",
+      "rect": [
+        907.5,
+        1072.0,
+        40.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[1].card[1].copy",
+      "layer": "modals_page",
+      "rect": [
+        955.5,
+        1072.0,
+        109.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[2].card[0].invite",
+      "layer": "modals_page",
+      "rect": [
+        446.0,
+        1442.0,
+        298.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[2].card[0].invite.choice",
+      "layer": "modals_page",
+      "rect": [
+        638.0,
+        1446.0,
+        102.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[2].card[0].send",
+      "layer": "modals_page",
+      "rect": [
+        750.0,
+        1442.0,
+        84.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[0].access",
+      "layer": "modals_page",
+      "rect": [
+        734.0,
+        1708.0,
+        92.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[0].remove",
+      "layer": "modals_page",
+      "rect": [
+        826.0,
+        1698.0,
+        24.0,
+        52.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[1].access",
+      "layer": "modals_page",
+      "rect": [
+        734.0,
+        1760.0,
+        92.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[2].card[0].person[1].remove",
+      "layer": "modals_page",
+      "rect": [
+        826.0,
+        1750.0,
+        24.0,
+        52.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[2].card[0].copy",
+      "layer": "modals_page",
+      "rect": [
+        714.0,
+        1881.0,
+        120.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[0]",
+      "layer": "modals_page",
+      "rect": [
+        158.0,
+        2119.0,
+        368.0,
+        606.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[0].close",
+      "layer": "modals_page",
+      "rect": [
+        174.0,
+        2135.0,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[0].comments[0]",
+      "layer": "modals_page",
+      "rect": [
+        162.0,
+        2473.0,
+        360.0,
+        140.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[0].comments[0].reaction",
+      "layer": "modals_page",
+      "rect": [
+        222.0,
+        2573.0,
+        48.0,
+        28.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[0].reply",
+      "layer": "modals_page",
+      "rect": [
+        222.0,
+        2635.0,
+        288.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[0].tools[0]",
+      "layer": "modals_page",
+      "rect": [
+        174.0,
+        2673.0,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[0].tools[1]",
+      "layer": "modals_page",
+      "rect": [
+        214.0,
+        2673.0,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[0].tools[2]",
+      "layer": "modals_page",
+      "rect": [
+        254.0,
+        2673.0,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[0].tools[3]",
+      "layer": "modals_page",
+      "rect": [
+        294.0,
+        2673.0,
+        36.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[0].send",
+      "layer": "modals_page",
+      "rect": [
+        441.0,
+        2673.0,
+        69.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[1]",
+      "layer": "modals_page",
+      "rect": [
+        780.0,
+        2296.0,
+        316.0,
+        401.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[1][cancel]",
+      "layer": "modals_page",
+      "rect": [
+        804.0,
+        2581.0,
+        268.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[3].card[1][confirm]",
+      "layer": "modals_page",
+      "rect": [
+        804.0,
+        2633.0,
+        268.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].section[0]",
+      "layer": "modals_page",
+      "rect": [
+        373.0,
+        2919.0,
+        136.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].section[1]",
+      "layer": "modals_page",
+      "rect": [
+        373.0,
+        2963.0,
+        136.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].section[2]",
+      "layer": "modals_page",
+      "rect": [
+        373.0,
+        3007.0,
+        136.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].preview",
+      "layer": "modals_page",
+      "rect": [
+        479.0,
+        3131.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.size[0]",
+      "layer": "modals_page",
+      "rect": [
+        534.0,
+        2971.0,
+        80.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.color[0]",
+      "layer": "modals_page",
+      "rect": [
+        620.0,
+        2971.0,
+        112.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[0]",
+      "layer": "modals_page",
+      "rect": [
+        738.0,
+        2967.0,
+        127.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[0][0]",
+      "layer": "modals_page",
+      "rect": [
+        742.0,
+        2971.0,
+        59.5,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[0][1]",
+      "layer": "modals_page",
+      "rect": [
+        801.5,
+        2971.0,
+        59.5,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.remove[0]",
+      "layer": "modals_page",
+      "rect": [
+        875.0,
+        2975.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.size[1]",
+      "layer": "modals_page",
+      "rect": [
+        534.0,
+        3017.0,
+        80.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.color[1]",
+      "layer": "modals_page",
+      "rect": [
+        620.0,
+        3017.0,
+        112.0,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[1]",
+      "layer": "modals_page",
+      "rect": [
+        738.0,
+        3013.0,
+        127.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[1][0]",
+      "layer": "modals_page",
+      "rect": [
+        742.0,
+        3017.0,
+        59.5,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.format[1][1]",
+      "layer": "modals_page",
+      "rect": [
+        801.5,
+        3017.0,
+        59.5,
+        32.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.remove[1]",
+      "layer": "modals_page",
+      "rect": [
+        875.0,
+        3021.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.add",
+      "layer": "modals_page",
+      "rect": [
+        875.0,
+        2927.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.compression",
+      "layer": "modals_page",
+      "rect": [
+        534.0,
+        3110.0,
+        287.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[4].card[0].images.export",
+      "layer": "modals_page",
+      "rect": [
+        534.0,
+        3173.0,
+        365.0,
+        40.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].section[0]",
+      "layer": "modals_page",
+      "rect": [
+        355.0,
+        3427.0,
+        156.0,
+        38.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].section[1]",
+      "layer": "modals_page",
+      "rect": [
+        355.0,
+        3467.0,
+        156.0,
+        38.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].section[2]",
+      "layer": "modals_page",
+      "rect": [
+        355.0,
+        3507.0,
+        156.0,
+        38.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].section[3]",
+      "layer": "modals_page",
+      "rect": [
+        355.0,
+        3547.0,
+        156.0,
+        38.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].section[4]",
+      "layer": "modals_page",
+      "rect": [
+        355.0,
+        3587.0,
+        156.0,
+        38.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.username.edit",
+      "layer": "modals_page",
+      "rect": [
+        889.0,
+        3491.0,
+        24.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.username",
+      "layer": "modals_page",
+      "rect": [
+        852.0,
+        3491.0,
+        61.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.auto_prompt",
+      "layer": "modals_page",
+      "rect": [
+        873.0,
+        3603.0,
+        40.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.auto_play",
+      "layer": "modals_page",
+      "rect": [
+        873.0,
+        3659.0,
+        40.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.publish",
+      "layer": "modals_page",
+      "rect": [
+        873.0,
+        3715.0,
+        40.0,
+        24.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    },
+    {
+      "id": "modals_page.group[5].card[0].general.language",
+      "layer": "modals_page",
+      "rect": [
+        785.0,
+        3771.0,
+        128.0,
+        36.0
+      ],
+      "clip": [
+        0.0,
+        129.0,
+        1280.0,
+        623.0
+      ]
+    }
+  ]
+}
