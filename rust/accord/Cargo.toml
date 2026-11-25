@@ -9,6 +9,11 @@ rust-version.workspace = true
 license.workspace = true
 publish = false
 description = "Semantic contract of plev: persistent logical identity, meaning, state, actions and constraints of every control, as pure data"
+# the integration tests are one executable, tests/suite.rs, a module per file
+# (task-106): cargo links every file under tests/ as an executable of its
+# own, each with the whole crate inside. a target listed apart at the end of
+# this file is one that needs a process to itself.
+autotests = false
 
 [features]
 default = ["serde"]
@@ -28,3 +33,7 @@ serde_json.workspace = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "suite"
+path = "tests/suite.rs"
