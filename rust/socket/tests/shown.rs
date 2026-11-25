@@ -3,7 +3,7 @@
 //! `todo.clear` reads the counter's `done`, state of another node, as the
 //! ide's `commit.submit` reads `changes:staged`.
 
-mod support;
+use crate::support;
 
 use accord::{Actor, Change, Rejection, RequestId, Revision, Stage, StateRef, Value};
 use socket::{

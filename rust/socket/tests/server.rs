@@ -2,7 +2,7 @@
 //! agent sees, what it may do, and that its action takes the path a
 //! person's click takes.
 
-mod support;
+use crate::support;
 
 use accord::redactor::REDACTED;
 use accord::{
