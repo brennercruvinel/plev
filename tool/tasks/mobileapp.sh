@@ -36,15 +36,15 @@ android() {
     CARGO_PROFILE_FLAG="--release"
     [ "$PROFILE" = "debug" ] && CARGO_PROFILE_FLAG=""
 
+    # the crate type is asked for here, not in the manifest: uigallery is a
+    # plain rlib for the desktop, and cargo-ndk copies the cdylib it is told
+    # about. libuigallery.so statically links engine; GameActivity loads only
+    # "uigallery".
     echo ">> building uigallery cdylib via cargo-ndk (arm64-v8a, x86_64, $PROFILE)"
     ( cd "$REPO_ROOT" && cargo ndk \
         -t arm64-v8a -t x86_64 \
         -o "$JNILIBS" \
-        build -p uigallery --lib $CARGO_PROFILE_FLAG )
-
-    # cargo-ndk also emits engine's own cdylib (libengine.so); it is dead weight —
-    # libuigallery.so statically links engine and GameActivity loads only "uigallery".
-    find "$JNILIBS" -name 'libengine.so' -delete
+        rustc -p uigallery --lib $CARGO_PROFILE_FLAG --crate-type cdylib )
 
     echo ">> jniLibs:"; find "$JNILIBS" -name 'libuigallery.so' -exec ls -la {} \;
 
@@ -68,7 +68,7 @@ ios() {
     fi
 
     echo ">> building Rust staticlib ($TRIPLE, $PROFILE)"
-    ( cd "$REPO_ROOT" && cargo build -p uigallery --lib --target "$TRIPLE" $CARGO_PROFILE_FLAG )
+    ( cd "$REPO_ROOT" && cargo rustc -p uigallery --lib --target "$TRIPLE" $CARGO_PROFILE_FLAG --crate-type staticlib )
 
     LIBDIR="$REPO_ROOT/target/$TRIPLE/$PROFILE"
     echo ">> staticlib: $LIBDIR/libuigallery.a"

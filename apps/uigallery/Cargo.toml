@@ -10,11 +10,12 @@ publish = false
 default-run = "uigallery"
 description = "plev design system gallery — every widget, every state, every theme"
 
-# lib: rlib for the desktop/web bin; cdylib is the android `.so` (GameActivity
-# loads it and calls `android_main`); staticlib is the iOS `.a` linked by the
-# Xcode app (which calls `uigallery_ios_main`).
-[lib]
-crate-type = ["lib", "cdylib", "staticlib"]
+# lib: a plain rlib for the desktop/web bin. the mobile builds ask for their
+# crate type on the command line (tool/tasks/mobileapp.sh, `cargo rustc
+# --crate-type`): cdylib is the android `.so` (GameActivity loads it and calls
+# `android_main`), staticlib is the iOS `.a` linked by the Xcode app (which
+# calls `uigallery_ios_main`). listed here, both were linked on every desktop
+# build, a 327 MB archive nobody read (task-106).
 
 [[bin]]
 name = "uigallery"
