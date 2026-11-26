@@ -1,37 +1,30 @@
-#  plev: agents, devs and designers playing on the same canvas.
+#  plev - real time UI rendering
 
-O PLEV é um motor em Rust voltado a UI generativa e acessível, com um compositor GPU-first e um padrão semântico compartilhado entre pessoas e agentes.
+Devs, agents, and designers playing on the same canvas.
 
-Uma engine de compositing GPU-first em Rust. Um único código desenha o
+Like or not, acredito que interfaces estáticas estão com os dias contados por causa dos llms, estamos atravesando (again) uma mudança brusca na maneira como construimos interfaces para humanos, tenho chamado esse novo ciclo de real time UI rendering.
+
+O PLEV é uma engine de compositing GPU-first voltado a UI generativa cross devices priorizando perfomance e controle de memória. Um único código renderiza o
 mesmo frame no macOS (Metal), no Linux (Vulkan), no navegador (WebGPU), no
-iOS (Metal) e no Android (Vulkan). A gallery foi capturada no navegador e
-no simulador do iOS e comparada com o desktop byte a byte. No navegador, 79 das 82 páginas
-são idênticas; as outras três mostram conteúdo diferente de propósito,
-porque o navegador não tem Claude nem git.
+iOS (Metal) e no Android (Vulkan).
 
-Comecei isso há uns seis anos, bem antes dos LLMs, quando decidi aprender
-Rust do jeito honesto: construindo algo real. O algo real era um app
-educativo para a minha filha, cem por cento em Rust, e ele precisava de uma
-engine que não existia. O plev é a engine por baixo desse sonho. 
 
-A scene é reconstruída a cada frame, o compositor redesenha só as layers que
-mudaram, e tudo termina numa surface sRGB. Há glass, backdrop blur, analytic
-shadows e layout que acompanha o conteúdo. O texto passa por shaping de
-verdade, é rasterizado na escala da tela e cobre os scripts latino, árabe,
-hebraico, devanágari, chinês, japonês e coreano, além de color emoji, com
-carets bidi, input methods e um editor que abre um milhão de linhas em cerca
-de 20 ms numa build de release. Quando nada muda, nada é desenhado: um campo
-com foco e sem toque custa dois frames por segundo para o caret, e um app
-idle não custa nenhum. Os apps consomem a engine e nada passa por fora dela.
+# Short story
+Comecei esse projeto há uns seis anos, com intuito de ensinar rust para meus filhos, desde que os LLMs começaram a fazer o meu trabalho, tenho tratado essa engine como meu laboratório de aprendizado e experimentos de gui e gpu. 
 
-Cada controle que um app desenha também é dado: um id, um role, seu estado e
-suas actions. Um screen reader, um agente fora do processo e uma sessão
-gravada leem esse mesmo contrato. Um agente age pelo mesmo dispatcher que um
-clique, e só sobre o estado que lhe foi mostrado; agir sobre algo que mudou
-desde então é recusado, com o nome de quem mudou. Uma tela pode ser gerada a
-partir de um intent, como uma IR verificada, e uma sessão gravada abre no
-inspector ou roda de novo como teste.
-
+** Atualmente estou lapidando o que estou nomeando temporariamente como `.monster`., ** Um codec binário próprio de animação inspirado no falecido flash e action script (btw, nunca superei a morte do SWF, fuck you, apple), estou aplicando conceitualmente a mesma ideia do H.264 aplicada a vetores: keyframes são snapshots completos
+da cena (seek em O(1)), interframes são segmentos por propriedade (valor,
+easing em 1 byte, duração) que o player interpola, independentes de fps e
+scrubáveis. A cena é um mapa plano `depth → node` com bit de presença por
+campo, então o que não mudou custa zero bytes. Valores quantizados no
+arquivo (twips, rgba8, u16 fixo), f32 na memória; seções com sha256;
+decoder estrito pra evitar não bugar com panic. O encoder tem dois modos: lower
+de uma timeline autoral, ou descoberta de deltas a partir de frames
+amostrados, sem ninguém declarar nada. É esse segundo modo que permite ao
+`record` gravar uma sessão de uso como dado, nunca como vídeo: a trilha
+visual e a trilha semântica (quem visualizou, quem interagiu, quem codoi, sobre qual estado, com
+que resultado) no mesmo arquivo. Um bug reproduzido vira um `.monster`, e o
+`.monster` vira um teste no gate. Contrui uma engine de converte o lottie para o formato (very experimental).
 
 O plev não compete com o [Flutter](https://flutter.dev), o
 [egui](https://github.com/emilk/egui), o [Dioxus](https://dioxuslabs.com) ou
@@ -44,65 +37,22 @@ mais alto nível que vi nos últimos anos, e o [Bevy](https://bevyengine.org)
 me ensinou como um projeto em Rust pode ser ambicioso e acolhedor ao mesmo
 tempo. O plev deve a eles boa parte do que há de bom aqui.
 
-Ela já serve além do sonho original: o
-[urna](https://github.com/hoffresearch/urna), um vector database embarcado e
-soberano, entrega seu explorer (`apps/urnadbapp`) sobre o plev. E o app
-infantil que começou tudo isso continua sendo a próxima coisa a construir.
 
-Se algo disso fizer sentido para você, venha construir comigo.
 
-## O que há dentro
-
-**A engine.** Compositor por layers com hash de sujeira, texto com
-cosmic-text num atlas de glifos na escala física da tela, layout com taffy,
-paths com lyon, tudo numa surface sRGB. Um design system inteiro
-(`engine::widgets`) mora dentro dela: botões, formulários, navegação,
-tabelas, overlays, charts, grafos e um editor de texto em rope que abre um
-milhão de linhas em cerca de 20 ms. A gallery de 82 páginas é a prova de
-regressão: 1312 frames (82 páginas, 4 temas, 4 escalas) iguais bit a bit
-entre execuções, e o desktop é a referência contra a qual web, iOS e Android
-são comparados pixel a pixel.
-
-**O contrato semântico.** Cada controle desenhado também é um registro
-(`accord`): id, role, estado, ações e as precondições de cada ação. Esse
-registro é o que o AccessKit projeta para o leitor de tela, o que um agente
-observa e opera pelo socket local, e o que uma sessão gravada guarda. Uma
-tela pode nascer de uma intenção como IR (`plevir`), verificada antes de
-existir contra as capabilities que o app declarou, e ser transformada em
-runtime (esconder, agrupar, adensar, dar ênfase) sem perder identidade; cada
-transformação carrega sua inversa exata.
-
-**O `.monster`.** Um codec binário próprio de animação e de gravação, com a
-mesma ideia do H.264 aplicada a vetores: keyframes são snapshots completos
-da cena (seek em O(1)), interframes são segmentos por propriedade (valor,
-easing em 1 byte, duração) que o player interpola, independentes de fps e
-scrubáveis. A cena é um mapa plano `depth → node` com bit de presença por
-campo, então o que não mudou custa zero bytes. Valores quantizados no
-arquivo (twips, rgba8, u16 fixo), f32 na memória; seções com sha256;
-decoder estrito que nunca entra em pânico. O encoder tem dois modos: lower
-de uma timeline autoral, ou descoberta de deltas a partir de frames
-amostrados, sem ninguém declarar nada. É esse segundo modo que permite ao
-`record` gravar uma sessão de uso como dado, nunca como vídeo: a trilha
-visual e a trilha semântica (quem observou, quem agiu, sobre qual estado, com
-que resultado) no mesmo arquivo. Um bug reproduzido vira um `.monster`, e o
-`.monster` vira um teste no gate. Uma animação importada do Lottie sai pela
-mesma porta: amostrada uma vez, codificada, e depois disso o plev só toca
-monster.
-
-**Os importers.** Telas de outros mundos entram por um transpiler em três
+**O sonho de um "universal importers** A ideia é que interfaces de outros frameworks entram por um transpiler em três
 estágios: parse (tree-sitter para React TSX + Sass, HTML + CSS e gpui; o
 JSON da REST para Figma), resolve para uma árvore comum com cores mapeadas
 nos tokens do tema dentro de uma tolerância medida, e dois emissores sobre
 essa árvore: código Rust contra o builder, ou plev IR com um relatório que
 põe cada construção da origem em `supported`, `transformed`, `approximated`
-ou `impossible`, com `arquivo:linha`. Nada é descartado em silêncio, e o
+ou `impossible`, com `arquivo:linha`. por enquanto, quase nada é descartado, e o
 importer não declara capability nenhuma: um botão sai como `binding
 required`, e é o verificador que decide se a tela pode existir. SVG entra
 como path tesselado. O escopo é pequeno de propósito: um componente de cada
-origem, provado de ponta a ponta, antes de prometer o formato inteiro.
+origem, provado end to end, antes de prometer o formato inteiro.
 
-**Em volta.** Demos que provaram uma capacidade cada (grafos, câmera,
-gestos, mobile, Lottie, um arcade), um cliente git (`idestudio`) que serve de
+**Playground.** Demos que provaram uma capacidade cada (grafos, câmera,
+gestures, mobile, Lottie, um arcade), um cliente git (`idestudio`) que serve de
 app real para o contrato semântico, um inspector de sessões, e inferência
 local (`llmrun`, candle e burn no device do renderer) para o que o plev
 precisa fazer sem sair do processo.
@@ -209,11 +159,6 @@ Para uma imagem sem abrir janela:
 cargo run -p uigallery -- --render Todo --dev frame --out frame.png
 ```
 
-O desenho inteiro está em
-[docs/Tasks/task-105-profiler-panel-in-the-gallery](docs/Tasks/task-105-profiler-panel-in-the-gallery/task-105-profiler-panel-in-the-gallery.md)
-e a decisão no
-[ADR 0093](docs/adr/Workflows/0093-the-dev-mode-is-the-engines-own/0093-the-dev-mode-is-the-engines-own.md).
-
 ### No navegador
 
 Cada comando imprime o endereço a abrir. Uma porta já ocupada é pulada para
@@ -232,7 +177,7 @@ graphs para ver outro grafo.
 
 ### No celular
 
-O simulador do iOS precisa do Xcode e do xcodegen; o Android precisa do seu
+O simulador do iOS precisa do Xcode e do xcodegen; o Android precisa do 
 SDK e NDK, do JDK 17 e do cargo-ndk.
 
 ```
@@ -286,10 +231,10 @@ aberta mostra a mudança.
 
 ## Workspace
 
-A raiz do repositório é um workspace virtual; cada crate mora em uma de
-quatro casas, conforme o que ela é.
+Cada crate mora em uma de
+quatro modulos, conforme o que ela é.
 
-| Casa | Onde | O quê |
+| Modulo | Onde | O quê |
 |---|---|---|
 | Libraries | `rust/` | `engine` (compose, control, drawing, runtime, styling e o design system em `engine::widgets`; o inventário está em [docs/Research/Structure/component-catalog.md](docs/Research/Structure/component-catalog.md)), `accord` (o contrato semântico), `plevir` (a IR do plev e seu verifier), `screen` (surfaces materializadas a partir da IR), `offers` (os proposers), `claude` (o Claude como proposer), `socket` (o agent port e a CLI do plev), `record` (o flight recorder), `replay` (a leitura de uma sessão gravada, plev-inspect), `motion` (o codec .monster), `import` (Lottie, SVG, React, HTML, Figma e gpui para dentro), `editor` (o core de edição em rope), `gitdrv` (git), `markup` + `macros` (a markup DSL e as proc-macros), `unions` (sem código: um só feature set para toda build, mantido pelo cargo hakari), `llmrun` (workspace próprio) |
 | Apps | `apps/` | `uigallery` (a gallery do design system: desktop, web, Android, iOS), `idestudio` (o cliente git), `agenteval` (o lab do experimento), `inspector` (a janela do session inspector), `mirroring` (uma página espelhada pelo scene socket), `urnadbapp` (o explorer de `.urna`, workspace próprio) |
@@ -303,29 +248,24 @@ leem, e `data/graphs/<formato>` as entradas de grafo que a demo graphs desenha
 
 ## Contratos
 
-Violar um deles é defeito, mesmo quando os pixels parecem certos.
 
 - Um TextStyle por text run, compartilhado entre medição e desenho. A única
   fonte de largura é o shaper, nunca uma estimativa aritmética.
 - sRGB: decode uma vez ao entrar no trabalho da GPU, encode uma vez na
   escrita da surface.
-- A geometria dos containers deriva do espaço disponível, nunca de
+- A geometria dos containers deriva do espaço disponível, não de
   constantes.
-- A UI é desenhada para conteúdo, constraints, capabilities e ranges, não
-  para telas e dispositivos: escala fluida, responsividade guiada pelo
+- A UI é desenhada para conteúdo, constraints, capabilities e ranges, escala fluida, responsividade guiada pelo
   componente, layout intrínseco, valores relativos e semânticos, adaptação
   progressiva.
-- Uma mudança de estado visível implica invalidação, sem redraw silencioso e
-  sem frame stale na tela.
-- Um agente age só pelo dispatcher do app, o mesmo caminho de um clique, e
-  só sobre o estado que lhe foi mostrado.
+- Uma mudança de estado visível gera invalidação, principalmente pra evitar redraw silencioso e frame stale na tela.
 
 Um guard test varre o repositório e falha se algum código desenhar texto
 construindo uma raw key em vez de passar pelo caminho único do TextStyle.
 
 ## Docs
 
-- [docs/ATLAS.toml](docs/ATLAS.toml): a arquitetura num arquivo só. Tabelas para as máquinas, prosa para as pessoas, o diagrama do frame flow no fim.
+- [docs/ATLAS.toml](docs/ATLAS.toml): centralizando temporariamente as diretrizes de arquitetura num arquivo só pra conseguir manter o controle. A ideia é table são para os llms, prosa para humanos, o diagrama do frame flow no fim.
 - [docs/](docs/README.md): o acervo, com o [changelog](docs/CHANGELOG.md) por data, as [tasks](docs/Tasks/Tasks.md) (uma pasta por task), as decisões em [docs/adr/](docs/adr/adr.md) (uma pasta por ADR, com os aprendizados ao lado) e o que sabemos em [docs/Research/](docs/Research/Research.md), pelos mesmos temas dos ADRs, com os experimentos em `Research/Exploring`. Toda página termina com uma lista Related de links comuns, então Obsidian, Quartz, Zola e o GitHub desenham o mesmo grafo.
 - Ler o acervo como site: [apps/zolaviews](apps/zolaviews/README.md) (`node plev/book.mjs --serve`, Zola) ou [apps/quartzweb](apps/quartzweb/README.md) (`npx quartz build --serve`, em `localhost:8080`); ou abrir `docs/` como vault no Obsidian.
 - [docs/Research/Workflows/code-against-the-plev-engine.md](docs/Research/Workflows/code-against-the-plev-engine.md): o manual de operação, para ler antes de tocar em código de UI ou de rendering. Seus vizinhos em [docs/Research/Workflows/](docs/Research/Workflows/): validação de pixels, o target web, orquestração de agentes.
