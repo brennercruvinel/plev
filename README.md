@@ -72,7 +72,7 @@ A gallery do design system, cada componente na sua própria página:
 cargo run -p uigallery
 ```
 
-As demos que abrem uma janela sozinhas:
+Playground demos:
 
 ```
 cargo run -p arcade
@@ -86,7 +86,7 @@ cargo run -p shapes
 cargo run -p ticker
 ```
 
-A demo de grafos tem quatro páginas; sem argumento abre a primeira:
+Algumas demos de grafos:
 
 ```
 cargo run -p graphs -- lesmis
@@ -94,10 +94,6 @@ cargo run -p graphs -- compound
 cargo run -p graphs -- elk
 cargo run -p graphs -- elk-groups
 ```
-
-Três demos pedem um arquivo, e `commit` não abre janela: imprime no
-terminal os três receipts do cenário em que um agente tenta commitar o que
-viu e a pessoa mudou o staging no meio.
 
 ```
 cargo run -p commit
@@ -144,7 +140,7 @@ você escolhe o frame mostrado (`Live`, `Slowest`, ou um clique numa barra
 do histórico), move o painel para o lado e fecha. A borda do painel arrasta
 para redimensionar.
 
-No seu código, três macros alimentam o painel e custam uma leitura atômica
+Três macros alimentam o painel e fazem uma leitura atômica
 quando ele está desligado:
 
 ```rust
@@ -160,10 +156,6 @@ cargo run -p uigallery -- --render Todo --dev frame --out frame.png
 ```
 
 ### No navegador
-
-Cada comando imprime o endereço a abrir. Uma porta já ocupada é pulada para
-a próxima livre, então todos podem rodar ao mesmo tempo. Redimensione a
-janela e o layout acompanha.
 
 ```
 tool/tasks/webtarget.sh uigallery
@@ -223,7 +215,7 @@ Os testes de integração de um crate são um executável só, `tests/suite.rs`,
 com um módulo por arquivo. Os testes de um arquivo:
 `cargo test -p engine --test suite capture::`.
 
-As ferramentas além dessas (uma página para PNG, o custo de um frame, o agent
+As ferramentas além dessas (uma página para PNG, o agent
 port, o mirror, as sessões gravadas, os importers, o modelo de linguagem)
 estão em [docs/Research/Workflows/run-the-tools.md](docs/Research/Workflows/run-the-tools.md). Uma build de
 debug faz hot reload: salve um `.wgsl`, uma string ou uma cor e a janela
